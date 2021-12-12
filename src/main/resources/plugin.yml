@@ -1,0 +1,45 @@
+name: MapBot
+version: 3.0
+main: me.maplef.Main
+api-version: 1.18
+depend:
+  - PlaceholderAPI
+commands:
+  mapbot:
+    description: commands of Mapbot_v4
+    aliases: [mb]
+permissions:
+  mapbot.*:
+    description: full access to mapbot commands
+    children:
+      mapbot.help: true
+      mapbot.bind: true
+      mapbot.hitokoto: true
+      mapbot.weather: true
+      mapbot.receive: true
+      mapbot.keepinv: true
+      mapbot.haste: true
+  mapbot.help:
+    description: show help infomations
+    default: true
+  mapbot.bind:
+    description: bind player's QQ number
+    default: true
+  mapbot.hitokoto:
+    description: get a hitokoto
+    default: true
+  mapbot.weather:
+    description: get weather of a city
+    default: true
+  mapbot.receive:
+    description: receive messages from QQ group or not
+    default: true
+  mapbot.keepinv:
+    description: keep inventory at the cost of points or not
+    default: true
+  mapbot.haste:
+    description: buy haste time by points
+    default: true
+  mapbot.stopserver:
+    description: start a server stopping countdown, send all players to a safer server before shutdown
+    default: op

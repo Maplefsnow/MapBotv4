@@ -14,7 +14,7 @@ public class DownloadImage {
 
         byte[] bs = new byte[1024];
         int len;
-        String filePath = ".\\plugins\\MapBot\\images\\" + fileName + ".jpg";
+        String filePath = ".\\plugins\\MapBot\\cat_images\\" + fileName + ".jpg";
         File file = new File(filePath);
         FileOutputStream os = new FileOutputStream(file, true);
         while ((len = is.read(bs)) != -1)

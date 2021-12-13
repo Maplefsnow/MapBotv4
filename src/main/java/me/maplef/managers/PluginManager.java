@@ -21,7 +21,7 @@ public class PluginManager {
                 MessageChainBuilder helpMsg = new MessageChainBuilder();
                 helpMsg.append(new At(senderID)).append(" 你好，以下是我支持的命令\n(其中\"<>\"内的为必填参数，\"[]\"内的为可选参数)\n——————\n");
                 for(String pluginName : pluginsName) {
-                    Class<?> clazz = Class.forName("me.maplef.Plugins." + pluginName);
+                    Class<?> clazz = Class.forName("me.maplef.plugins." + pluginName);
                     Object classObj = clazz.getDeclaredConstructor().newInstance();
                     Map<String, Object> pluginInfo = (Map<String, Object>) clazz.getMethod("register").invoke(classObj);
                     Map<String, String> pluginUsage = (Map<String, String>) pluginInfo.get("usages");
@@ -34,7 +34,7 @@ public class PluginManager {
 
             default: {
                 for(String pluginName : pluginsName){
-                    Class<?> clazz = Class.forName("me.maplef.Plugins." + pluginName);
+                    Class<?> clazz = Class.forName("me.maplef.plugins." + pluginName);
                     Object classObj = clazz.getDeclaredConstructor().newInstance();
                     Map<String, Object> pluginInfo = (Map<String, Object>) clazz.getMethod("register").invoke(classObj);
 

@@ -210,7 +210,7 @@ public class GroupListeners extends SimpleListenerHost {
         if(e.getMessage().contentToString().contains("test")){
             Bot bot = BotOperator.bot;
             try{
-                Objects.requireNonNull(Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(playerGroup)).get(1021789967))).sendMessage("test message: qwq");
+                Objects.requireNonNull(Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(playerGroup)).get(1329785932))).sendMessage("test message: qwq");
             } catch (Exception ex){
                 ex.printStackTrace();
             }

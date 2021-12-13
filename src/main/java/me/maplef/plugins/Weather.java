@@ -22,7 +22,7 @@ public class Weather {
     public static String WeatherMessage(String location) throws Exception{
         StringBuilder msg = new StringBuilder();
 
-        // Weather API Key: 10e06cc392b645c3b8e3519860c2f05a
+        // Weather API Key
         String KEY = Objects.requireNonNull(config.getString("QWeather-APIKey"));
 
         // Request url concat

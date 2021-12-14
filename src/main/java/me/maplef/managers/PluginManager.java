@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class PluginManager {
     private static final String[] pluginsName = {"Hitokoto", "CatImage", "CheckTPS", "CheckMoney", "CheckOnlineTime", "Weather", "ListPlayers",
-            "BindIDAndQQ", "CheckLocation", "StopServer", "WorldNews"};
+            "BindIDAndQQ", "CheckLocation", "StopServer", "WorldNews", "ReloadConfigs"};
 
     public static MessageChain commandHandler(String command, Long groupID, Long senderID , String[] args) throws Exception{
         switch (command){

@@ -74,18 +74,14 @@ public class GroupListeners extends SimpleListenerHost {
         for(Message message : e.getMessage()){
             if(message.contentToString().startsWith("@")){
                 String atNum = message.contentToString().substring(1);
-
-                Bukkit.getLogger().info("message: " + message);
-                Bukkit.getLogger().info("atNum: " + atNum);
-
                 if(atNum.equals(botAcc.toString())) continue;
 
                 try {
                     atID = (String) DatabaseOperator.query(Long.parseLong(atNum)).get("NAME");
                     continue;
-                } catch (SQLException | PlayerNotFoundException ex) {
+                } catch (SQLException ex) {
                     ex.printStackTrace();
-                }
+                } catch (PlayerNotFoundException ignored){}
             }
 
             msg = msg.concat(message.contentToString());
@@ -111,9 +107,9 @@ public class GroupListeners extends SimpleListenerHost {
 
             try {
                 sendFlag = (Integer) DatabaseOperator.query(player.getName()).get("MSGREC");
-            } catch (SQLException | PlayerNotFoundException ex) {
+            } catch (SQLException ex) {
                 Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
-            }
+            } catch (PlayerNotFoundException ignored){}
 
             if(sendFlag == 1) player.sendMessage(CU.t(linkedMsg));
         }
@@ -192,11 +188,11 @@ public class GroupListeners extends SimpleListenerHost {
 
     @EventHandler
     public void onJoinGroupRequest(MemberJoinRequestEvent e){
-        if(e.getGroupId() != innerGroup) return;
-
         Bukkit.getLogger().info(e.component3());
         Bukkit.getLogger().info(e.component6());
         Bukkit.getLogger().info(e.component7());
+
+        if(e.getGroupId() != innerGroup) return;
 
         String code = e.getMessage().substring(e.getMessage().length() - 6);
         if(code.equals(InnerGroupInvite.inviteCode)) e.accept();

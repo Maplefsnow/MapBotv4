@@ -1,6 +1,7 @@
 package me.maplef.plugins;
 
 import me.maplef.Main;
+import me.maplef.MapbotPlugin;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.Bukkit;
@@ -13,8 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ListPlayers {
-    static final FileConfiguration messages = Main.getInstance().getMessageConfig();
+public class ListPlayers implements MapbotPlugin {
+    static FileConfiguration messages = Main.getInstance().getMessageConfig();
 
     public static List<String> list(){
         List<String> onlineList = new ArrayList<>();
@@ -24,7 +25,8 @@ public class ListPlayers {
         return onlineList;
     }
 
-    public static MessageChain onEnable(Long groupID, Long senderID, String[] args){
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args){
         List<String> onlineList = list();
 
         StringBuilder msgBuilder = new StringBuilder();
@@ -38,7 +40,8 @@ public class ListPlayers {
         return new MessageChainBuilder().append(msg).build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

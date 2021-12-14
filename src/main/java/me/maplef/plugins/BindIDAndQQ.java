@@ -2,11 +2,12 @@ package me.maplef.plugins;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import me.maplef.Main;
+import me.maplef.MapbotPlugin;
 import me.maplef.exceptions.GroupNotAllowedException;
 import me.maplef.exceptions.InvalidSyntaxException;
 import me.maplef.exceptions.NoPermissionException;
 import me.maplef.exceptions.PlayerNotFoundException;
-import me.maplef.Main;
 import me.maplef.utils.BotOperator;
 import me.maplef.utils.DatabaseOperator;
 import me.maplef.utils.HttpClient4;
@@ -25,7 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-public class BindIDAndQQ {
+public class BindIDAndQQ implements MapbotPlugin {
     static final FileConfiguration config = me.maplef.Main.getPlugin(me.maplef.Main.class).getConfig();
     private static final Long opGroup = config.getLong("op-group");
     private static final Long playerGroup = config.getLong("player-group");
@@ -109,7 +110,13 @@ public class BindIDAndQQ {
         return new MessageChainBuilder().append(new At(senderID)).append(" 解除了 ").append(fixedName).append(" 的ID绑定，白名单已移除").build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

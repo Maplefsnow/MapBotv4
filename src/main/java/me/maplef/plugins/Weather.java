@@ -3,6 +3,7 @@ package me.maplef.plugins;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.maplef.MapbotPlugin;
 import me.maplef.exceptions.InvalidSyntaxException;
 import me.maplef.Main;
 import me.maplef.utils.HttpClient4;
@@ -16,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class Weather {
+public class Weather implements MapbotPlugin {
     static final FileConfiguration config = Main.getInstance().getConfig();
 
     public static String WeatherMessage(String location) throws Exception{
@@ -80,12 +81,14 @@ public class Weather {
         }
     }
 
-    public static MessageChain onEnable(Long groupID, Long senderID, String [] args) throws Exception{
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String [] args) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
         return new MessageChainBuilder().append(WeatherMessage(args[0])).build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

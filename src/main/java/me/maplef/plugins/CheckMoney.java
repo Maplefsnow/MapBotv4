@@ -1,5 +1,6 @@
 package me.maplef.plugins;
 
+import me.maplef.MapbotPlugin;
 import me.maplef.exceptions.InvalidSyntaxException;
 import me.maplef.exceptions.PlayerNotFoundException;
 import me.maplef.utils.BotOperator;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class CheckMoney {
+public class CheckMoney implements MapbotPlugin {
     static final FileConfiguration config = me.maplef.Main.getPlugin(me.maplef.Main.class).getConfig();
     private static final Long opGroup = config.getLong("op-group");
 
@@ -52,7 +53,8 @@ public class CheckMoney {
         return money;
     }
 
-    public static MessageChain onEnable(Long groupID, Long senderID, Object[] args) throws Exception{
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
         MessageChainBuilder msg = new MessageChainBuilder();
         String playerName;
 
@@ -67,13 +69,14 @@ public class CheckMoney {
         return msg.build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("money", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, Object[].class));
-        commands.put("积分", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, Object[].class));
+        commands.put("money", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("积分", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, String[].class));
 
         usages.put("money", "#money - 查询自己的猫猫积分");
         usages.put("积分", "#积分 - 查询自己的猫猫积分");

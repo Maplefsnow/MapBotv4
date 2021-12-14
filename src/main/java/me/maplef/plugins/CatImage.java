@@ -1,5 +1,6 @@
 package me.maplef.plugins;
 
+import me.maplef.MapbotPlugin;
 import me.maplef.utils.BotOperator;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.Image;
@@ -15,11 +16,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
-public class CatImage {
+public class CatImage implements MapbotPlugin {
     public static MessageChain getImage(Long groupID) throws Exception{
         String imagePath = ".\\plugins\\MapBot\\cat_images";
-        File[] imageList = new File(imagePath).listFiles();
-        assert imageList != null;
+        File[] imageList = Objects.requireNonNull(new File(imagePath).listFiles());
 
         Random random = new Random();
         int pos = random.nextInt(imageList.length);
@@ -36,11 +36,13 @@ public class CatImage {
         }
     }
 
-    public static MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
         return new MessageChainBuilder().append(getImage(groupID)).build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

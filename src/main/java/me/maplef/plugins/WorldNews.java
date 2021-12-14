@@ -2,6 +2,7 @@ package me.maplef.plugins;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import me.maplef.MapbotPlugin;
 import me.maplef.utils.BotOperator;
 import me.maplef.utils.DownloadImage;
 import me.maplef.utils.HttpClient4;
@@ -18,15 +19,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class WorldNews {
+public class WorldNews implements MapbotPlugin {
     private final Bot bot = BotOperator.bot;
 
     public MessageChain SendNews(Long groupID){
-        File tmp = new File(".\\plugins\\MapBot\\images\\temp.jpg");
-        if(tmp.exists()){
-            Bukkit.getLogger().info("找到 temp.jpg 文件");
-            if(tmp.delete()) Bukkit.getLogger().info("Deleted temp.jpg!");
-        }
+        File tmp = new File(".\\plugins\\MapBot\\cat_images\\temp.jpg");
+        if(tmp.exists() && tmp.delete()) {Bukkit.getLogger();}
 
         String apiUrl = "https://api.03c3.cn/zb/api.php";
         JSONObject imageUrlRes = JSON.parseObject(HttpClient4.doGet(apiUrl));
@@ -44,11 +42,13 @@ public class WorldNews {
         }
     }
 
+    @Override
     public MessageChain onEnable(Long groupID, Long senderID, String[] args){
         return SendNews(groupID);
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

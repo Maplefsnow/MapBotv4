@@ -1,6 +1,7 @@
 package me.maplef.plugins;
 
 import me.clip.placeholderapi.PlaceholderAPI;
+import me.maplef.MapbotPlugin;
 import me.maplef.exceptions.GroupNotAllowedException;
 import me.maplef.Main;
 import net.mamoe.mirai.message.data.MessageChain;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class CheckTPS {
+public class CheckTPS implements MapbotPlugin {
     static final FileConfiguration config = Main.getInstance().getConfig();
     static final FileConfiguration messages = Main.getInstance().getMessageConfig();
     private static final Long opGroup = config.getLong("op-group");
@@ -30,7 +31,8 @@ public class CheckTPS {
         return Double.parseDouble(tpsStr);
     }
 
-    public static MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
         if(!Objects.equals(groupID, opGroup) && !Objects.equals(groupID, playerGroup))
             throw new GroupNotAllowedException();
 
@@ -38,7 +40,8 @@ public class CheckTPS {
         return new MessageChainBuilder().append(msg).build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
@@ -57,5 +60,4 @@ public class CheckTPS {
         return info;
     }
 
-    public CheckTPS(){}
 }

@@ -10,14 +10,16 @@ QWeather-APIKey: 'qwq'  # 和风天气API密钥
 tps-check-cron: '0 0/1 * * * ?'  # to decide the frequency of TPS-Check
 good-morning-cron: '0 0 7 * * ?'  # to decide when bot says good morning
 good-night-cron: '0 0 23 * * ?'  # to decide when bot says good night
+inner-group-invite-cron: '0 0 0/1 * * ?'
+inner-group-kick-cron: '0 0 18 * * 7'
 
 message-length-limit: 60  # chars  # the maximum of a group message to be transferred to the MC server
 tps-warning-threshold: 17.0  # ticks  # when server TPS is lower than this number, send a warning message to the op-group above
 bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility
-isActive-time-per-day: 40  # minutes  # not very useful, just ignore it
 keep-inv-cost: 40  #pts  # (ONLY for CatLand, EconomyX is needed)
 haste-per-minute-cost: 3.0  #pts  # (ONLY for CatLand, EconomyX is needed)
 
+isActive-time-per-day: 40  # minutes  # not very useful, just ignore it
 inner-player-group-whitelist:  # not very useful, just ignore it
   - 'Maplef_snow'
   - 'xinQi5'

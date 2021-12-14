@@ -2,6 +2,7 @@ package me.maplef.plugins;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import me.maplef.MapbotPlugin;
 import me.maplef.utils.HttpClient4;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
@@ -10,7 +11,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Hitokoto {
+public class Hitokoto implements MapbotPlugin {
     public static String HitokotoMessage() {
         String jsonString = HttpClient4.doGet("https://v1.hitokoto.cn/");
         if (jsonString.isEmpty())  jsonString = HttpClient4.doGet("https://v1.hitokoto.cn/");
@@ -20,11 +21,13 @@ public class Hitokoto {
                 res.get("hitokoto"), res.get("from").toString().replace("\"",""), res.get("id"));
     }
 
-    public static MessageChain onEnable(Long groupID, Long senderID, String[] args){
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args){
         return new MessageChainBuilder().append(HitokotoMessage()).build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

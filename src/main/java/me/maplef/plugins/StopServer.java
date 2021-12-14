@@ -1,5 +1,6 @@
 package me.maplef.plugins;
 
+import me.maplef.MapbotPlugin;
 import me.maplef.exceptions.NoPermissionException;
 import me.maplef.Main;
 import me.maplef.utils.BotOperator;
@@ -16,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class StopServer {
+public class StopServer implements MapbotPlugin {
     static final FileConfiguration config = me.maplef.Main.getPlugin(me.maplef.Main.class).getConfig();
     static final FileConfiguration messages = Main.getPlugin(Main.class).getMessageConfig();
     private static final Long opGroup = config.getLong("op-group");
@@ -112,7 +113,13 @@ public class StopServer {
             return new MessageChainBuilder().append(new At(senderID)).append(" 目前没有正在进行的关服定时任务").build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

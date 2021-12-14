@@ -1,20 +1,23 @@
 package me.maplef.plugins;
 
-import me.maplef.exceptions.InvalidSyntaxException;
 import me.maplef.Main;
+import me.maplef.MapbotPlugin;
+import me.maplef.exceptions.InvalidSyntaxException;
+import me.maplef.exceptions.PlayerNotFoundException;
 import me.maplef.utils.DatabaseOperator;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CheckOnlineTime {
+public class CheckOnlineTime implements MapbotPlugin {
     private static final FileConfiguration onlineTimes = Main.getInstance().getOnlineTimeConfig();
 
-    public static int check(String name, int mode) throws Exception {
+    public static int check(String name, int mode) throws SQLException, PlayerNotFoundException {
         String playerUUID = DatabaseOperator.query(name).get("UUID").toString();
 
         int dailyTime = onlineTimes.getInt(playerUUID.concat(".daily_play_time")) / 60000;
@@ -31,27 +34,29 @@ public class CheckOnlineTime {
         }
     }
 
-    public static MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
 
         String fixedName = (String) DatabaseOperator.query(args[0]).get("NAME"); int onlineTime = 0;
         String[] timeText = {"今天", "本周", "本月", "总计"};
 
-        int mode;
-        if(args.length == 1) mode = 0;
-        else{
+        int mode = 0;
+        if(args.length > 1){
             try{
                 mode = Integer.parseInt(args[1]);
-                onlineTime = check(fixedName, mode);
             } catch (NumberFormatException e){
                 throw new Exception("请输入一个整数");
             }
         }
 
+        onlineTime = check(fixedName, mode);
+
         return new MessageChainBuilder().append(String.format("%s %s的在线时长为 %d 分钟", fixedName, timeText[mode], onlineTime)).build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

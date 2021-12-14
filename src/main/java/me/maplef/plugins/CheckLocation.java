@@ -1,5 +1,6 @@
 package me.maplef.plugins;
 
+import me.maplef.MapbotPlugin;
 import me.maplef.exceptions.InvalidSyntaxException;
 import me.maplef.exceptions.NoPermissionException;
 import me.maplef.utils.BotOperator;
@@ -15,11 +16,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-public class CheckLocation {
+public class CheckLocation implements MapbotPlugin {
     static final FileConfiguration config = me.maplef.Main.getPlugin(me.maplef.Main.class).getConfig();
     private static final Long opGroup = config.getLong("op-group");
 
-    public static MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
+    @Override
+    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
         if(!Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
 
@@ -46,7 +48,8 @@ public class CheckLocation {
         return new MessageChainBuilder().append(msg).build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

@@ -7,14 +7,14 @@ import java.net.URL;
 import java.net.URLConnection;
 
 public class DownloadImage {
-    public static String download(String urlString, String fileName) throws Exception {
+    public static String download(String urlString, String fileName, String path) throws Exception {
         URL url = new URL(urlString);
         URLConnection con = url.openConnection();
         InputStream is = con.getInputStream();
 
         byte[] bs = new byte[1024];
         int len;
-        String filePath = ".\\plugins\\MapBot\\cat_images\\" + fileName + ".jpg";
+        String filePath = path + "\\" + fileName + ".jpg";
         File file = new File(filePath);
         FileOutputStream os = new FileOutputStream(file, true);
         while ((len = is.read(bs)) != -1)

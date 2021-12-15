@@ -47,6 +47,5 @@ public class BotOperator {
             Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
         }
     }
-
 }
 

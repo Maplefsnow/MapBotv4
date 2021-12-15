@@ -27,14 +27,18 @@ public class InnerGroupKick implements Job {
     public void execute(JobExecutionContext context) {
         ContactList<NormalMember> inner_players = Objects.requireNonNull(bot.getGroup(innerGroup)).getMembers();
         List<String> kickList = new ArrayList<>();
+        List<String> whitelist = config.getStringList("inner-player-group-auto-manage.kick.whitelist");
 
         for(NormalMember member : inner_players) {
             try {
                 String player_name = DatabaseOperator.query(member.getId()).get("NAME").toString();
+
+                if(whitelist.contains(player_name)) continue;
+
                 int weekly_online_time = CheckOnlineTime.check(player_name, 1);
                 int total_online_time = CheckOnlineTime.check(player_name, 3);
 
-                if(weekly_online_time < 400 && total_online_time < 20000) {
+                if(weekly_online_time < config.getInt("inner-player-group-auto-manage.kick.requirement") && total_online_time < 20000) {
                     try{
                         member.kick("你因为当周活跃未达标被移出本群，请再接再厉吧qwq");
                         kickList.add(player_name);
@@ -46,8 +50,7 @@ public class InnerGroupKick implements Job {
         }
 
         StringBuilder kickMsg = new StringBuilder(String.format("从内群中移出了 %d 名玩家：\n", kickList.size()));
-        for(String name : kickList)
-            kickMsg.append(name).append(", ");
+        for(String name : kickList) kickMsg.append(name).append(", ");
         String msg = kickMsg.toString();
         BotOperator.send(opGroup, msg.substring(0, msg.length()-2));
     }

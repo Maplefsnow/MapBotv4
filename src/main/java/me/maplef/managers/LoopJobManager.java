@@ -16,17 +16,22 @@ public class LoopJobManager {
 
     public static void register(){
         try{
-            CronExpression morning_cron = new CronExpression(Objects.requireNonNull(config.getString("good-morning-cron")));
-            CronExpression night_cron = new CronExpression(Objects.requireNonNull(config.getString("good-night-cron")));
-            CronExpression tpsCheck_cron = new CronExpression(Objects.requireNonNull(config.getString("tps-check-cron")));
-            CronExpression inner_group_invite_cron = new CronExpression(Objects.requireNonNull(config.getString("inner-group-invite-cron")));
-            CronExpression inner_group_kick_cron = new CronExpression(Objects.requireNonNull(config.getString("inner-group-kick-cron")));
+            CronExpression morning_cron = new CronExpression(Objects.requireNonNull(config.getString("daily-greetings.morning.cron")));
+            CronExpression night_cron = new CronExpression(Objects.requireNonNull(config.getString("daily-greetings.night.cron")));
+            CronExpression tpsCheck_cron = new CronExpression(Objects.requireNonNull(config.getString("tps-check.cron")));
+            CronExpression inner_group_invite_cron = new CronExpression(Objects.requireNonNull(config.getString("inner-player-group-auto-manage.invite.cron")));
+            CronExpression inner_group_kick_cron = new CronExpression(Objects.requireNonNull(config.getString("inner-player-group-auto-manage.kick.cron")));
 
-            Scheduler.registerJob("Morning", String.valueOf(morning_cron), GoodMorning.class);
-            Scheduler.registerJob("Night", String.valueOf(night_cron), GoodNight.class);
-            Scheduler.registerJob("tpsCheck", String.valueOf(tpsCheck_cron), TPSCheck.class);
-            Scheduler.registerJob("InnerGroupInvite", String.valueOf(inner_group_invite_cron), InnerGroupInvite.class);
-            Scheduler.registerJob("InnerGroupKick", String.valueOf(inner_group_kick_cron), InnerGroupKick.class);
+            if(config.getBoolean("daily-greetings.morning.enabled"))
+                Scheduler.registerJob("Morning", String.valueOf(morning_cron), GoodMorning.class);
+            if(config.getBoolean("daily-greetings.night.enabled"))
+                Scheduler.registerJob("Night", String.valueOf(night_cron), GoodNight.class);
+            if(config.getBoolean("tps-check.enabled"))
+                Scheduler.registerJob("tpsCheck", String.valueOf(tpsCheck_cron), TPSCheck.class);
+            if(config.getBoolean("inner-player-group-auto-manage.invite.enabled"))
+                Scheduler.registerJob("InnerGroupInvite", String.valueOf(inner_group_invite_cron), InnerGroupInvite.class);
+            if(config.getBoolean("inner-player-group-auto-manage.kick.enabled"))
+                Scheduler.registerJob("InnerGroupKick", String.valueOf(inner_group_kick_cron), InnerGroupKick.class);
             Scheduler.registerJob("OnlinePlayerRecorder", "0 0/10 * * * ?", OnlinePlayerRecorder.class);
 
             Scheduler.scheduler.start();

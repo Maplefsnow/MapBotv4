@@ -6,14 +6,13 @@ import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class WelcomeNew{
-    static final FileConfiguration welcomeNew = Main.getInstance().getMessageConfig();
+    static final FileConfiguration messages = Main.getInstance().getMessageConfig();
 
     public static MessageChain WelcomeMessage() {
         StringBuilder msg = new StringBuilder();
 
-        int size = welcomeNew.getStringList("welcome-new-message").size();
-        for(int i = 0; i < size; i++)
-            msg.append(welcomeNew.getStringList("welcome-new-message").get(i)).append("\n");
+        for(String singleMsg : messages.getStringList("welcome-new-message.group"))
+            msg.append(singleMsg).append("\n");
 
         return new MessageChainBuilder().append(msg.toString().trim()).build();
     }

@@ -32,7 +32,7 @@ public class WorldNews implements MapbotPlugin {
 
         File newsImg; ExternalResource imageResource;
         try {
-            newsImg = new File(DownloadImage.download(imageUrl, "temp"));
+            newsImg = new File(DownloadImage.download(imageUrl, "temp", ".\\plugins\\Mapbot"));
             imageResource = ExternalResource.create(newsImg);
             Image newsImage = Objects.requireNonNull(bot.getGroup(groupID)).uploadImage(imageResource);
             return new MessageChainBuilder().append(Image.fromId(newsImage.getImageId())).build();

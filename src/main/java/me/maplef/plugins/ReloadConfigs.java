@@ -1,6 +1,7 @@
 package me.maplef.plugins;
 
 import me.maplef.Main;
+import me.maplef.MapbotPlugin;
 import me.maplef.exceptions.NoPermissionException;
 import me.maplef.utils.BotOperator;
 import net.mamoe.mirai.message.data.MessageChain;
@@ -12,10 +13,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class ReloadConfigs {
+public class ReloadConfigs implements MapbotPlugin {
     static FileConfiguration config = Main.getInstance().getConfig();
     final long opGroup = config.getLong("op-group");
 
+    @Override
     public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
         if(!Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
@@ -25,7 +27,8 @@ public class ReloadConfigs {
         return new MessageChainBuilder().append("配置文件重载完毕").build();
     }
 
-    public static Map<String, Object> register() throws NoSuchMethodException{
+    @Override
+    public Map<String, Object> register() throws NoSuchMethodException{
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();

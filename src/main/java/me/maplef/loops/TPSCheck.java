@@ -13,7 +13,7 @@ public class TPSCheck implements Job {
     private static int tpsLowCount = 0;
     private static boolean tpsWarnFlag = false;
     private final Long opGroup = config.getLong("op-group");
-    private final double tpsThreshold = config.getDouble("tps-warning-threshold");
+    private final double tpsThreshold = config.getDouble("tps-check.threshold");
 
     @Override
     public void execute(JobExecutionContext context){

@@ -1,6 +1,6 @@
 name: MapBot
 version: 3.0
-main: me.maplef.Main
+main: me.maplef.mapbotv4.Main
 api-version: 1.18
 depend:
   - PlaceholderAPI

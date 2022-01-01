@@ -25,13 +25,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Mapbot implements CommandExecutor, TabExecutor {
-    final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
+    private final FileConfiguration config = Main.getInstance().getConfig();
+    private final FileConfiguration messages = Main.getInstance().getMessageConfig();
     private final String msgHeader = "&b&l============ &d小枫4号 &b&l============&f\n";
     private final String msgFooter = "\n&b&l==============================";
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        String msgStart = config.getString("message-prefix");
+        String msgStart = messages.getString("message-prefix");
         if(sender instanceof Player){
             Player player = (Player) sender;
             if(args.length == 0 || args[0].equals("help")){

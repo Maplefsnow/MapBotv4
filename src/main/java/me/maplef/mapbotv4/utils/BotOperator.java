@@ -10,7 +10,7 @@ import org.bukkit.Bukkit;
 import java.util.Objects;
 
 public class BotOperator {
-    public static Bot bot;
+    private static Bot bot;
 
     public static void login(Long qq, String password){
         bot = BotFactory.INSTANCE.newBot(qq, password, new BotConfiguration(){{
@@ -46,6 +46,10 @@ public class BotOperator {
         } catch (NullPointerException e){
             Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
         }
+    }
+
+    public static Bot getBot() {
+        return bot;
     }
 }
 

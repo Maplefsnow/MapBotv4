@@ -22,7 +22,7 @@ public class InnerGroupKick implements Job {
     final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
     private final Long opGroup = config.getLong("op-group");
     private final Long innerGroup = config.getLong("inner-player-group");
-    final Bot bot = BotOperator.bot;
+    final Bot bot = BotOperator.getBot();
 
     @Override
     public void execute(JobExecutionContext context) {

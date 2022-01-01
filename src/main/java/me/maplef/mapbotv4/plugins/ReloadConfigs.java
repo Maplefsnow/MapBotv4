@@ -19,7 +19,7 @@ public class ReloadConfigs implements MapbotPlugin {
 
     @Override
     public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
-        if(!Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(senderID))
+        if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
 
         Main.getInstance().registerConfig();

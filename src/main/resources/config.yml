@@ -17,10 +17,15 @@ tps-check:
   cron: '0 0/1 * * * ?'  # to decide the frequency of TPS-Check
   threshold: 17.0  # ticks  # when server TPS is lower than this number, send a warning message to the op-group above
 
+online-player-record:
+  enabled: true
+  cron: '0 0/10 * * * ?'
+
 daily-greetings:
   morning:
     enabled: true
     cron: '0 0 7 * * ?'
+    city: '苏州'
   night:
     enabled: true
     cron: '0 0 23 * * ?'

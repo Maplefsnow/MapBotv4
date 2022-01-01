@@ -20,7 +20,7 @@ public class InnerGroupInvite implements Job {
     private final Long opGroup = config.getLong("op-group");
     private final Long playerGroup = config.getLong("player-group");
     private final Long innerGroup = config.getLong("inner-player-group");
-    final Bot bot = BotOperator.bot;
+    final Bot bot = BotOperator.getBot();
 
     @Override
     public void execute(JobExecutionContext context){

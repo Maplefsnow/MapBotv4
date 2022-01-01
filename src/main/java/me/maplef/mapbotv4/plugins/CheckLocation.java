@@ -24,7 +24,7 @@ public class CheckLocation implements MapbotPlugin {
     @Override
     public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
-        if(!Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
+        if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
 
         String targetPlayer = args[0];
 

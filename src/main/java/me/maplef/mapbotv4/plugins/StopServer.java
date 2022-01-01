@@ -60,7 +60,7 @@ public class StopServer implements MapbotPlugin {
     }
 
     public static MessageChain stopLater(Long groupID, Long senderID, String[] args) throws Exception{
-        if(!Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(senderID))
+        if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
         if(stopFlag) throw new Exception("已存在一个正在进行的关服定时任务");
 
@@ -102,7 +102,7 @@ public class StopServer implements MapbotPlugin {
     }
 
     public static MessageChain stopCancel(Long groupID, Long senderID, String[] args) throws Exception{
-        if(!Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(senderID))
+        if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
 
         if(stopFlag){

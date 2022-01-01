@@ -26,7 +26,7 @@ public class CatImage implements MapbotPlugin {
         File image = imageList[pos];
         ExternalResource imageResource = ExternalResource.create(image);
 
-        Bot bot = BotOperator.bot;
+        Bot bot = BotOperator.getBot();
         try{
             Image catImage = Objects.requireNonNull(bot.getGroup(groupID)).uploadImage(imageResource);
             return new MessageChainBuilder().append(Image.fromId(catImage.getImageId())).build();

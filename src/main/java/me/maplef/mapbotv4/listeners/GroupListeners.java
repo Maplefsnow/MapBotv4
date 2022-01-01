@@ -9,6 +9,7 @@ import me.maplef.mapbotv4.plugins.WelcomeNew;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
@@ -30,6 +31,8 @@ import java.util.regex.Pattern;
 public class GroupListeners extends SimpleListenerHost {
     final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
     final FileConfiguration messages = Main.getInstance().getMessageConfig();
+
+    private final Bot bot = BotOperator.getBot();
 
     private final Long botAcc = config.getLong("bot-account");
     private final Long playerGroup = config.getLong("player-group");
@@ -89,15 +92,15 @@ public class GroupListeners extends SimpleListenerHost {
         }
 
         for(Player player : Bukkit.getServer().getOnlinePlayers()){
-            String linkedMsg;
+            String msgHead;
             if(!atID.isEmpty()){
                 if(player.getName().equals(atID)){
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1f, 1.5f);
-                    linkedMsg = String.format("<&b%s&f> &a&l@%s&f%s", e.getSender().getNameCard(), atID, msg);
+                    msgHead = String.format("<&b%s&f> &a&l@%s&f", e.getSender().getNameCard(), atID);
                 } else
-                    linkedMsg = String.format("<&b%s&f> &f&l@%s&f%s", e.getSender().getNameCard(), atID, msg);
+                    msgHead = String.format("<&b%s&f> &f&l@%s&f", e.getSender().getNameCard(), atID);
             } else
-                linkedMsg = String.format("<&b%s&f> %s", e.getSender().getNameCard(), msg);
+                msgHead = String.format("<&b%s&f> ", e.getSender().getNameCard());
 
             int sendFlag = 1;
 
@@ -107,7 +110,14 @@ public class GroupListeners extends SimpleListenerHost {
                 Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
             } catch (PlayerNotFoundException ignored){}
 
-            if(sendFlag == 1) player.sendMessage(CU.t(linkedMsg));
+            if(sendFlag == 1){
+                if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId())){
+                    msg = msg.replace("§", "");
+                    player.sendMessage(CU.t(msgHead) + msg);
+                } else {
+                    player.sendMessage(CU.t(msgHead + msg));
+                }
+            }
         }
     }
 

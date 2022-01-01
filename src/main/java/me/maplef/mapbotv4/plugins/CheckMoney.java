@@ -59,7 +59,7 @@ public class CheckMoney implements MapbotPlugin {
         MessageChainBuilder msg = new MessageChainBuilder();
         String playerName;
 
-        if(Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(senderID) && args.length > 0){
+        if(Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID) && args.length > 0){
             playerName = (String) DatabaseOperator.query(args[0]).get("NAME");
             msg.append(String.format("%s 的猫猫积分为 %.1f", playerName, check(args)));
         } else {

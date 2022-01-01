@@ -1,7 +1,5 @@
 package me.maplef.mapbotv4;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteStreams;
 import me.maplef.mapbotv4.commands.Mapbot;
 import me.maplef.mapbotv4.listeners.GameListeners;
 import me.maplef.mapbotv4.listeners.GroupListeners;
@@ -16,18 +14,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.sql.SQLException;
 import java.util.Objects;
 
-public class Main extends JavaPlugin implements Listener, PluginMessageListener {
+public class Main extends JavaPlugin implements Listener {
     private FileConfiguration messageConfig;
     private FileConfiguration onlineTimeConfig;
     private static Main instance;
@@ -66,7 +61,7 @@ public class Main extends JavaPlugin implements Listener, PluginMessageListener 
             public void run() {
                 getServer().getLogger().info("Mapbot正在登陆，请耐心等待...");
                 BotOperator.login(botAcc, botPassword);
-                BotOperator.bot.getEventChannel().registerListenerHost(new GroupListeners());
+                BotOperator.getBot().getEventChannel().registerListenerHost(new GroupListeners());
                 BotOperator.send(opGroup, "Mapbot ON");
                 getServer().getLogger().info("Mapbot登陆成功");
             }
@@ -75,13 +70,9 @@ public class Main extends JavaPlugin implements Listener, PluginMessageListener 
         this.getServer().getPluginManager().registerEvents(this, this);
         this.getServer().getPluginManager().registerEvents(new GameListeners(), this);
 
-        this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-        this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", this);
-
         Objects.requireNonNull(getCommand("mapbot")).setExecutor(new Mapbot());
         Objects.requireNonNull(getCommand("mapbot")).setTabCompleter(new Mapbot());
 
-        this.getServer().removeRecipe(NamespacedKey.minecraft("newelytra"));
         this.getServer().addRecipe(Recipes.elytra);
 
         try {
@@ -109,19 +100,6 @@ public class Main extends JavaPlugin implements Listener, PluginMessageListener 
         getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message")));
         getServer().removeRecipe(NamespacedKey.minecraft("newelytra"));
         getLogger().info(ChatColor.RED + "MapBot已停止运行，感谢使用。");
-    }
-
-    @Override
-    public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte[] bytes) {
-        if (!channel.equals("BungeeCord")) {
-            return;
-        }
-        ByteArrayDataInput in = ByteStreams.newDataInput(bytes);
-        String subchannel = in.readUTF();
-        if (subchannel.equals("SomeSubChannel")) {
-            // 使用下文中的"返回（Response）"一节的代码进行读取
-            // 数据处理
-        }
     }
 
     public static Main getInstance() {

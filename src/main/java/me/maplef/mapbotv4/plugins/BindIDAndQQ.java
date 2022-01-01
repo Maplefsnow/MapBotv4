@@ -31,7 +31,7 @@ public class BindIDAndQQ implements MapbotPlugin {
     private static final Long opGroup = config.getLong("op-group");
     private static final Long playerGroup = config.getLong("player-group");
 
-    static final Bot bot = BotOperator.bot;
+    static final Bot bot = BotOperator.getBot();
 
     public static MessageChain bind(Long groupID, Long senderID, String[] args) throws Exception{
         if(!Objects.equals(groupID, playerGroup)) throw new GroupNotAllowedException();
@@ -88,7 +88,7 @@ public class BindIDAndQQ implements MapbotPlugin {
     }
 
     public static MessageChain unbind(Long groupID, Long senderID, String[] args) throws Exception{
-        if(!Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
+        if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
         if(args.length < 1) throw new InvalidSyntaxException();
 
         String name = args[0];
@@ -96,7 +96,7 @@ public class BindIDAndQQ implements MapbotPlugin {
         String fixedName = (String) DatabaseOperator.query(name).get("NAME");
         long targetQQ = Long.parseLong(DatabaseOperator.query(name).get("QQ").toString());
 
-        if(Objects.requireNonNull(BotOperator.bot.getGroup(opGroup)).contains(targetQQ)) throw new Exception("你没有权限解绑一位op的ID");
+        if(Objects.requireNonNull(bot.getGroup(opGroup)).contains(targetQQ)) throw new Exception("你没有权限解绑一位op的ID");
 
         DatabaseOperator.executeCommand(String.format("DELETE FROM PLAYER WHERE NAME = '%s';", fixedName));
         String whitelistDelCommand = String.format("whitelist remove %s", fixedName);

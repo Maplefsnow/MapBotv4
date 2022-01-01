@@ -20,11 +20,11 @@ import java.util.Map;
 import java.util.Objects;
 
 public class WorldNews implements MapbotPlugin {
-    private final Bot bot = BotOperator.bot;
+    private final Bot bot = BotOperator.getBot();
 
     public MessageChain SendNews(Long groupID){
-        File tmp = new File(".\\plugins\\MapBot\\cat_images\\temp.jpg");
-        if(tmp.exists() && tmp.delete()) {Bukkit.getLogger();}
+        File tmp = new File(".\\plugins\\MapBot\\temp.jpg");
+        if(tmp.exists()) if(tmp.delete()) Bukkit.getLogger().info("deleted temp.jpg!");
 
         String apiUrl = "https://api.03c3.cn/zb/api.php";
         JSONObject imageUrlRes = JSON.parseObject(HttpClient4.doGet(apiUrl));

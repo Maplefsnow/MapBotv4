@@ -2,10 +2,8 @@ package me.maplef.mapbotv4;
 
 import me.maplef.mapbotv4.commands.Mapbot;
 import me.maplef.mapbotv4.listeners.GameListeners;
-import me.maplef.mapbotv4.listeners.GroupListeners;
 import me.maplef.mapbotv4.managers.LoopJobManager;
-import me.maplef.mapbotv4.plugins.Recipes;
-import me.maplef.mapbotv4.utils.BotOperator;
+import me.maplef.mapbotv4.plugins.BotQQOperator;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.Scheduler;
@@ -16,7 +14,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -38,11 +35,11 @@ public class Main extends JavaPlugin implements Listener {
 
         getConfig().options().copyDefaults(); registerConfig();
         getMessageConfig().options().copyDefaults();
-        this.saveDefaultConfig();
-        this.saveResource("messages.yml", false);
-        this.saveResource("cat_images/catImageSample.jpg", false);
-        if(botAcc == 123){
+        if(!getDataFolder().exists()){
             getLogger().warning("请在生成的配置文件中修改相关配置再启动本插件");
+            this.saveDefaultConfig();
+            this.saveResource("messages.yml", false);
+            this.saveResource("cat_images/catImageSample.jpg", false);
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -56,24 +53,13 @@ public class Main extends JavaPlugin implements Listener {
 
         instance = this;
 
-        new BukkitRunnable(){
-            @Override
-            public void run() {
-                getServer().getLogger().info("Mapbot正在登陆，请耐心等待...");
-                BotOperator.login(botAcc, botPassword);
-                BotOperator.getBot().getEventChannel().registerListenerHost(new GroupListeners());
-                BotOperator.send(opGroup, "Mapbot ON");
-                getServer().getLogger().info("Mapbot登陆成功");
-            }
-        }.runTaskAsynchronously(Main.getPlugin(Main.class));
+        BotQQOperator.login();
 
         this.getServer().getPluginManager().registerEvents(this, this);
         this.getServer().getPluginManager().registerEvents(new GameListeners(), this);
 
         Objects.requireNonNull(getCommand("mapbot")).setExecutor(new Mapbot());
         Objects.requireNonNull(getCommand("mapbot")).setTabCompleter(new Mapbot());
-
-        this.getServer().addRecipe(Recipes.elytra);
 
         try {
             DatabaseOperator.init();
@@ -92,10 +78,7 @@ public class Main extends JavaPlugin implements Listener {
             Bukkit.getLogger().warning(e.getClass().getName() + ": " + e.getMessage());
         }
 
-        if(botAcc != 123){
-            BotOperator.send(opGroup, "Mapbot OFF");
-            BotOperator.close();
-        }
+        BotQQOperator.logout();
 
         getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message")));
         getServer().removeRecipe(NamespacedKey.minecraft("newelytra"));

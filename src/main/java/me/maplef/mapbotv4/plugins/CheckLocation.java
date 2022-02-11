@@ -7,6 +7,8 @@ import me.maplef.mapbotv4.exceptions.NoPermissionException;
 import me.maplef.mapbotv4.utils.BotOperator;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.MessageUtils;
+import net.mamoe.mirai.message.data.PlainText;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -46,7 +48,7 @@ public class CheckLocation implements MapbotPlugin {
             return new MessageChainBuilder().append("找不到该玩家或该玩家不在线").build();
 
         msg = msg.substring(0, msg.length() - 2);
-        return new MessageChainBuilder().append(msg).build();
+        return MessageUtils.newChain(new PlainText(msg));
     }
 
     @Override

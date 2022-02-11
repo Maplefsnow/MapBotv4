@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 
 public class GameListeners implements Listener {
     final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
-    private final Long botAcc = config.getLong("bot-account");
     private final Long groupID = config.getLong("player-group");
     private final String msgStart = "&b[&d小枫4号&b] ";
 
@@ -82,7 +81,7 @@ public class GameListeners implements Listener {
             player.sendMessage(CU.t(msgStart + String.format("扣除了你 %d 猫猫积分，本次免疫死亡掉落", cost)));
             player.sendMessage(CU.t(msgStart + "如需关闭本功能请执行 &6/mb help &b以获得帮助"));
             e.setKeepInventory(true); e.setKeepLevel(true);
-            e.getDrops().clear();
+            e.getDrops().clear(); e.setDroppedExp(0);
         }
 
         Location deathLocation = player.getLocation();
@@ -92,13 +91,4 @@ public class GameListeners implements Listener {
         Bukkit.getLogger().info(msg);
         Bukkit.getLogger().info(e.getKeepInventory() ? "keep" : "not keep");
     }
-
-//    @EventHandler
-//    public void AdvancementReward(PlayerAdvancementDoneEvent e){
-//        String msg = e.getAdvancement().getKey().getKey();
-//        if(msg.contains("find_end_city")){
-//            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "givemoney " + e.getPlayer().getName() + " 20");
-//            Bukkit.getLogger().warning("QWQ!!!");
-//        }
-//    }
 }

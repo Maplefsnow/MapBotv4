@@ -43,3 +43,6 @@ permissions:
   mapbot.stopserver:
     description: start a server stopping countdown, send all players to a safer server before shutdown
     default: op
+  mapbot.login:
+    description: login Mapbot QQ Account
+    default: op

@@ -4,6 +4,7 @@ bot-password: 'No_BUG_Report'  # QQ bot password
 player-group: 10000  # the number of QQ group where players are in
 inner-player-group: 10010  # not very useful, just ignore it
 op-group: 10086  # the group where managers and operators in
+check-in-group: 10101  # the group to check in
 
 QWeather-APIKey: 'qwq'  # 和风天气API密钥
 
@@ -13,33 +14,42 @@ keep-inv-cost: 40  #pts  # (ONLY for CatLand, EconomyX is needed)
 haste-per-minute-cost: 3.0  #pts  # (ONLY for CatLand, EconomyX is needed)
 
 tps-check:
-  enabled: true
+  enable: true
   cron: '0 0/1 * * * ?'  # to decide the frequency of TPS-Check
   threshold: 17.0  # ticks  # when server TPS is lower than this number, send a warning message to the op-group above
 
 online-player-record:
-  enabled: true
+  enable: true
   cron: '0 0/10 * * * ?'
 
 daily-greetings:
   morning:
-    enabled: true
+    enable: true
     cron: '0 0 7 * * ?'
     city: '苏州'
   night:
-    enabled: true
+    enable: true
     cron: '0 0 23 * * ?'
+
+player-group-auto-manage:
+  enable: true
+  reject-message: '请加群 705754458 以获取入群验证码'
+
+netease-cloud-music:
+  profile:
+    phone: '10000000000'
+    password: 'qwerty123456'
 
 inner-player-group-auto-manage:
   invite:
-    enabled: true
+    enable: true
     cron: '0 0 0/1 * * ?'
     requirement: 1000  # minutes per week
     blacklist:
       - 'qwq'
       - 'qaq'
   kick:
-    enabled: true
+    enable: true
     cron: '0 0 18 ? * 7'
     requirement: 1000
     whitelist:

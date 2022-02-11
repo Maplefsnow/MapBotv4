@@ -4,6 +4,7 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactory;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.network.WrongPasswordException;
 import net.mamoe.mirai.utils.BotConfiguration;
 import org.bukkit.Bukkit;
 
@@ -17,7 +18,12 @@ public class BotOperator {
             noNetworkLog();
             noBotLog();
         }});
-        bot.login();
+        try {
+            bot.login();
+        } catch (WrongPasswordException e){
+            Bukkit.getServer().getLogger().warning("bot密码输入错误，请检查配置文件！");
+            bot.close();
+        }
     }
 
     public static void close(){

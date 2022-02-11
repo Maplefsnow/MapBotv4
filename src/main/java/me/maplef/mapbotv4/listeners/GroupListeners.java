@@ -1,7 +1,6 @@
 package me.maplef.mapbotv4.listeners;
 
 import me.maplef.mapbotv4.Main;
-import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.CommandNotFoundException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.PluginManager;
@@ -9,11 +8,13 @@ import me.maplef.mapbotv4.plugins.WelcomeNew;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
+import me.maplef.mapbotv4.utils.HttpClient4;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MemberJoinEvent;
+import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
 import net.mamoe.mirai.event.events.MemberLeaveEvent;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
@@ -22,7 +23,6 @@ import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.reflections.Reflections;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -37,7 +37,6 @@ public class GroupListeners extends SimpleListenerHost {
     private final Long botAcc = config.getLong("bot-account");
     private final Long playerGroup = config.getLong("player-group");
     private final Long opGroup = config.getLong("op-group");
-    private final Long innerGroup = config.getLong("inner-player-group");
 
     static final LinkedList<Message> messageRecorder = new LinkedList<>();
     private final String commandPattern = "^#[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s[\\u4E00-\\u9FA5A-Za-z0-9_\\s]+)?$";
@@ -187,14 +186,39 @@ public class GroupListeners extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void onTest(GroupMessageEvent e){
-        if(e.getGroup().getId() != opGroup) return;
+    public void onJoinGroupRequest(MemberJoinRequestEvent e){
+        if(!config.getBoolean("player-group-auto-manage.enable")) return;
+        if(e.getGroupId() != playerGroup) return;
 
-        if(e.getMessage().contentToString().contains("test")){
-            Reflections reflections = new Reflections("me.maplef.mapbotv4.plugins");
-            Set<Class<? extends MapbotPlugin>> classes = reflections.getSubTypesOf(MapbotPlugin.class);
-            for(Class<? extends MapbotPlugin> singleClass : classes)
-                Bukkit.getLogger().info(singleClass.getName());
+        Bukkit.getServer().getLogger().info(e.getMessage());
+
+        if(!e.getMessage().contains("IV")){
+            e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
+            BotOperator.send(opGroup, "已拒绝 " + e.component7() + " 入群");
+            return;
         }
+
+        String code = e.getMessage().split("\n")[1].substring(3);
+        Bukkit.getServer().getLogger().info(code);
+        String url = "https://copa.mrzzj.top/invitecode/check.php?InviteCode=" + code;
+        String resString = HttpClient4.doGet(url);
+
+        if (resString.equals("OK")) {
+            e.accept();
+            BotOperator.send(opGroup, "已同意 " + e.component7() + " 入群");
+        }
+        else {
+            e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
+            BotOperator.send(opGroup, "已拒绝 " + e.component7() + " 入群");
+        }
+    }
+
+    @EventHandler
+    public void onTest(GroupMessageEvent e){
+//        if(e.getGroup().getId() != opGroup) return;
+//
+//        if(e.getMessage().contentToString().contains("test")){
+//
+//        }
     }
 }

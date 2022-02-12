@@ -18,7 +18,7 @@ public class GoodNight implements Job {
         List<String> msg;
         msg = messages.getStringList("good-night-message");
         for(String i : msg){
-            BotOperator.send(groupID, i);
+            BotOperator.sendGroupMessage(groupID, i);
         }
     }
 }

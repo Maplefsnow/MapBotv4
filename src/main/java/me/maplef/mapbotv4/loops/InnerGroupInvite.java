@@ -47,7 +47,7 @@ public class InnerGroupInvite implements Job {
 
                     Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(playerGroup)).get(playerQQ)).sendMessage(inviteGreeting);
 
-                    BotOperator.send(opGroup, String.format("已邀请 %s 进入内群\n", playerName));
+                    BotOperator.sendGroupMessage(opGroup, String.format("已邀请 %s 进入内群\n", playerName));
                     break;
                 }
             }

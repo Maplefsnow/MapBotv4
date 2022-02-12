@@ -16,6 +16,8 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MemberJoinEvent;
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
 import net.mamoe.mirai.event.events.MemberLeaveEvent;
+import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.AtAll;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.Bukkit;
@@ -59,7 +61,7 @@ public class GroupListeners extends SimpleListenerHost {
         } catch (Exception ex){
             ex.printStackTrace();
         }
-        BotOperator.send(e.getGroup().getId(), message.build());
+        BotOperator.sendGroupMessage(e.getGroup().getId(), message.build());
     }
 
     @EventHandler
@@ -70,8 +72,8 @@ public class GroupListeners extends SimpleListenerHost {
         String msg = "", atID = "";
 
         for(Message message : e.getMessage()){
-            if(message.contentToString().startsWith("@")){
-                String atNum = message.contentToString().substring(1);
+            if(message instanceof At){
+                String atNum = String.valueOf(((At) message).getTarget());
                 if(atNum.equals(botAcc.toString())) continue;
 
                 try {
@@ -80,20 +82,22 @@ public class GroupListeners extends SimpleListenerHost {
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 } catch (PlayerNotFoundException ignored){}
+            } else if (message instanceof AtAll){
+                atID = "全体成员";
             }
 
             msg = msg.concat(message.contentToString());
         }
 
         if(msg.length() > config.getInt("message-length-limit")){
-            BotOperator.send(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
+            BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
             return;
         }
 
         for(Player player : Bukkit.getServer().getOnlinePlayers()){
             String msgHead;
             if(!atID.isEmpty()){
-                if(player.getName().equals(atID)){
+                if(player.getName().equals(atID) || atID.equals("全体成员")){
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1f, 1.5f);
                     msgHead = String.format("<&b%s&f> &a&l@%s&f", e.getSender().getNameCard(), atID);
                 } else
@@ -128,7 +132,7 @@ public class GroupListeners extends SimpleListenerHost {
             if(messageRecorder.get(0).contentEquals(messageRecorder.get(1), false) &&
                 messageRecorder.get(1).contentEquals(messageRecorder.get(2), false)){
                 messageRecorder.clear();
-                BotOperator.send(e.getGroup().getId(), e.getMessage());
+                BotOperator.sendGroupMessage(e.getGroup().getId(), e.getMessage());
             }
 
             messageRecorder.clear();
@@ -144,14 +148,14 @@ public class GroupListeners extends SimpleListenerHost {
         if(score < config.getInt("bot-speak-possibility")){
             int col = random.nextInt(messages.getStringList("bot-greetings").size());
             String msg = messages.getStringList("bot-greetings").get(col);
-            BotOperator.send(playerGroup, msg);
+            BotOperator.sendGroupMessage(playerGroup, msg);
         }
     }
 
     @EventHandler
     public void onNewCome(MemberJoinEvent e){
         if(e.getGroupId() != playerGroup) return;
-        BotOperator.send(e.getGroupId(), WelcomeNew.WelcomeMessage());
+        BotOperator.sendGroupMessage(e.getGroupId(), WelcomeNew.WelcomeMessage());
         Bukkit.getServer().broadcastMessage(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.server")));
     }
 
@@ -170,7 +174,7 @@ public class GroupListeners extends SimpleListenerHost {
         } catch (PlayerNotFoundException ignored){}
 
         if(ID == null){
-            reportMsg = String.format("玩家 %s 已退出猫猫大陆，未检测到该玩家的绑定ID行为", e.getMember().getNameCard());
+            reportMsg = String.format("玩家 %s 已退出%s，未检测到该玩家的绑定ID行为", e.getMember().getNameCard(), messages.getString("server-name"));
         } else {
             String whitelistDelCommand = String.format("whitelist remove %s", ID);
             new BukkitRunnable(){
@@ -179,10 +183,10 @@ public class GroupListeners extends SimpleListenerHost {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), whitelistDelCommand);
                 }
             }.runTask(Main.getPlugin(Main.class));
-            reportMsg = String.format("玩家 %s 已退出猫猫大陆，ID绑定已解除，白名单已移除", ID);
+            reportMsg = String.format("玩家 %s 已退出%s，ID绑定已解除，白名单已移除", ID, messages.getString("server-name"));
         }
 
-        BotOperator.send(opGroup, reportMsg);
+        BotOperator.sendGroupMessage(opGroup, reportMsg);
     }
 
     @EventHandler
@@ -194,7 +198,7 @@ public class GroupListeners extends SimpleListenerHost {
 
         if(!e.getMessage().contains("IV")){
             e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
-            BotOperator.send(opGroup, "已拒绝 " + e.component7() + " 入群");
+            BotOperator.sendGroupMessage(opGroup, "已拒绝 " + e.component7() + " 入群");
             return;
         }
 
@@ -205,20 +209,20 @@ public class GroupListeners extends SimpleListenerHost {
 
         if (resString.equals("OK")) {
             e.accept();
-            BotOperator.send(opGroup, "已同意 " + e.component7() + " 入群");
+            BotOperator.sendGroupMessage(opGroup, "已同意 " + e.component7() + " 入群");
         }
         else {
             e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
-            BotOperator.send(opGroup, "已拒绝 " + e.component7() + " 入群");
+            BotOperator.sendGroupMessage(opGroup, "已拒绝 " + e.component7() + " 入群");
         }
     }
 
     @EventHandler
     public void onTest(GroupMessageEvent e){
-//        if(e.getGroup().getId() != opGroup) return;
-//
-//        if(e.getMessage().contentToString().contains("test")){
-//
-//        }
+        if(e.getGroup().getId() != opGroup) return;
+
+        if(e.getMessage().contentToString().contains("test")){
+            Bukkit.getServer().getLogger().info("test!");
+        }
     }
 }

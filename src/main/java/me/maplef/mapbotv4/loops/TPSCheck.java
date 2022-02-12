@@ -27,12 +27,12 @@ public class TPSCheck implements Job {
         tps = PlaceholderAPI.setPlaceholders(player, tps);
         if (Float.parseFloat(tps) < tpsThreshold) {
             if(tpsLowCount < 2){
-                BotOperator.send(opGroup, String.format("检测到服务器tps已低于%.1f，当前tps: %s", tpsThreshold, tps));
+                BotOperator.sendGroupMessage(opGroup, String.format("检测到服务器tps已低于%.1f，当前tps: %s", tpsThreshold, tps));
                 tpsLowCount++;
             } else {
                 if(!tpsWarnFlag){
-                    BotOperator.send(opGroup, String.format("检测到服务器tps已低于%.1f，当前tps: %s", tpsThreshold, tps));
-                    BotOperator.send(opGroup, String.format("服务器tps已连续3分钟低于%.1f，将暂停tps告警直至tps回升至%.1f以上", tpsThreshold, tpsThreshold));
+                    BotOperator.sendGroupMessage(opGroup, String.format("检测到服务器tps已低于%.1f，当前tps: %s", tpsThreshold, tps));
+                    BotOperator.sendGroupMessage(opGroup, String.format("服务器tps已连续3分钟低于%.1f，将暂停tps告警直至tps回升至%.1f以上", tpsThreshold, tpsThreshold));
                     tpsWarnFlag = true;
                 }
             }

@@ -29,7 +29,7 @@ public class BotQQOperator implements MapbotPlugin {
                 getServer().getLogger().info("Mapbot正在登陆，请耐心等待...");
                 BotOperator.login(botAcc, botPassword);
                 BotOperator.getBot().getEventChannel().registerListenerHost(new GroupListeners());
-                BotOperator.send(opGroup, "Mapbot ON");
+                BotOperator.sendGroupMessage(opGroup, "Mapbot ON");
                 getServer().getLogger().info("Mapbot登陆成功");
             }
         }.runTaskAsynchronously(Main.getPlugin(Main.class));
@@ -37,7 +37,7 @@ public class BotQQOperator implements MapbotPlugin {
 
     public static void logout(){
         try {
-            BotOperator.send(opGroup, "Mapbot OFF");
+            BotOperator.sendGroupMessage(opGroup, "Mapbot OFF");
             BotOperator.close();
         } catch (Exception ignored) {}
     }

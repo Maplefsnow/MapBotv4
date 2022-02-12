@@ -19,14 +19,14 @@ public class GoodMorning implements Job{
 
         long groupID = config.getLong("player-group");
 
-        BotOperator.send(groupID, "现在是北京时间早上7点整，早上好！小枫4号随时为您效劳");
-        BotOperator.send(groupID, worldNews.SendNews(groupID));
+        BotOperator.sendGroupMessage(groupID, "现在是北京时间早上7点整，早上好！小枫4号随时为您效劳");
+        BotOperator.sendGroupMessage(groupID, worldNews.SendNews(groupID));
         try {
-            BotOperator.send(groupID, String.format("这是今天的天气早报：\n%s", Weather.WeatherMessage(config.getString("daily-greetings.morning.city"))));
+            BotOperator.sendGroupMessage(groupID, String.format("这是今天的天气早报：\n%s", Weather.WeatherMessage(config.getString("daily-greetings.morning.city"))));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        BotOperator.send(groupID, Hitokoto.HitokotoMessage());
-        BotOperator.send(groupID, "早安，" + messages.getString("server-name"));
+        BotOperator.sendGroupMessage(groupID, Hitokoto.HitokotoMessage());
+        BotOperator.sendGroupMessage(groupID, "早安，" + messages.getString("server-name"));
     }
 }

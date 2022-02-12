@@ -10,7 +10,6 @@ QWeather-APIKey: 'qwq'  # 和风天气API密钥
 
 message-length-limit: 60  # chars  # the maximum of a group message to be transferred to the MC server
 bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility
-keep-inv-cost: 40  #pts  # (ONLY for CatLand, EconomyX is needed)
 haste-per-minute-cost: 3.0  #pts  # (ONLY for CatLand, EconomyX is needed)
 
 tps-check:
@@ -21,6 +20,11 @@ tps-check:
 online-player-record:
   enable: true
   cron: '0 0/10 * * * ?'
+
+keep-inventory:
+  enable: true
+  death-log: true  # log the death location to console
+  cost: 40  # (ONLY for CatLand, EconomyX is needed)
 
 daily-greetings:
   morning:

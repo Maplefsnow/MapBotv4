@@ -53,6 +53,6 @@ public class InnerGroupKick implements Job {
         StringBuilder kickMsg = new StringBuilder(String.format("从内群中移出了 %d 名玩家：\n", kickList.size()));
         for(String name : kickList) kickMsg.append(name).append(", ");
         String msg = kickMsg.toString();
-        BotOperator.send(opGroup, msg.substring(0, msg.length()-2));
+        BotOperator.sendGroupMessage(opGroup, msg.substring(0, msg.length()-2));
     }
 }

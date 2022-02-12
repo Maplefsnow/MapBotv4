@@ -21,9 +21,11 @@ import java.sql.SQLException;
 import java.util.regex.Pattern;
 
 public class GameListeners implements Listener {
-    final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
+    final FileConfiguration config = Main.getInstance().getConfig();
+    final FileConfiguration messages = Main.getInstance().getMessageConfig();
+
     private final Long groupID = config.getLong("player-group");
-    private final String msgStart = "&b[&d小枫4号&b] ";
+    private final String msgPrefix = messages.getString("message-prefix");
 
     @EventHandler
     public void MessageReceive(AsyncPlayerChatEvent e) {
@@ -45,7 +47,7 @@ public class GameListeners implements Listener {
             msg.append(player.getName()).append(": ").append(e.getMessage());
         }
 
-        BotOperator.send(groupID, msg.build());
+        BotOperator.sendGroupMessage(groupID, msg.build());
     }
 
     @EventHandler
@@ -57,7 +59,6 @@ public class GameListeners implements Listener {
         }
 
         int keep = 0;
-
         try {
             Object tmp = DatabaseOperator.query(player.getName()).get("KEEPINV");
             if(tmp != null)
@@ -67,28 +68,34 @@ public class GameListeners implements Listener {
         }
 
         if(keep == 1){
-            String moneyString = PlaceholderAPI.setPlaceholders(player, "%vault_eco_balance_fixed%");
-            float money = Float.parseFloat(moneyString);
-            int cost = config.getInt("keep-inv-cost");
+            if(config.getBoolean("keep-inventory.enable")){
+                String moneyString = PlaceholderAPI.setPlaceholders(player, "%vault_eco_balance_fixed%");
+                float money = Float.parseFloat(moneyString);
+                int cost = config.getInt("keep-inventory.cost");
 
-            if(money < cost){
-                player.sendMessage(CU.t(msgStart + "你没有足够的猫猫积分以免疫死亡不掉落"));
-                return;
+                if(money < cost){
+                    player.sendMessage(CU.t(msgPrefix + "你没有足够的猫猫积分以免疫死亡不掉落"));
+                    return;
+                }
+
+                String takeMoneyCommand = String.format("money take %s %d", player.getName(), cost);
+                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), takeMoneyCommand);
+                player.sendMessage(CU.t(msgPrefix + String.format("扣除了你 %d 猫猫积分，本次免疫死亡掉落", cost)));
+                player.sendMessage(CU.t(msgPrefix + "如需关闭本功能请执行 &6/mb help &b以获得帮助"));
+                e.setKeepInventory(true); e.setKeepLevel(true);
+                e.getDrops().clear(); e.setDroppedExp(0);
+            } else {
+                player.sendMessage(CU.t(msgPrefix + "管理员未开启积分换取死亡不掉落功能"));
             }
-
-            String takeMoneyCommand = String.format("money take %s %d", player.getName(), cost);
-            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), takeMoneyCommand);
-            player.sendMessage(CU.t(msgStart + String.format("扣除了你 %d 猫猫积分，本次免疫死亡掉落", cost)));
-            player.sendMessage(CU.t(msgStart + "如需关闭本功能请执行 &6/mb help &b以获得帮助"));
-            e.setKeepInventory(true); e.setKeepLevel(true);
-            e.getDrops().clear(); e.setDroppedExp(0);
         }
 
-        Location deathLocation = player.getLocation();
-        String msg = String.format("玩家 %s 在 %s 的 (%d, %d, %d) 位置死亡",
-                player.getName(), deathLocation.getWorld(),
-                deathLocation.getBlockX(), deathLocation.getBlockY(), deathLocation.getBlockZ());
-        Bukkit.getLogger().info(msg);
-        Bukkit.getLogger().info(e.getKeepInventory() ? "keep" : "not keep");
+        if(config.getBoolean("keep-inventory.death-log")){
+            Location deathLocation = player.getLocation();
+            String msg = String.format("玩家 %s 在世界 %s 的 (%d, %d, %d) 位置死亡，背包物品已%s",
+                    player.getName(), deathLocation.getWorld(),
+                    deathLocation.getBlockX(), deathLocation.getBlockY(), deathLocation.getBlockZ(),
+                    e.getKeepInventory() ? "保留" : "掉落");
+            Bukkit.getServer().getLogger().info(msg);
+        }
     }
 }

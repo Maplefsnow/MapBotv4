@@ -2,7 +2,6 @@ package me.maplef.mapbotv4.utils;
 
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactory;
-import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.network.WrongPasswordException;
 import net.mamoe.mirai.utils.BotConfiguration;
@@ -30,7 +29,7 @@ public class BotOperator {
         bot.close();
     }
 
-    public static void send(Long groupID, MessageChain message){
+    public static void sendGroupMessage(Long groupID, MessageChain message){
         try{
             Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
         } catch (NullPointerException e){
@@ -38,15 +37,7 @@ public class BotOperator {
         }
     }
 
-    public static void send(Long groupID, String message){
-        try{
-            Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
-        } catch (NullPointerException e){
-            Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
-        }
-    }
-
-    public static void send(Long groupID, Message message){
+    public static void sendGroupMessage(Long groupID, String message){
         try{
             Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
         } catch (NullPointerException e){

@@ -24,12 +24,15 @@ bot-greetings:
   - '你喜欢喝什么奶茶？'
 
 welcome-new-message:
-  group:
-    - '这里是小枫4号，欢迎你加入猫猫大陆！'
-    - '服务器版本: 1.18'
-    - '猫猫大陆官方论坛: www.catland.top'
-    - '祝你在猫猫大陆玩的开心！'
-  server: '&a有新猫猫加入猫猫大陆啦，快在群里欢迎ta吧！'
+  player-group:
+    group:
+      - '这里是小枫4号，欢迎你加入猫猫大陆！'
+      - '服务器版本: 1.18'
+      - '猫猫大陆官方论坛: www.catland.top'
+      - '祝你在猫猫大陆玩的开心！'
+    server: '&a有新猫猫加入猫猫大陆啦，快在群里欢迎ta吧！'
+  check-in-group:
+    group: '欢迎初次来到猫猫大陆，请注册并登录论坛 https://www.catland.top，在【审核专区】板块获取审核问卷链接'
 
 good-night-message:
   - '现在是北京时间晚上11点整'

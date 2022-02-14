@@ -3,7 +3,8 @@ package me.maplef.mapbotv4.plugins;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
-import me.maplef.mapbotv4.listeners.GroupListeners;
+import me.maplef.mapbotv4.listeners.CheckInGroupListeners;
+import me.maplef.mapbotv4.listeners.PlayerGroupListeners;
 import me.maplef.mapbotv4.utils.BotOperator;
 import net.mamoe.mirai.message.data.MessageChain;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -29,7 +30,8 @@ public class BotQQOperator implements MapbotPlugin {
             public void run() {
                 getServer().getLogger().info("Mapbot正在登陆，请耐心等待...");
                 BotOperator.login(botAcc, botPassword);
-                BotOperator.getBot().getEventChannel().registerListenerHost(new GroupListeners());
+                BotOperator.getBot().getEventChannel().registerListenerHost(new PlayerGroupListeners());
+                BotOperator.getBot().getEventChannel().registerListenerHost(new CheckInGroupListeners());
                 BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
                 getServer().getLogger().info("Mapbot登陆成功");
             }

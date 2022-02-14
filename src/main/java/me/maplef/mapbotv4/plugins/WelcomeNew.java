@@ -11,7 +11,7 @@ public class WelcomeNew{
     public static MessageChain WelcomeMessage() {
         StringBuilder msg = new StringBuilder();
 
-        for(String singleMsg : messages.getStringList("welcome-new-message.group"))
+        for(String singleMsg : messages.getStringList("welcome-new-message.player-group.group"))
             msg.append(singleMsg).append("\n");
 
         return new MessageChainBuilder().append(msg.toString().trim()).build();

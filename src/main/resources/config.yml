@@ -1,6 +1,8 @@
 bot-account: 123  # QQ bot account
 bot-password: 'No_BUG_Report'  # QQ bot password
 
+super-admin-account: [123, 456]
+
 player-group: 10000  # the number of QQ group where players are in
 inner-player-group: 10010  # not very useful, just ignore it
 op-group: 10086  # the group where managers and operators in
@@ -40,6 +42,9 @@ daily-greetings:
 player-group-auto-manage:
   enable: true
   reject-message: '请加群 705754458 以获取入群验证码'
+
+check-in-group-auto-manage:
+  enable: true
 
 netease-cloud-music:
   profile:

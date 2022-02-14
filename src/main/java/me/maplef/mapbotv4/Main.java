@@ -80,7 +80,7 @@ public class Main extends JavaPlugin implements Listener {
 
         BotQQOperator.logout();
 
-        getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message")));
+        getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message.server")));
         getServer().removeRecipe(NamespacedKey.minecraft("newelytra"));
         getLogger().info(messageConfig.getString("disable-message.console"));
     }

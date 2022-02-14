@@ -97,7 +97,9 @@ public class BindIDAndQQ implements MapbotPlugin {
         String fixedName = (String) DatabaseOperator.query(name).get("NAME");
         long targetQQ = Long.parseLong(DatabaseOperator.query(name).get("QQ").toString());
 
-        if(Objects.requireNonNull(bot.getGroup(opGroup)).contains(targetQQ)) throw new Exception("你没有权限解绑一位op的ID");
+        if(!Objects.requireNonNull(config.getLongList("super-admin-account")).contains(senderID) &&
+            Objects.requireNonNull(bot.getGroup(opGroup)).contains(targetQQ))
+            throw new Exception("你没有权限解绑一位op的ID");
 
         DatabaseOperator.executeCommand(String.format("DELETE FROM PLAYER WHERE NAME = '%s';", fixedName));
         String whitelistDelCommand = String.format("whitelist remove %s", fixedName);

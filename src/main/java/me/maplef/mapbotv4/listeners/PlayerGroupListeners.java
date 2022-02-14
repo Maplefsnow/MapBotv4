@@ -27,7 +27,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.regex.Pattern;
 
-public class GroupListeners extends SimpleListenerHost {
+public class PlayerGroupListeners extends SimpleListenerHost {
     final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
     final FileConfiguration messages = Main.getInstance().getMessageConfig();
 
@@ -155,7 +155,7 @@ public class GroupListeners extends SimpleListenerHost {
         if(e.getGroupId() != playerGroup) return;
 
         BotOperator.sendGroupMessage(e.getGroupId(), WelcomeNew.WelcomeMessage());
-        Bukkit.getServer().broadcastMessage(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.server")));
+        Bukkit.getServer().broadcastMessage(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.player-group.server")));
         if(Objects.requireNonNull(bot.getGroup(checkInGroup)).contains(e.getMember().getId())){
             MessageChainBuilder congratulationMsg = new MessageChainBuilder();
             congratulationMsg.append("恭喜").append(new At(e.getMember().getId())).append(" 通过了审核，正式成为猫猫大陆的一员！");

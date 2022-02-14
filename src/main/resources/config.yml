@@ -12,6 +12,8 @@ message-length-limit: 60  # chars  # the maximum of a group message to be transf
 bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility
 haste-per-minute-cost: 3.0  #pts  # (ONLY for CatLand, EconomyX is needed)
 
+command-prefix: '#'
+
 tps-check:
   enable: true
   cron: '0 0/1 * * * ?'  # to decide the frequency of TPS-Check

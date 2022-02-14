@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("unused")
 public class BindIDAndQQ implements MapbotPlugin {
     static final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
     private static final Long opGroup = config.getLong("op-group");

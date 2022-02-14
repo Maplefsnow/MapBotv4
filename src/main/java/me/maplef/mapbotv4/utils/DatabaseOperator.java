@@ -45,8 +45,8 @@ public class DatabaseOperator {
         if(arg instanceof String) name = (String) arg;
         else if (arg instanceof Long) QQ = (Long) arg;
 
-        try(Statement stmt = c.createStatement();
-            ResultSet res = stmt.executeQuery("SELECT * FROM PLAYER;")){
+        try(Statement stmt = c.createStatement()){
+            ResultSet res = stmt.executeQuery("SELECT * FROM PLAYER;");
             while(res.next()){
                 if(res.getString("NAME").toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT)) || res.getLong("QQ") == QQ){
                     found = true;

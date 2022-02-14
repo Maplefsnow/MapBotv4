@@ -41,7 +41,7 @@ public class GameListeners implements Listener {
                 long atQQ = Long.parseLong(DatabaseOperator.query(atName).get("QQ").toString());
                 msg.append(player.getName()).append(": ").append(new At(atQQ)).append(atMsg.substring(atName.length())).build();
             } catch (SQLException | PlayerNotFoundException ex) {
-                ex.printStackTrace();
+                Bukkit.getServer().getLogger().warning(ex.getClass().getName() + ": " + ex.getMessage());
             }
         } else {
             msg.append(player.getName()).append(": ").append(e.getMessage());

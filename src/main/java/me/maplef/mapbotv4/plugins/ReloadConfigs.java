@@ -22,7 +22,7 @@ public class ReloadConfigs implements MapbotPlugin {
         if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
 
-        Main.getInstance().registerConfig();
+        Main.getInstance().reloadConfig();
 
         return new MessageChainBuilder().append("配置文件重载完毕").build();
     }
@@ -49,5 +49,4 @@ public class ReloadConfigs implements MapbotPlugin {
         return info;
     }
 
-    public ReloadConfigs(){}
 }

@@ -8,7 +8,6 @@ import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.Scheduler;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -31,10 +30,11 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        getLogger().info("MapBot已启用！");
-
         getConfig().options().copyDefaults(); registerConfig();
         getMessageConfig().options().copyDefaults();
+
+        Bukkit.getServer().getLogger().info(messageConfig.getString("enable-message.console"));
+
         if(!getDataFolder().exists()){
             getLogger().warning("请在生成的配置文件中修改相关配置再启动本插件");
             this.saveDefaultConfig();
@@ -66,7 +66,7 @@ public class Main extends JavaPlugin implements Listener {
             LoopJobManager.register();
         } catch (SQLException ignored){}
 
-        getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("enable-message")));
+        getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("enable-message.server")));
     }
 
     @Override
@@ -82,7 +82,7 @@ public class Main extends JavaPlugin implements Listener {
 
         getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message")));
         getServer().removeRecipe(NamespacedKey.minecraft("newelytra"));
-        getLogger().info(ChatColor.RED + "MapBot已停止运行，感谢使用。");
+        getLogger().info(messageConfig.getString("disable-message.console"));
     }
 
     public static Main getInstance() {

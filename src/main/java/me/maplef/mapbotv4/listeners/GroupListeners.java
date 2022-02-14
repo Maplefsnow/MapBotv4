@@ -16,10 +16,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MemberJoinEvent;
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
 import net.mamoe.mirai.event.events.MemberLeaveEvent;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.AtAll;
-import net.mamoe.mirai.message.data.Message;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -39,9 +36,10 @@ public class GroupListeners extends SimpleListenerHost {
     private final Long botAcc = config.getLong("bot-account");
     private final Long playerGroup = config.getLong("player-group");
     private final Long opGroup = config.getLong("op-group");
+    private final Long checkInGroup = config.getLong("check-in-group");
 
     static final LinkedList<Message> messageRecorder = new LinkedList<>();
-    private final String commandPattern = "^#[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s[\\u4E00-\\u9FA5A-Za-z0-9_\\s]+)?$";
+    private final String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s[\\u4E00-\\u9FA5A-Za-z0-9_\\s]+)?$";
 
     @EventHandler
     public void onCommandReceive(GroupMessageEvent e){
@@ -155,8 +153,14 @@ public class GroupListeners extends SimpleListenerHost {
     @EventHandler
     public void onNewCome(MemberJoinEvent e){
         if(e.getGroupId() != playerGroup) return;
+
         BotOperator.sendGroupMessage(e.getGroupId(), WelcomeNew.WelcomeMessage());
         Bukkit.getServer().broadcastMessage(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.server")));
+        if(Objects.requireNonNull(bot.getGroup(checkInGroup)).contains(e.getMember().getId())){
+            MessageChainBuilder congratulationMsg = new MessageChainBuilder();
+            congratulationMsg.append("恭喜").append(new At(e.getMember().getId())).append(" 通过了审核，正式成为猫猫大陆的一员！");
+            BotOperator.sendGroupMessage(checkInGroup, congratulationMsg.build());
+        }
     }
 
     @EventHandler
@@ -222,7 +226,7 @@ public class GroupListeners extends SimpleListenerHost {
         if(e.getGroup().getId() != opGroup) return;
 
         if(e.getMessage().contentToString().contains("test")){
-            Bukkit.getServer().getLogger().info("test!");
+            Bukkit.getServer().getLogger().info("tested!");
         }
     }
 }

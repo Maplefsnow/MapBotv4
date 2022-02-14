@@ -2,8 +2,14 @@ message-prefix: '&c[&f小枫4号&b] '
 
 server-name: '猫猫大陆'
 
-enable-message: '&aMapbot已启用！'
-disable-message: '&cMapbot已关闭！'
+enable-message:
+  console: '&aMapbot已启用！'
+  server: '&a小枫4号已启用！'
+  op-group: 'Mapbot ON'
+disable-message:
+  console: '&cMapbot已关闭！'
+  server: '&c小枫4号已关闭！'
+  op-group: 'Mapbot OFF'
 
 bot-greetings:
   - '今天晚上吃点什么？'

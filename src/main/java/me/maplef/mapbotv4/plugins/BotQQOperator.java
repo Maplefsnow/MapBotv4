@@ -16,7 +16,8 @@ import java.util.Map;
 import static org.bukkit.Bukkit.getServer;
 
 public class BotQQOperator implements MapbotPlugin {
-    static final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
+    static final FileConfiguration config = Main.getInstance().getConfig();
+    static final FileConfiguration messageConfig = Main.getInstance().getMessageConfig();
 
     public static final Long botAcc = config.getLong("bot-account");
     public static final Long opGroup = config.getLong("op-group");
@@ -29,7 +30,7 @@ public class BotQQOperator implements MapbotPlugin {
                 getServer().getLogger().info("Mapbot正在登陆，请耐心等待...");
                 BotOperator.login(botAcc, botPassword);
                 BotOperator.getBot().getEventChannel().registerListenerHost(new GroupListeners());
-                BotOperator.sendGroupMessage(opGroup, "Mapbot ON");
+                BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
                 getServer().getLogger().info("Mapbot登陆成功");
             }
         }.runTaskAsynchronously(Main.getPlugin(Main.class));
@@ -37,7 +38,7 @@ public class BotQQOperator implements MapbotPlugin {
 
     public static void logout(){
         try {
-            BotOperator.sendGroupMessage(opGroup, "Mapbot OFF");
+            BotOperator.sendGroupMessage(opGroup, messageConfig.getString("disable-message.op-group"));
             BotOperator.close();
         } catch (Exception ignored) {}
     }

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class PluginManager {
+    @SuppressWarnings("unchecked")
     public static MessageChain commandHandler(String command, Long groupID, Long senderID , String[] args) throws Exception{
         Reflections reflections = new Reflections("me.maplef.mapbotv4.plugins");
         Set<Class<? extends MapbotPlugin>> pluginClasses = reflections.getSubTypesOf(MapbotPlugin.class);

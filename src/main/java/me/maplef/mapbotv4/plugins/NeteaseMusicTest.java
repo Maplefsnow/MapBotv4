@@ -76,14 +76,6 @@ public class NeteaseMusicTest implements MapbotPlugin {
         return MessageUtils.newChain(new PlainText(String.format("\"%s\" 的搜索结果:\n%s", songName, resString)));
     }
 
-    private String getMp3Url(String songName){
-        String address = DOMAIN + "/cloudsearch";
-
-
-
-        return null;
-    }
-
     private String getMusicID(String songName){
         String address = DOMAIN + "/cloudsearch";
 
@@ -109,7 +101,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
                 return search(args[1]);
             }
             default:
-                throw new IllegalStateException("Unexpected value: " + args[0]);
+                throw new IllegalStateException("未知的参数: " + args[0]);
         }
     }
 

@@ -12,9 +12,7 @@ import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.HttpClient4;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -46,38 +44,57 @@ public class BindIDAndQQ implements MapbotPlugin {
             throw new Exception("你已经绑定id了，如需更改请联系管理组");
         } catch (PlayerNotFoundException ignored){}
 
-        String mojangUrl = "https://api.mojang.com/users/profiles/minecraft/";
-        String url = mojangUrl.concat(args[0]);
-        String jsonString;
-        try{
-            jsonString = HttpClient4.doGet(url);
-        } catch (Exception exception){
-            throw new Exception("该ID非正版ID，请检查输入是否正确");
+        String fixedUUID, MCID;
+        if(config.getBoolean("bind-id-and-qq.online-mode")){
+            String mojangUrl = "https://api.mojang.com/users/profiles/minecraft/";
+            String url = mojangUrl.concat(args[0]);
+            String jsonString;
+            try{
+                jsonString = HttpClient4.doGet(url);
+            } catch (Exception exception){
+                throw new Exception("该ID非正版ID，请检查输入是否正确");
+            }
+            JSONObject jsonRes = JSON.parseObject(jsonString);
+
+            if(jsonRes == null) throw new Exception("向mojang服务器请求认证用户名失败，请稍后重试");
+
+            StringBuilder fixedUUIDBuilder = new StringBuilder().append(jsonRes.getString("id"));
+            fixedUUIDBuilder.insert(8, '-'); fixedUUIDBuilder.insert(13, '-');
+            fixedUUIDBuilder.insert(18, '-'); fixedUUIDBuilder.insert(23, '-');
+
+            MCID = jsonRes.getString("name");
+            fixedUUID = fixedUUIDBuilder.toString();
+        } else {
+            MCID = args[0]; fixedUUID = "";
         }
-        JSONObject jsonRes = JSON.parseObject(jsonString);
-
-        if(jsonRes == null) throw new Exception("向mojang服务器请求认证用户名失败，请稍后重试");
-
-        StringBuilder fixedUUID = new StringBuilder().append(jsonRes.getString("id"));
-        fixedUUID.insert(8, '-'); fixedUUID.insert(13, '-');
-        fixedUUID.insert(18, '-'); fixedUUID.insert(23, '-');
-        String MCID = jsonRes.getString("name");
 
         String order = String.format("INSERT INTO PLAYER (NAME, QQ, UUID, KEEPINV, MSGREC) VALUES ('%s', '%s', '%s', 0, 1);", MCID, senderID, fixedUUID);
         DatabaseOperator.executeCommand(order);
-        String whitelistAddCommand = String.format("whitelist add %s", MCID);
-        new BukkitRunnable(){
-            @Override
-            public void run(){
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), whitelistAddCommand);
-            }
-        }.runTask(Main.getPlugin(Main.class));
-        Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(playerGroup)).get(senderID)).setNameCard(MCID);
 
-        return new MessageChainBuilder().append(new At(senderID)).append(" 绑定ID成功，白名单已添加").build();
+        if(config.getBoolean("bind-id-and-qq.whitelist")){
+            String whitelistAddCommand = String.format("whitelist add %s", MCID);
+            new BukkitRunnable(){
+                @Override
+                public void run(){
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), whitelistAddCommand);
+                }
+            }.runTask(Main.getPlugin(Main.class));
+        }
+
+        if(config.getBoolean("bind-id-and-qq.modify-namecard")){
+            Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(playerGroup)).get(senderID)).setNameCard(MCID);
+        }
+
+        return config.getBoolean("bind-id-and-qq.whitelist") ?
+                new MessageChainBuilder().append(new At(senderID)).append(" 绑定ID成功，白名单已添加").build() :
+                new MessageChainBuilder().append(new At(senderID)).append(" 绑定ID成功").build();
     }
 
     public static MessageChain update(Long groupID, Long senderID, String[] args) throws PlayerNotFoundException, SQLException {
+        if(!config.getBoolean("bind-id-and-qq.online-mode")){
+            return MessageUtils.newChain(new At(senderID), new PlainText(" 目前使用离线模式，无法与 mojang 服务器通信更新id，请联系管理员手动更新"));
+        }
+
         String mojangURL = "https://sessionserver.mojang.com/session/minecraft/profile/";
 
         String UUID = (String) DatabaseOperator.query(senderID).get("UUID");

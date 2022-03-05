@@ -124,7 +124,9 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
     @EventHandler
     public void onRepeat(GroupMessageEvent e){
+        if(!config.getBoolean("bot-repeater.enabled")) return;
         if(e.getGroup().getId() != playerGroup) return;
+
         messageRecorder.push(e.getMessage());
         if(messageRecorder.size() == 3){
             if(messageRecorder.get(0).contentEquals(messageRecorder.get(1), false) &&

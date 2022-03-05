@@ -84,7 +84,10 @@ public class StopServer implements MapbotPlugin {
             public void run() {
                 if(countdown == 0 && stopFlag){
                     Bukkit.getServer().broadcastMessage(CU.t(msgStart + "&c&l服务器正在关闭..."));
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stpall catland-shelter");
+
+                    if(config.getBoolean("stop-server.teleport-players.enabled"))
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stpall " + config.getString("stop-server.teleport-players.target-server"));
+
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stop");
                     cancel(); return;
                 }

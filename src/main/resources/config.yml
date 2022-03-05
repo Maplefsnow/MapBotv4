@@ -1,7 +1,7 @@
 bot-account: 123  # QQ bot account
 bot-password: 'No_BUG_Report'  # QQ bot password
 
-super-admin-account: [123, 456]
+super-admin-account: [123, 456]  # super administrator accounts
 
 player-group: 10000  # the number of QQ group where players are in
 inner-player-group: 10010  # not very useful, just ignore it
@@ -11,10 +11,16 @@ check-in-group: 10101  # the group to check in
 QWeather-APIKey: 'qwq'  # 和风天气API密钥
 
 message-length-limit: 60  # chars  # the maximum of a group message to be transferred to the MC server
-bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility
+bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility, set to 0 to disable
 haste-per-minute-cost: 3.0  #pts  # (ONLY for CatLand, EconomyX is needed)
 
 command-prefix: '#'
+
+bind-id-and-qq:
+  # this function must be enabled
+  online-mode: true
+  whitelist: true
+  modify-namecard: true
 
 tps-check:
   enable: true
@@ -28,7 +34,12 @@ online-player-record:
 keep-inventory:
   enable: true
   death-log: true  # log the death location to console
-  cost: 40  # (ONLY for CatLand, EconomyX is needed)
+  cost: 40  # (ONLY for CatLand, XConomy is needed)
+
+stop-server:
+  teleport-players:
+    enabled: true
+    target-server: 'catland-shelter'
 
 daily-greetings:
   morning:
@@ -38,6 +49,9 @@ daily-greetings:
   night:
     enable: true
     cron: '0 0 23 * * ?'
+
+bot-repeater:
+  enabled: true
 
 player-group-auto-manage:
   enable: true

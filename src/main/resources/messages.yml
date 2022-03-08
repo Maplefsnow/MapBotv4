@@ -27,12 +27,19 @@ welcome-new-message:
   player-group:
     group:
       - '这里是小枫4号，欢迎你加入猫猫大陆！'
-      - '服务器版本: 1.18'
+      - '服务器版本: 1.18.1'
       - '猫猫大陆官方论坛: www.catland.top'
       - '祝你在猫猫大陆玩的开心！'
     server: '&a有新猫猫加入猫猫大陆啦，快在群里欢迎ta吧！'
   check-in-group:
     group: '欢迎初次来到猫猫大陆，请注册并登录论坛 https://www.catland.top，在【审核专区】板块获取审核问卷链接'
+
+congratulation-message: '恭喜 {PLAYER} 通过了审核，正式成为猫猫大陆的一员！'
+
+exit-player-group-message:
+  player-group: '玩家 {PLAYER} 掉出了这个世界！'
+  op-group: '{PLAYER} 已退出玩家群'
+  server: '{PLAYER} 退出了 {SERVERNAME}，有缘再会'
 
 good-night-message:
   - '现在是北京时间晚上11点整'

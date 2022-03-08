@@ -159,9 +159,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         BotOperator.sendGroupMessage(e.getGroupId(), WelcomeNew.WelcomeMessage());
         Bukkit.getServer().broadcastMessage(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.player-group.server")));
         if(Objects.requireNonNull(bot.getGroup(checkInGroup)).contains(e.getMember().getId())){
-            MessageChainBuilder congratulationMsg = new MessageChainBuilder();
-            congratulationMsg.append("恭喜").append(new At(e.getMember().getId())).append(" 通过了审核，正式成为猫猫大陆的一员！");
-            BotOperator.sendGroupMessage(checkInGroup, congratulationMsg.build());
+            BotOperator.sendGroupMessage(checkInGroup, Objects.requireNonNull(messages.getString("congratulation-message")).replace("{PLAYER}", e.getMember().getNick()));
         }
     }
 
@@ -171,7 +169,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         Long QQ = e.getMember().getId();
         String ID = null;
-        String reportMsg;
+        String playerGroupMsg, opGroupMsg;
 
         try{
             ID = DatabaseOperator.query(QQ).get("NAME").toString();
@@ -180,7 +178,14 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         } catch (PlayerNotFoundException ignored){}
 
         if(ID == null){
-            reportMsg = String.format("玩家 %s 已退出%s，未检测到该玩家的绑定ID行为", e.getMember().getNameCard(), messages.getString("server-name"));
+            opGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))
+                    .replace("{PLAYER}", e.getMember().getNameCard())
+                    .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")))
+                    + "，未检测到该玩家的绑定ID行为";
+
+            playerGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))
+                    .replace("{PLAYER}", e.getMember().getNameCard())
+                    .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")));
         } else {
             String whitelistDelCommand = String.format("whitelist remove %s", ID);
             new BukkitRunnable(){
@@ -189,10 +194,19 @@ public class PlayerGroupListeners extends SimpleListenerHost {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), whitelistDelCommand);
                 }
             }.runTask(Main.getPlugin(Main.class));
-            reportMsg = String.format("玩家 %s 已退出%s，ID绑定已解除，白名单已移除", ID, messages.getString("server-name"));
+
+            playerGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.player-group"))
+                    .replace("{PLAYER}", ID)
+                    .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")));
+
+            opGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))
+                    .replace("{PLAYER}", ID)
+                    .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")))
+                    + "，ID绑定已解除，白名单已移除";
         }
 
-        BotOperator.sendGroupMessage(opGroup, reportMsg);
+        BotOperator.sendGroupMessage(playerGroup, playerGroupMsg);
+        BotOperator.sendGroupMessage(opGroup, opGroupMsg);
     }
 
     @EventHandler

@@ -8,7 +8,6 @@ import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.Scheduler;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
@@ -23,10 +22,7 @@ public class Main extends JavaPlugin implements Listener {
     private FileConfiguration onlineTimeConfig;
     private static Main instance;
 
-    public final Long botAcc = getConfig().getLong("bot-account");
     public final Long opGroup = getConfig().getLong("op-group");
-
-    private final String botPassword = getConfig().getString("bot-password");
 
     @Override
     public void onEnable() {
@@ -81,7 +77,6 @@ public class Main extends JavaPlugin implements Listener {
         BotQQOperator.logout();
 
         getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message.server")));
-        getServer().removeRecipe(NamespacedKey.minecraft("newelytra"));
         getLogger().info(messageConfig.getString("disable-message.console"));
     }
 

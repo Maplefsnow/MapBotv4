@@ -23,6 +23,7 @@ public class ReloadConfigs implements MapbotPlugin {
             throw new NoPermissionException();
 
         Main.getInstance().reloadConfig();
+        Main.getInstance().registerConfig();
 
         return new MessageChainBuilder().append("配置文件重载完毕").build();
     }

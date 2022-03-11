@@ -1,14 +1,12 @@
 package me.maplef.mapbotv4.plugins;
 
-import me.clip.placeholderapi.PlaceholderAPI;
+import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.GroupNotAllowedException;
-import me.maplef.mapbotv4.Main;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -21,22 +19,12 @@ public class CheckTPS implements MapbotPlugin {
     private static final Long opGroup = config.getLong("op-group");
     private static final Long playerGroup = config.getLong("player-group");
 
-    public static double check(){
-        if(Bukkit.getServer().getOnlinePlayers().toArray().length == 0) return 20.0;
-
-        String tpsStr = "%server_tps_1%";
-        Player player = (Player) Bukkit.getServer().getOnlinePlayers().toArray()[0];
-        tpsStr = PlaceholderAPI.setPlaceholders(player, tpsStr);
-
-        return Double.parseDouble(tpsStr);
-    }
-
     @Override
     public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
         if(!Objects.equals(groupID, opGroup) && !Objects.equals(groupID, playerGroup))
             throw new GroupNotAllowedException();
 
-        String msg = String.format("当前%s服务器tps为：%.1f", messages.getString("server-name"), check());
+        String msg = String.format("当前%s服务器tps为：%.1f", messages.getString("server-name"), Bukkit.getServer().getTPS()[0]);
         return new MessageChainBuilder().append(msg).build();
     }
 

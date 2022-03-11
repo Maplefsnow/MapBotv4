@@ -7,10 +7,13 @@ import me.maplef.mapbotv4.plugins.BotQQOperator;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.Scheduler;
+import net.kyori.adventure.text.Component;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -21,6 +24,7 @@ public class Main extends JavaPlugin implements Listener {
     private FileConfiguration messageConfig;
     private FileConfiguration onlineTimeConfig;
     private static Main instance;
+    private static Economy econ = null;
 
     public final Long opGroup = getConfig().getLong("op-group");
 
@@ -40,11 +44,10 @@ public class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            Bukkit.getPluginManager().registerEvents(this, this);
-        } else {
-            getLogger().warning("找不到前置插件PlaceHolderAPI，请安装该插件！");
-            Bukkit.getPluginManager().disablePlugin(this);
+        if (!setupEconomy() ) {
+            Bukkit.getServer().getLogger().severe(String.format("[%s] 找不到前置插件 vault，请安装该插件！", getDescription().getName()));
+            getServer().getPluginManager().disablePlugin(this);
+            return;
         }
 
         instance = this;
@@ -59,10 +62,11 @@ public class Main extends JavaPlugin implements Listener {
 
         try {
             DatabaseOperator.init();
-            LoopJobManager.register();
         } catch (SQLException ignored){}
 
-        getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("enable-message.server")));
+        LoopJobManager.register();
+
+        getServer().broadcast(Component.text(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("enable-message.server"))));
     }
 
     @Override
@@ -76,12 +80,26 @@ public class Main extends JavaPlugin implements Listener {
 
         BotQQOperator.logout();
 
-        getServer().broadcastMessage(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message.server")));
+        getServer().broadcast(Component.text(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message.server"))));
         getLogger().info(messageConfig.getString("disable-message.console"));
+    }
+
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) return false;
+
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) return false;
+
+        econ = rsp.getProvider();
+        return true;
     }
 
     public static Main getInstance() {
         return instance;
+    }
+
+    public static Economy getEconomy() {
+        return econ;
     }
 
     public void registerConfig() {

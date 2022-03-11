@@ -11,7 +11,6 @@ import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import net.mamoe.mirai.utils.ExternalResource;
-import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -24,8 +23,8 @@ public class WorldNews implements MapbotPlugin {
 
     public MessageChain SendNews(Long groupID){
         File tmp = new File(".\\plugins\\MapBot\\temp.jpg");
-        if(tmp.exists()) if(tmp.delete()) Bukkit.getLogger().info("deleted temp.jpg!");
-
+        if(tmp.exists()) //noinspection StatementWithEmptyBody
+            if(tmp.delete());
         String apiUrl = "https://api.03c3.cn/zb/api.php";
         JSONObject imageUrlRes = JSON.parseObject(HttpClient4.doGet(apiUrl));
         String imageUrl = imageUrlRes.getString("imageUrl");

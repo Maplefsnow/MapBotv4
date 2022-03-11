@@ -11,7 +11,7 @@ MapBotv4 是枫号机器人Mapbot的第四代，作为 Minecraft bukkit/spigot/p
 ### 准备材料
 - [必需] 至少两个 QQ 群，其一为玩家群（下称`player-group`），另一为管理人员群（下称`op-group`）
 - [必需] 一个开启设备锁的 QQ 小号
-- [必需] 前置插件 [PlaceHolderAPI](https://github.com/PlaceholderAPI/PlaceholderAPI)
+- [必需] 前置插件 [Vault](https://github.com/MilkBowl/Vault)
 - [可选] 玩家审核群（下称`check-in-group`）
 - [可选] [和风天气](https://dev.qweather.com)API-KEY
 

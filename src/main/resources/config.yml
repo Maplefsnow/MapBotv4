@@ -61,6 +61,7 @@ player-group-auto-manage:
 
 check-in-group-auto-manage:
   enable: true
+  minimum-QQ-level: 10  # 最低QQ等级，防小号
 
 # 测试功能
 netease-cloud-music:

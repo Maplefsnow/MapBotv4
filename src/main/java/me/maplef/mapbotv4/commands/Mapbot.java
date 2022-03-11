@@ -3,13 +3,17 @@ package me.maplef.mapbotv4.commands;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.plugins.BotQQOperator;
-import me.maplef.mapbotv4.plugins.CheckMoney;
 import me.maplef.mapbotv4.plugins.Hitokoto;
 import me.maplef.mapbotv4.plugins.StopServer;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
-import org.bukkit.command.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +31,8 @@ public class Mapbot implements CommandExecutor, TabExecutor {
     private final FileConfiguration messages = Main.getInstance().getMessageConfig();
     private final String msgHeader = "&b&l============ &d小枫4号 &b&l============&f\n";
     private final String msgFooter = "\n&b&l==============================";
+
+    private final Economy econ = Main.getEconomy();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -117,18 +123,12 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                double playerMoney; int time;
+                double playerMoney = econ.getBalance(player); int time;
+
                 try{
-                    playerMoney = CheckMoney.check(player.getName());
                     time = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e){
                     player.sendMessage(CU.t(msgStart + "&c请输入一个整数"));
-                    return true;
-                } catch (PlayerNotFoundException e){
-                    e.printStackTrace();
-                    return false;
-                } catch (SQLException e){
-                    player.sendMessage(CU.t(msgStart + "&c数据库异常，请稍后再试"));
                     return true;
                 }
 
@@ -138,11 +138,14 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
-                        String.format("effect give %s minecraft:haste %d 4", player.getName(), time * 60));
-                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
-                        String.format("money take %s %d", player.getName(), time * (int) config.getDouble("haste-per-minute-cost")));
-                player.sendMessage(CU.t(msgStart + String.format("&a成功&b兑换 &e%d &b分钟的急迫V效果", time)));
+                EconomyResponse r = econ.withdrawPlayer(player, cost);
+                if(r.transactionSuccess()){
+                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
+                            String.format("effect give %s minecraft:haste %d 4", player.getName(), time * 60));
+                    player.sendMessage(CU.t(msgStart + String.format("&a成功&b兑换 &e%d &b分钟的急迫V效果", time)));
+                } else {
+                    player.sendMessage(CU.t(msgStart + "&4发生错误：" + r.errorMessage));
+                }
 
                 return true;
             }

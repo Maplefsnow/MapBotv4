@@ -8,6 +8,9 @@ import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.lang.reflect.Method;
@@ -15,43 +18,32 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 public class CheckMoney implements MapbotPlugin {
     static final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
     private static final Long opGroup = config.getLong("op-group");
 
+    private static final Economy econ = Main.getEconomy();
+
     public static double check(Object[] args) throws InvalidSyntaxException, PlayerNotFoundException, SQLException {
         if(args[0].toString().isEmpty()) throw new InvalidSyntaxException();
 
-        String url = "jdbc:sqlite:.\\plugins\\XConomy\\playerdata\\data.db";
+        String UUIDString = (String) DatabaseOperator.query(args[0]).get("UUID");
 
-        String fixedName = (String) DatabaseOperator.query(args[0]).get("NAME");
+        UUID uuid = UUID.fromString(UUIDString);
+        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
-        double money;
-        try (Connection c = DriverManager.getConnection(url);
-             Statement stmt = c.createStatement();
-             ResultSet res = stmt.executeQuery(String.format("SELECT * FROM xconomy WHERE player = '%s';", fixedName))){
-            money = res.getDouble("balance");
-        }
-        if(money == 0)
-            throw new PlayerNotFoundException();
-        else return money;
+        return econ.getBalance(player);
     }
 
     public static double check(Object arg) throws PlayerNotFoundException, SQLException {
-        String url = "jdbc:sqlite:.\\plugins\\XConomy\\playerdata\\data.db";
+        String UUIDString = (String) DatabaseOperator.query(arg).get("UUID");
 
-        String fixedName = (String) DatabaseOperator.query(arg).get("NAME");
+        UUID uuid = UUID.fromString(UUIDString);
+        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
-        double money;
-        try (Connection c = DriverManager.getConnection(url);
-             Statement stmt = c.createStatement();
-             ResultSet res = stmt.executeQuery(String.format("SELECT * FROM xconomy WHERE player = '%s';", fixedName))){
-            if(res == null) throw new PlayerNotFoundException();
-            money = res.getDouble("balance");
-        }
-
-        return money;
+        return econ.getBalance(player);
     }
 
     @Override

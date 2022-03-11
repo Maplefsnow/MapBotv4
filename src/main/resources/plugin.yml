@@ -3,7 +3,7 @@ version: 3.0
 main: me.maplef.mapbotv4.Main
 api-version: 1.18
 depend:
-  - PlaceholderAPI
+  - Vault
 commands:
   mapbot:
     description: commands of Mapbot_v4
@@ -19,6 +19,8 @@ permissions:
       mapbot.receive: true
       mapbot.keepinv: true
       mapbot.haste: true
+      mapbot.stopserver: true
+      mapbot.login: true
   mapbot.help:
     description: show help infomations
     default: true

@@ -1,11 +1,11 @@
 package me.maplef.mapbotv4.managers;
 
+import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.CommandNotFoundException;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.*;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
@@ -34,6 +34,20 @@ public class PluginManager {
                 }
 
                 return helpMsg.build();
+            }
+
+            case "about": case "关于": {
+                PluginDescriptionFile description = Main.getInstance().getDescription();
+                String name = description.getName();
+                String author = description.getAuthors().get(0);
+                String version = description.getVersion();
+                String github_url = "https://github.com/Maplefsnow/MapBotv4";
+
+                return MessageUtils.newChain(new PlainText(String.format(
+                                "%s v%s\n" +
+                                "Author: %s\n" +
+                                "GitHub: %s\n",
+                                name, version, author, github_url)));
             }
 
             default: {

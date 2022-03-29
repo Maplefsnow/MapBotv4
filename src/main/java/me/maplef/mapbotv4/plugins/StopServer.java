@@ -5,6 +5,7 @@ import me.maplef.mapbotv4.exceptions.NoPermissionException;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.CU;
+import net.kyori.adventure.text.Component;
 import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
@@ -34,13 +35,13 @@ public class StopServer implements MapbotPlugin {
             @Override
             public void run() {
                 if(countdown == 0 && stopFlag){
-                    Bukkit.getServer().broadcastMessage(CU.t(msgStart + "&c&l服务器正在关闭..."));
+                    Bukkit.getServer().broadcast(Component.text(CU.t(msgStart + "&c&l服务器正在关闭...")));
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stpall catland-shelter");
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stop");
                     cancel(); return;
                 }
                 if(countdown % 10 == 0 || (countdown <= 10 && countdown > 0))
-                    Bukkit.getServer().broadcastMessage(CU.t(msgStart + String.format("&c&l服务器还有 %d 秒关闭", countdown)));
+                    Bukkit.getServer().broadcast(Component.text(CU.t(msgStart + String.format("&c&l服务器还有 %d 秒关闭", countdown))));
 
                 countdown--;
 
@@ -52,7 +53,7 @@ public class StopServer implements MapbotPlugin {
     public static boolean stopCancel(){
         if(stopFlag){
             stopFlag = false;
-            Bukkit.getServer().broadcastMessage(CU.t(msgStart + "&e&l关服操作被管理员取消"));
+            Bukkit.getServer().broadcast(Component.text(CU.t(msgStart + "&e&l关服操作被管理员取消")));
             return true;
         } else {
             return false;
@@ -83,7 +84,7 @@ public class StopServer implements MapbotPlugin {
             @Override
             public void run() {
                 if(countdown == 0 && stopFlag){
-                    Bukkit.getServer().broadcastMessage(CU.t(msgStart + "&c&l服务器正在关闭..."));
+                    Bukkit.getServer().broadcast(Component.text(CU.t(msgStart + "&c&l服务器正在关闭...")));
 
                     if(config.getBoolean("stop-server.teleport-players.enabled"))
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "stpall " + config.getString("stop-server.teleport-players.target-server"));
@@ -92,7 +93,7 @@ public class StopServer implements MapbotPlugin {
                     cancel(); return;
                 }
                 if(countdown % 10 == 0 || (countdown <= 10 && countdown > 0))
-                    Bukkit.getServer().broadcastMessage(CU.t(msgStart + String.format("&c&l服务器还有 %d 秒关闭", countdown)));
+                    Bukkit.getServer().broadcast(Component.text(CU.t(msgStart + String.format("&c&l服务器还有 %d 秒关闭", countdown))));
 
                 countdown--;
 
@@ -110,7 +111,7 @@ public class StopServer implements MapbotPlugin {
 
         if(stopFlag){
             stopFlag = false;
-            Bukkit.getServer().broadcastMessage(CU.t(msgStart + "&e&l关服操作被管理员取消"));
+            Bukkit.getServer().broadcast(Component.text(CU.t(msgStart + "&e&l关服操作被管理员取消")));
             return new MessageChainBuilder().append(new At(senderID)).append(" 关服定时任务已取消").build();
         } else
             return new MessageChainBuilder().append(new At(senderID)).append(" 目前没有正在进行的关服定时任务").build();

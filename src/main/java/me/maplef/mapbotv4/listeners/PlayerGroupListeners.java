@@ -9,6 +9,7 @@ import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.HttpClient4;
+import net.kyori.adventure.text.Component;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
@@ -16,7 +17,10 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MemberJoinEvent;
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
 import net.mamoe.mirai.event.events.MemberLeaveEvent;
-import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.AtAll;
+import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -87,16 +91,25 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             msg = msg.concat(message.contentToString());
         }
 
-        if(msg.length() > config.getInt("message-length-limit")){
-            BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
-            return;
+        if(config.getBoolean("message-length-limit.enable")){
+            if(msg.length() > config.getInt("message-length-limit.maximum-length")){
+                if(config.getBoolean("message-length-limit.ignore-ops")){
+                    if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId())){
+                        BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
+                        return;
+                    }
+                } else {
+                    BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
+                    return;
+                }
+            }
         }
 
         for(Player player : Bukkit.getServer().getOnlinePlayers()){
             String msgHead;
             if(!atID.isEmpty()){
                 if(player.getName().equals(atID) || atID.equals("全体成员")){
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 1f, 1.5f);
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 2f, 1.5f);
                     msgHead = String.format("<&b%s&f> &a&l@%s&f", e.getSender().getNameCard(), atID);
                 } else
                     msgHead = String.format("<&b%s&f> &f&l@%s&f", e.getSender().getNameCard(), atID);
@@ -157,7 +170,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         if(e.getGroupId() != playerGroup) return;
 
         BotOperator.sendGroupMessage(e.getGroupId(), WelcomeNew.WelcomeMessage());
-        Bukkit.getServer().broadcastMessage(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.player-group.server")));
+        Bukkit.getServer().broadcast(Component.text(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.player-group.server"))));
         if(Objects.requireNonNull(bot.getGroup(checkInGroup)).contains(e.getMember().getId())){
             BotOperator.sendGroupMessage(checkInGroup, Objects.requireNonNull(messages.getString("congratulation-message")).replace("{PLAYER}", e.getMember().getNick()));
         }
@@ -183,7 +196,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
                     .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")))
                     + "，未检测到该玩家的绑定ID行为";
 
-            playerGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))
+            playerGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.player-group"))
                     .replace("{PLAYER}", e.getMember().getNameCard())
                     .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")));
         } else {
@@ -195,14 +208,14 @@ public class PlayerGroupListeners extends SimpleListenerHost {
                 }
             }.runTask(Main.getPlugin(Main.class));
 
-            playerGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.player-group"))
-                    .replace("{PLAYER}", ID)
-                    .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")));
-
             opGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))
                     .replace("{PLAYER}", ID)
                     .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")))
                     + "，ID绑定已解除，白名单已移除";
+
+            playerGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.player-group"))
+                    .replace("{PLAYER}", ID)
+                    .replace("{SERVERNAME}", Objects.requireNonNull(messages.getString("server-name")));
         }
 
         BotOperator.sendGroupMessage(playerGroup, playerGroupMsg);

@@ -30,8 +30,8 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(); registerConfig();
-        getMessageConfig().options().copyDefaults();
+        this.getConfig().options().copyDefaults(); this.registerConfig();
+        this.getMessageConfig().options().copyDefaults();
 
         Bukkit.getServer().getLogger().info(messageConfig.getString("enable-message.console"));
 
@@ -62,7 +62,9 @@ public class Main extends JavaPlugin implements Listener {
 
         try {
             DatabaseOperator.init();
-        } catch (SQLException ignored){}
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
 
         LoopJobManager.register();
 

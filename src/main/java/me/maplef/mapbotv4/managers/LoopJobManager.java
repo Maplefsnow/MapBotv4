@@ -23,12 +23,12 @@ public class LoopJobManager {
             CronExpression inner_group_kick_cron = new CronExpression(Objects.requireNonNull(config.getString("inner-player-group-auto-manage.kick.cron")));
             CronExpression online_player_record_cron = new CronExpression(Objects.requireNonNull(config.getString("online-player-record.cron")));
 
+            if(config.getBoolean("tps-check.enable"))
+                Scheduler.registerJob("tpsCheck", String.valueOf(tpsCheck_cron), TPSCheck.class);
             if(config.getBoolean("daily-greetings.morning.enable"))
                 Scheduler.registerJob("Morning", String.valueOf(morning_cron), GoodMorning.class);
             if(config.getBoolean("daily-greetings.night.enable"))
                 Scheduler.registerJob("Night", String.valueOf(night_cron), GoodNight.class);
-            if(config.getBoolean("tps-check.enable"))
-                Scheduler.registerJob("tpsCheck", String.valueOf(tpsCheck_cron), TPSCheck.class);
             if(config.getBoolean("inner-player-group-auto-manage.invite.enable"))
                 Scheduler.registerJob("InnerGroupInvite", String.valueOf(inner_group_invite_cron), InnerGroupInvite.class);
             if(config.getBoolean("inner-player-group-auto-manage.kick.enable"))
@@ -38,12 +38,12 @@ public class LoopJobManager {
 
             Scheduler.scheduler.start();
         } catch (SchedulerException exception){
+            Bukkit.getLogger().warning(exception.getClass() + ": " + exception.getMessage());
             try{
                 Scheduler.scheduler.shutdown();
             } catch (SchedulerException exception1){
                 Bukkit.getLogger().warning(exception1.getClass() + ": " + exception1.getMessage());
             }
-            Bukkit.getLogger().warning(exception.getClass() + ": " + exception.getMessage());
         } catch (ParseException e){
             e.printStackTrace();
         }

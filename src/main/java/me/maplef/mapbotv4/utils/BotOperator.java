@@ -1,5 +1,6 @@
 package me.maplef.mapbotv4.utils;
 
+import me.maplef.mapbotv4.Main;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactory;
 import net.mamoe.mirai.message.data.MessageChain;
@@ -25,24 +26,24 @@ public class BotOperator {
         }
     }
 
-    public static void close(){
-        bot.close();
-    }
-
     public static void sendGroupMessage(Long groupID, MessageChain message){
-        try{
-            Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
-        } catch (NullPointerException e){
-            Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            try{
+                Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
+            } catch (NullPointerException e){
+                Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
+            }
+        });
     }
 
     public static void sendGroupMessage(Long groupID, String message){
-        try{
-            Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
-        } catch (NullPointerException e){
-            Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            try{
+                Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
+            } catch (NullPointerException e){
+                Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
+            }
+        });
     }
 
     public static Bot getBot() {

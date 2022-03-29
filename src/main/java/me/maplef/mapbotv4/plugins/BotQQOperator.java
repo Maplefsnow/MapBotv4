@@ -7,12 +7,13 @@ import me.maplef.mapbotv4.listeners.CheckInGroupListeners;
 import me.maplef.mapbotv4.listeners.PlayerGroupListeners;
 import me.maplef.mapbotv4.utils.BotOperator;
 import net.mamoe.mirai.message.data.MessageChain;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.bukkit.Bukkit.getServer;
 
@@ -21,28 +22,24 @@ public class BotQQOperator implements MapbotPlugin {
     static final FileConfiguration messageConfig = Main.getInstance().getMessageConfig();
 
     public static final Long botAcc = config.getLong("bot-account");
-    public static final Long opGroup = config.getLong("op-group");
     private static final String botPassword = config.getString("bot-password");
+    public static final Long opGroup = config.getLong("op-group");
 
     public static void login(){
-        new BukkitRunnable(){
-            @Override
-            public void run() {
-                getServer().getLogger().info("Mapbot正在登陆，请耐心等待...");
-                BotOperator.login(botAcc, botPassword);
-                BotOperator.getBot().getEventChannel().registerListenerHost(new PlayerGroupListeners());
-                BotOperator.getBot().getEventChannel().registerListenerHost(new CheckInGroupListeners());
-                BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
-                getServer().getLogger().info("Mapbot登陆成功");
-            }
-        }.runTaskAsynchronously(Main.getPlugin(Main.class));
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            getServer().getLogger().info("Mapbot正在登陆，请耐心等待...");
+            BotOperator.login(botAcc, botPassword);
+            BotOperator.getBot().getEventChannel().registerListenerHost(new PlayerGroupListeners());
+            BotOperator.getBot().getEventChannel().registerListenerHost(new CheckInGroupListeners());
+            BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
+            getServer().getLogger().info("Mapbot登陆成功");
+        });
     }
 
     public static void logout(){
-        try {
-            BotOperator.sendGroupMessage(opGroup, messageConfig.getString("disable-message.op-group"));
-            BotOperator.close();
-        } catch (Exception ignored) {}
+        Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).sendMessage(Objects.requireNonNull(messageConfig.getString("disable-message.op-group")));
+        BotOperator.getBot().close();
+        getServer().getLogger().info("Mapbot已退出登陆");
     }
 
     @Override

@@ -17,10 +17,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MemberJoinEvent;
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
 import net.mamoe.mirai.event.events.MemberLeaveEvent;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.AtAll;
-import net.mamoe.mirai.message.data.Message;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -42,7 +39,9 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     private final Long opGroup = config.getLong("op-group");
     private final Long checkInGroup = config.getLong("check-in-group");
 
-    static final LinkedList<Message> messageRecorder = new LinkedList<>();
+    static MessageChain repeatedMessage = null;
+    static int repeatCount = 0;
+
     private final String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s[\\u4E00-\\u9FA5A-Za-z0-9_\\s]+)?$";
 
     @EventHandler
@@ -71,28 +70,31 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         if(e.getGroup().getId() != playerGroup) return;
         if(Pattern.matches(commandPattern, e.getMessage().contentToString())) return;
 
-        String msg = "", atID = "";
-
+        StringBuilder msgStringBuilder = new StringBuilder();
+        ArrayList<String> atList = new ArrayList<>();
         for(Message message : e.getMessage()){
             if(message instanceof At){
                 String atNum = String.valueOf(((At) message).getTarget());
                 if(atNum.equals(botAcc.toString())) continue;
 
+                String atID = "";
                 try {
                     atID = (String) DatabaseOperator.query(Long.parseLong(atNum)).get("NAME");
-                    continue;
+                    atList.add(atID);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 } catch (PlayerNotFoundException ignored){}
-            } else if (message instanceof AtAll){
-                atID = "全体成员";
+                msgStringBuilder.append(String.format("&f&l@%s&r", atID));
+            } else if(message instanceof AtAll){
+                msgStringBuilder.append("&a&l@全体成员&r");
+                atList.add("ALL");
+            } else {
+                msgStringBuilder.append(message.contentToString());
             }
-
-            msg = msg.concat(message.contentToString());
         }
 
         if(config.getBoolean("message-length-limit.enable")){
-            if(msg.length() > config.getInt("message-length-limit.maximum-length")){
+            if(msgStringBuilder.length() > config.getInt("message-length-limit.maximum-length")){
                 if(config.getBoolean("message-length-limit.ignore-ops")){
                     if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId())){
                         BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
@@ -106,31 +108,26 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         }
 
         for(Player player : Bukkit.getServer().getOnlinePlayers()){
-            String msgHead;
-            if(!atID.isEmpty()){
-                if(player.getName().equals(atID) || atID.equals("全体成员")){
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 2f, 1.5f);
-                    msgHead = String.format("<&b%s&f> &a&l@%s&f", e.getSender().getNameCard(), atID);
-                } else
-                    msgHead = String.format("<&b%s&f> &f&l@%s&f", e.getSender().getNameCard(), atID);
-            } else
-                msgHead = String.format("<&b%s&f> ", e.getSender().getNameCard());
-
             int sendFlag = 1;
-
             try {
                 sendFlag = (Integer) DatabaseOperator.query(player.getName()).get("MSGREC");
             } catch (SQLException ex) {
                 Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
             } catch (PlayerNotFoundException ignored){}
 
-            if(sendFlag == 1){
-                if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId())){
-                    msg = msg.replace("§", "");
-                    player.sendMessage(CU.t(msgHead) + msg);
-                } else {
-                    player.sendMessage(CU.t(msgHead + msg));
-                }
+            if(sendFlag == 0) continue;
+
+            if(atList.contains(player.getName()) || atList.contains("ALL")){
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 5f, 1.5f);
+            }
+
+            String msgHead = Objects.requireNonNull(config.getString("message-head-format")).replace("{SENDER}", e.getSender().getNameCard());
+            String msgString = msgStringBuilder.toString();
+
+            if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId())){
+                player.sendMessage(CU.t(msgHead) + msgString.replace("§", ""));
+            } else {
+                player.sendMessage(CU.t(msgHead + msgString));
             }
         }
     }
@@ -140,15 +137,21 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         if(!config.getBoolean("bot-repeater.enabled")) return;
         if(e.getGroup().getId() != playerGroup) return;
 
-        messageRecorder.push(e.getMessage());
-        if(messageRecorder.size() == 3){
-            if(messageRecorder.get(0).contentEquals(messageRecorder.get(1), false) &&
-                messageRecorder.get(1).contentEquals(messageRecorder.get(2), false)){
-                messageRecorder.clear();
-                BotOperator.sendGroupMessage(e.getGroup().getId(), e.getMessage());
+        if(repeatedMessage == null){
+            repeatedMessage = e.getMessage();
+            repeatCount = 1;
+        } else {
+            if(e.getMessage().contentToString().equals(repeatedMessage.contentToString()) && !repeatedMessage.contentToString().equals("[图片]")) repeatCount += 1;
+            else{
+                repeatedMessage = e.getMessage();
+                repeatCount = 1;
             }
+        }
 
-            messageRecorder.clear();
+        if(repeatCount >= config.getInt("bot-repeater.frequency")){
+            BotOperator.sendGroupMessage(e.getGroup().getId(), e.getMessage());
+            repeatedMessage = null;
+            repeatCount = 0;
         }
     }
 

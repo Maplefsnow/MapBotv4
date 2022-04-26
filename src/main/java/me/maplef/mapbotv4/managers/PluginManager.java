@@ -46,7 +46,7 @@ public class PluginManager {
                 return MessageUtils.newChain(new PlainText(String.format(
                                 "%s v%s\n" +
                                 "Author: %s\n" +
-                                "GitHub: %s\n",
+                                "GitHub: %s",
                                 name, version, author, github_url)));
             }
 

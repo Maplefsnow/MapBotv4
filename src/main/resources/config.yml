@@ -20,6 +20,8 @@ QWeather-APIKey: 'qwq'  # 和风天气API密钥
 bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility, set to 0 to disable
 haste-per-minute-cost: 3.0
 
+message-head-format: '&f<&b{SENDER}&f> '
+
 command-prefix: '#'
 
 bind-id-and-qq:
@@ -62,8 +64,11 @@ daily-greetings:
     enable: true
     cron: '0 0 23 * * ?'
 
+# bot may repeat the message that has been repeated several times
 bot-repeater:
   enabled: true
+  # NEVER set this to 1 unless you simply want a repeater
+  frequency: 3  # counts  # set this number to decide the frequency
 
 # 除非你已接入猫猫大陆审核专用系统 COPA，否则请禁用此项
 player-group-auto-manage:

@@ -2,14 +2,13 @@ package me.maplef.mapbotv4.plugins;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DownloadImage;
 import me.maplef.mapbotv4.utils.HttpClient4;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.message.data.Image;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 
 import java.io.File;
@@ -25,19 +24,20 @@ public class WorldNews implements MapbotPlugin {
         File tmp = new File(".\\plugins\\MapBot\\temp.jpg");
         if(tmp.exists()) //noinspection StatementWithEmptyBody
             if(tmp.delete());
+
         String apiUrl = "https://api.03c3.cn/zb/api.php";
         JSONObject imageUrlRes = JSON.parseObject(HttpClient4.doGet(apiUrl));
         String imageUrl = imageUrlRes.getString("imageUrl");
 
         File newsImg; ExternalResource imageResource;
         try {
-            newsImg = new File(DownloadImage.download(imageUrl, "temp", ".\\plugins\\Mapbot"));
+            newsImg = new File(DownloadImage.download(imageUrl, "temp", String.valueOf(Main.getInstance().getDataFolder())));
             imageResource = ExternalResource.create(newsImg);
             Image newsImage = Objects.requireNonNull(bot.getGroup(groupID)).uploadImage(imageResource);
-            return new MessageChainBuilder().append(Image.fromId(newsImage.getImageId())).build();
+            return MessageUtils.newChain(Image.fromId(newsImage.getImageId()));
         } catch (Exception e) {
             e.printStackTrace();
-            return new MessageChainBuilder().append("获取新闻失败QAQ").build();
+            return MessageUtils.newChain(new PlainText("获取新闻失败QAQ"));
         }
     }
 

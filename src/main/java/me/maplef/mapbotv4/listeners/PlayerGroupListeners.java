@@ -10,13 +10,12 @@ import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.HttpClient4;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.contact.PermissionDeniedException;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.event.events.MemberJoinEvent;
-import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
-import net.mamoe.mirai.event.events.MemberLeaveEvent;
+import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
@@ -25,7 +24,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 public class PlayerGroupListeners extends SimpleListenerHost {
@@ -66,9 +68,22 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void onMessageReceive(GroupMessageEvent e){
+    public void onMessageForward(GroupMessageEvent e){
         if(e.getGroup().getId() != playerGroup) return;
         if(Pattern.matches(commandPattern, e.getMessage().contentToString())) return;
+
+        QuoteReply quoteMessage = e.getMessage().get(QuoteReply.Key);
+        Long quoteFromID = null; String quotePlayerNAME = null; MessageChain quoteOriginalMessage = null;
+        if(quoteMessage != null){
+            MessageSource quoteSource = quoteMessage.getSource();
+            quoteOriginalMessage = quoteSource.getOriginalMessage();
+            try {
+                quoteFromID = quoteSource.getFromId();
+                quotePlayerNAME = (String) DatabaseOperator.query(quoteSource.getFromId()).get("NAME");
+            } catch (SQLException | PlayerNotFoundException ex) {
+                ex.printStackTrace();
+            }
+        }
 
         StringBuilder msgStringBuilder = new StringBuilder();
         ArrayList<String> atList = new ArrayList<>();
@@ -93,8 +108,19 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             }
         }
 
+        String msgString = msgStringBuilder.toString();
+        if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId()))
+            msgString = msgString.replace("§", "");
+
+        if(config.getBoolean("block-words.enabled")){
+            List<String> blocklist = config.getStringList("block-words.blocklist");
+            for(String blockedWord : blocklist){
+                if(msgString.contains(blockedWord)) return;
+            }
+        }
+
         if(config.getBoolean("message-length-limit.enable")){
-            if(msgStringBuilder.length() > config.getInt("message-length-limit.maximum-length")){
+            if(msgString.length() > config.getInt("message-length-limit.maximum-length")){
                 if(config.getBoolean("message-length-limit.ignore-ops")){
                     if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId())){
                         BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
@@ -114,20 +140,37 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             } catch (SQLException ex) {
                 Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
             } catch (PlayerNotFoundException ignored){}
-
             if(sendFlag == 0) continue;
 
-            if(atList.contains(player.getName()) || atList.contains("ALL")){
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 5f, 1.5f);
-            }
+            if(atList.contains(player.getName()) || atList.contains("ALL"))
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 10f, 1.5f);
 
             String msgHead = Objects.requireNonNull(config.getString("message-head-format")).replace("{SENDER}", e.getSender().getNameCard());
-            String msgString = msgStringBuilder.toString();
 
-            if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId())){
-                player.sendMessage(CU.t(msgHead) + msgString.replace("§", ""));
+            if(quoteMessage != null){
+                HoverEvent<Component> quoteHover; Component quoteInfo = null;
+
+                if(quoteFromID.equals(botAcc)){
+                    String[] msgSplit = quoteOriginalMessage.contentToString().split(": ", 2);
+                    try{
+                        DatabaseOperator.query(msgSplit[0]);
+                        quoteHover = HoverEvent.showText(Component.text(String.format("%s:\n%s", msgSplit[0], msgSplit[1])));
+                        quoteInfo = Component.text(CU.t(String.format("&7&o[回复%s的消息]&r", msgSplit[0]))).hoverEvent(quoteHover);
+                    } catch (PlayerNotFoundException ex){
+                        quoteHover = HoverEvent.showText(Component.text(String.format("小叶子:\n%s", quoteOriginalMessage.contentToString())));
+                        quoteInfo = Component.text(CU.t("&7&o[回复小叶子的消息]&r")).hoverEvent(quoteHover);
+                    } catch (SQLException ex){
+                        ex.printStackTrace();
+                    }
+                } else {
+                    quoteHover = HoverEvent.showText(Component.text(String.format("%s:\n%s", quotePlayerNAME, quoteOriginalMessage.contentToString())));
+                    quoteInfo = Component.text(CU.t(String.format("&7&o[回复%s的消息]&r", quotePlayerNAME))).hoverEvent(quoteHover);
+                }
+
+                assert quoteInfo != null;
+                player.sendMessage(Component.text(CU.t(msgHead)).append(quoteInfo).append(Component.text(" " + CU.t(msgString))));
             } else {
-                player.sendMessage(CU.t(msgHead + msgString));
+                player.sendMessage(Component.text(CU.t(msgHead + msgString)));
             }
         }
     }
@@ -165,6 +208,27 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             int col = random.nextInt(messages.getStringList("bot-greetings").size());
             String msg = messages.getStringList("bot-greetings").get(col);
             BotOperator.sendGroupMessage(playerGroup, msg);
+        }
+    }
+
+    @EventHandler
+    public void onBlockedWordReceive(GroupMessageEvent e){
+        if(e.getGroup().getId() != playerGroup) return;
+        if(!config.getBoolean("block-words.enabled")) return;
+
+        String message = e.getMessage().contentToString();
+        List<String> blocklist = config.getStringList("block-words.blocklist");
+        for(String blockedWord : blocklist){
+            if(message.contains(blockedWord)){
+                try {
+                    MessageSource.recall(e.getMessage());
+                } catch (PermissionDeniedException ignored){}
+                if(!Objects.requireNonNull(config.getString("block-words.warning-message")).isEmpty()){
+                    BotOperator.sendGroupMessage(e.getGroup().getId(),
+                            MessageUtils.newChain(new At(e.getSender().getId()), new PlainText(" " + config.getString("block-words.warning-message"))));
+                }
+                break;
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 message-prefix: '&c[&f小枫4号&b] '
 
 server-name: '猫猫大陆'
+currency-name: '猫猫积分'
 
 enable-message:
   console: '&aMapbot已启用！'
@@ -27,7 +28,7 @@ welcome-new-message:
   player-group:
     group:
       - '这里是小枫4号，欢迎你加入猫猫大陆！'
-      - '服务器版本: 1.18.1'
+      - '服务器版本: 1.18.2'
       - '猫猫大陆官方论坛: www.catland.top'
       - '祝你在猫猫大陆玩的开心！'
     server: '&a有新猫猫加入猫猫大陆啦，快在群里欢迎ta吧！'

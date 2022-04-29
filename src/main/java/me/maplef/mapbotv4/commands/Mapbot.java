@@ -72,10 +72,10 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                     int keepinvFlag = (Integer) DatabaseOperator.query(player.getName()).get("KEEPINV");
                     if(keepinvFlag == 1){
                         DatabaseOperator.executeCommand(String.format("UPDATE PLAYER SET KEEPINV = 0 WHERE NAME = '%s';", player.getName()));
-                        player.sendMessage(CU.t(msgStart + "积分换取死亡物品保留功能已 &4&l关闭"));
+                        player.sendMessage(CU.t(msgStart + "积分兑换死亡不掉落功能已 &4&l关闭"));
                     } else {
                         DatabaseOperator.executeCommand(String.format("UPDATE PLAYER SET KEEPINV = 1 WHERE NAME = '%s';", player.getName()));
-                        player.sendMessage(CU.t(msgStart + "积分换取死亡物品保留功能已 &a&l开启"));
+                        player.sendMessage(CU.t(msgStart + "积分兑换死亡不掉落功能已 &a&l开启"));
                     }
                     return true;
                 } catch (SQLException | PlayerNotFoundException e) {

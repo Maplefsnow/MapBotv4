@@ -11,10 +11,12 @@ import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.HttpClient4;
+import net.kyori.adventure.text.Component;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.lang.reflect.Method;
@@ -85,9 +87,10 @@ public class BindIDAndQQ implements MapbotPlugin {
             Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(playerGroup)).get(senderID)).setNameCard(MCID);
         }
 
-        return config.getBoolean("bind-id-and-qq.whitelist") ?
-                new MessageChainBuilder().append(new At(senderID)).append(" 绑定ID成功，白名单已添加").build() :
-                new MessageChainBuilder().append(new At(senderID)).append(" 绑定ID成功").build();
+        if(config.getBoolean("bind-id-and-qq.whitelist"))
+            return MessageUtils.newChain(new At(senderID)).plus(new PlainText(" 绑定ID成功，白名单已添加"));
+        else
+            return MessageUtils.newChain(new At(senderID)).plus(new PlainText(" 绑定ID成功"));
     }
 
     public static MessageChain update(Long groupID, Long senderID, String[] args) throws PlayerNotFoundException, SQLException {
@@ -126,6 +129,10 @@ public class BindIDAndQQ implements MapbotPlugin {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), whitelistDelCommand);
             }
         }.runTask(Main.getPlugin(Main.class));
+
+        try{
+            Objects.requireNonNull(Bukkit.getServer().getPlayer(fixedName)).kick(Component.text("你的ID绑定已解除"), PlayerKickEvent.Cause.WHITELIST);
+        } catch (NullPointerException ignored){}
 
         return new MessageChainBuilder().append(new At(senderID)).append(" 解除了 ").append(fixedName).append(" 的ID绑定，白名单已移除").build();
     }

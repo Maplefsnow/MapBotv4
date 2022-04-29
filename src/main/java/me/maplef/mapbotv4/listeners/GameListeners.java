@@ -73,20 +73,20 @@ public class GameListeners implements Listener {
                 int cost = config.getInt("keep-inventory.cost");
 
                 if(money < cost){
-                    player.sendMessage(CU.t(msgPrefix + "你没有足够的猫猫积分以免疫死亡不掉落"));
+                    player.sendMessage(CU.t(msgPrefix + String.format("你没有足够的%s以免疫死亡不掉落", messages.getString("currency-name"))));
                     return;
                 }
 
                 EconomyResponse r = econ.withdrawPlayer(player, cost);
                 if(r.transactionSuccess()){
-                    player.sendMessage(CU.t(msgPrefix + String.format("扣除了你 %d 猫猫积分，本次免疫死亡掉落", cost)));
+                    player.sendMessage(CU.t(msgPrefix + String.format("扣除了你 %d %s，本次免疫死亡掉落", cost, messages.getString("currency-name"))));
                     e.setKeepInventory(true); e.setKeepLevel(true);
                     e.getDrops().clear(); e.setDroppedExp(0);
                 } else {
                     player.sendMessage(CU.t(msgPrefix + "&4发生错误：" + r.errorMessage));
                 }
             } else {
-                player.sendMessage(CU.t(msgPrefix + "管理员未开启积分换取死亡不掉落功能"));
+                player.sendMessage(CU.t(msgPrefix + String.format("管理员未开启%s兑换死亡不掉落功能", messages.getString("currency-name"))));
             }
         }
 

@@ -70,6 +70,13 @@ bot-repeater:
   # NEVER set this to 1 unless you simply want a repeater
   frequency: 3  # counts  # set this number to decide the frequency
 
+block-words:
+  enabled: true
+  warning-message: '你的消息含有屏蔽词，已撤回'  # set this an empty string ('') to disable sending warning message
+  blocklist:
+    - '（脏话）'
+    - '（敏感词）'
+
 # 除非你已接入猫猫大陆审核专用系统 COPA，否则请禁用此项
 player-group-auto-manage:
   enable: false

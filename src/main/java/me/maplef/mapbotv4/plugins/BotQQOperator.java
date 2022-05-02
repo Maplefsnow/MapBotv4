@@ -7,6 +7,7 @@ import me.maplef.mapbotv4.listeners.CheckInGroupListeners;
 import me.maplef.mapbotv4.listeners.PlayerGroupListeners;
 import me.maplef.mapbotv4.utils.BotOperator;
 import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.network.WrongPasswordException;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -28,11 +29,17 @@ public class BotQQOperator implements MapbotPlugin {
     public static void login(){
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
             getServer().getLogger().info("Mapbot正在登陆，请耐心等待...");
-            BotOperator.login(botAcc, botPassword);
-            BotOperator.getBot().getEventChannel().registerListenerHost(new PlayerGroupListeners());
-            BotOperator.getBot().getEventChannel().registerListenerHost(new CheckInGroupListeners());
-            BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
-            getServer().getLogger().info("Mapbot登陆成功");
+            try{
+                BotOperator.login(botAcc, botPassword);
+                BotOperator.getBot().getEventChannel().registerListenerHost(new PlayerGroupListeners());
+                BotOperator.getBot().getEventChannel().registerListenerHost(new CheckInGroupListeners());
+                BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
+                getServer().getLogger().info("Mapbot登陆成功");
+            } catch (WrongPasswordException e){
+                getServer().getLogger().warning("bot登陆密码错误，请检查配置文件！");
+            } catch (Exception e){
+                getServer().getLogger().warning("Mapbot登陆失败：" + e.getMessage());
+            }
         });
     }
 
@@ -69,7 +76,7 @@ public class BotQQOperator implements MapbotPlugin {
         info.put("usages", usages);
         info.put("author", "Maplef");
         info.put("description", "操作bot账号");
-        info.put("version", "1.0");
+        info.put("version", "1.1");
 
         return info;
     }

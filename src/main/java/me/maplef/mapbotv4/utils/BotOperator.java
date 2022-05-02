@@ -13,17 +13,12 @@ import java.util.Objects;
 public class BotOperator {
     private static Bot bot;
 
-    public static void login(Long qq, String password){
+    public static void login(Long qq, String password) throws WrongPasswordException{
         bot = BotFactory.INSTANCE.newBot(qq, password, new BotConfiguration(){{
             noNetworkLog();
             noBotLog();
         }});
-        try {
-            bot.login();
-        } catch (WrongPasswordException e){
-            Bukkit.getServer().getLogger().warning("bot密码输入错误，请检查配置文件！");
-            bot.close();
-        }
+        bot.login();
     }
 
     public static void sendGroupMessage(Long groupID, MessageChain message){

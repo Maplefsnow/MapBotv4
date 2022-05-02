@@ -2,23 +2,24 @@ package me.maplef.mapbotv4.listeners;
 
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.exceptions.CommandNotFoundException;
+import me.maplef.mapbotv4.exceptions.MessageContainsBlockedWordsException;
+import me.maplef.mapbotv4.exceptions.MessageLengthOutOfBoundException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.PluginManager;
 import me.maplef.mapbotv4.plugins.WelcomeNew;
-import me.maplef.mapbotv4.utils.BotOperator;
-import me.maplef.mapbotv4.utils.CU;
-import me.maplef.mapbotv4.utils.DatabaseOperator;
-import me.maplef.mapbotv4.utils.HttpClient4;
+import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.PermissionDeniedException;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
-import net.mamoe.mirai.event.events.*;
+import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.event.events.MemberJoinEvent;
+import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
+import net.mamoe.mirai.event.events.MemberLeaveEvent;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -36,7 +37,6 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
     private final Bot bot = BotOperator.getBot();
 
-    private final Long botAcc = config.getLong("bot-account");
     private final Long playerGroup = config.getLong("player-group");
     private final Long opGroup = config.getLong("op-group");
     private final Long checkInGroup = config.getLong("check-in-group");
@@ -68,111 +68,33 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void onMessageForward(GroupMessageEvent e){
+    public void onMessageForward_New(GroupMessageEvent e){
         if(e.getGroup().getId() != playerGroup) return;
         if(Pattern.matches(commandPattern, e.getMessage().contentToString())) return;
 
-        QuoteReply quoteMessage = e.getMessage().get(QuoteReply.Key);
-        Long quoteFromID = null; String quotePlayerNAME = null; MessageChain quoteOriginalMessage = null;
-        if(quoteMessage != null){
-            MessageSource quoteSource = quoteMessage.getSource();
-            quoteOriginalMessage = quoteSource.getOriginalMessage();
-            try {
-                quoteFromID = quoteSource.getFromId();
-                quotePlayerNAME = (String) DatabaseOperator.query(quoteSource.getFromId()).get("NAME");
-            } catch (SQLException | PlayerNotFoundException ex) {
-                ex.printStackTrace();
-            }
-        }
+        ClickEvent clickMsgHead = null; Component msgHeadComponent;
+        try{
+            clickMsgHead = ClickEvent.suggestCommand("@" + DatabaseOperator.query(e.getSender().getId()).get("NAME") + " ");
+        } catch (Exception ignored){}
+        String msgHead = Objects.requireNonNull(config.getString("message-head-format")).replace("{SENDER}", e.getSender().getNameCard());
+        msgHeadComponent = Component.text(CU.t(msgHead)).clickEvent(clickMsgHead);
 
-        StringBuilder msgStringBuilder = new StringBuilder();
-        ArrayList<String> atList = new ArrayList<>();
-        for(Message message : e.getMessage()){
-            if(message instanceof At){
-                String atNum = String.valueOf(((At) message).getTarget());
-                if(atNum.equals(botAcc.toString())) continue;
-
-                String atID = "";
+        try {
+            Component msgContextComponent = QQMessageHandler.handle(e.getSender().getId(), e.getMessage());
+            for(Player player : Bukkit.getServer().getOnlinePlayers()) {
+                int sendFlag = 1;
                 try {
-                    atID = (String) DatabaseOperator.query(Long.parseLong(atNum)).get("NAME");
-                    atList.add(atID);
+                    sendFlag = (Integer) DatabaseOperator.query(player.getName()).get("MSGREC");
                 } catch (SQLException ex) {
-                    ex.printStackTrace();
-                } catch (PlayerNotFoundException ignored){}
-                msgStringBuilder.append(String.format("&f&l@%s&r", atID));
-            } else if(message instanceof AtAll){
-                msgStringBuilder.append("&a&l@全体成员&r");
-                atList.add("ALL");
-            } else {
-                msgStringBuilder.append(message.contentToString());
+                    Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
+                } catch (PlayerNotFoundException ignored) {}
+                if (sendFlag == 0) continue;
+
+                player.sendMessage(msgHeadComponent.append(msgContextComponent));
             }
-        }
-
-        String msgString = msgStringBuilder.toString();
-        if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId()))
-            msgString = msgString.replace("§", "");
-
-        if(config.getBoolean("block-words.enabled")){
-            List<String> blocklist = config.getStringList("block-words.blocklist");
-            for(String blockedWord : blocklist){
-                if(msgString.contains(blockedWord)) return;
-            }
-        }
-
-        if(config.getBoolean("message-length-limit.enable")){
-            if(msgString.length() > config.getInt("message-length-limit.maximum-length")){
-                if(config.getBoolean("message-length-limit.ignore-ops")){
-                    if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(e.getSender().getId())){
-                        BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
-                        return;
-                    }
-                } else {
-                    BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
-                    return;
-                }
-            }
-        }
-
-        for(Player player : Bukkit.getServer().getOnlinePlayers()){
-            int sendFlag = 1;
-            try {
-                sendFlag = (Integer) DatabaseOperator.query(player.getName()).get("MSGREC");
-            } catch (SQLException ex) {
-                Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
-            } catch (PlayerNotFoundException ignored){}
-            if(sendFlag == 0) continue;
-
-            if(atList.contains(player.getName()) || atList.contains("ALL"))
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_GUITAR, 10f, 1.5f);
-
-            String msgHead = Objects.requireNonNull(config.getString("message-head-format")).replace("{SENDER}", e.getSender().getNameCard());
-
-            if(quoteMessage != null){
-                HoverEvent<Component> quoteHover; Component quoteInfo = null;
-
-                if(quoteFromID.equals(botAcc)){
-                    String[] msgSplit = quoteOriginalMessage.contentToString().split(": ", 2);
-                    try{
-                        DatabaseOperator.query(msgSplit[0]);
-                        quoteHover = HoverEvent.showText(Component.text(String.format("%s:\n%s", msgSplit[0], msgSplit[1])));
-                        quoteInfo = Component.text(CU.t(String.format("&7&o[回复%s的消息]&r", msgSplit[0]))).hoverEvent(quoteHover);
-                    } catch (PlayerNotFoundException ex){
-                        quoteHover = HoverEvent.showText(Component.text(String.format("小叶子:\n%s", quoteOriginalMessage.contentToString())));
-                        quoteInfo = Component.text(CU.t("&7&o[回复小叶子的消息]&r")).hoverEvent(quoteHover);
-                    } catch (SQLException ex){
-                        ex.printStackTrace();
-                    }
-                } else {
-                    quoteHover = HoverEvent.showText(Component.text(String.format("%s:\n%s", quotePlayerNAME, quoteOriginalMessage.contentToString())));
-                    quoteInfo = Component.text(CU.t(String.format("&7&o[回复%s的消息]&r", quotePlayerNAME))).hoverEvent(quoteHover);
-                }
-
-                assert quoteInfo != null;
-                player.sendMessage(Component.text(CU.t(msgHead)).append(quoteInfo).append(Component.text(" " + CU.t(msgString))));
-            } else {
-                player.sendMessage(Component.text(CU.t(msgHead + msgString)));
-            }
-        }
+        } catch (MessageLengthOutOfBoundException ex) {
+            BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
+        } catch (MessageContainsBlockedWordsException ignored){}
     }
 
     @EventHandler
@@ -183,6 +105,9 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         if(repeatedMessage == null){
             repeatedMessage = e.getMessage();
             repeatCount = 1;
+        } else if(Pattern.matches(commandPattern, e.getMessage().contentToString())){
+            repeatedMessage = null;
+            repeatCount = 0;
         } else {
             if(e.getMessage().contentToString().equals(repeatedMessage.contentToString()) && !repeatedMessage.contentToString().equals("[图片]")) repeatCount += 1;
             else{

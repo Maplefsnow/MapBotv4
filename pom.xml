@@ -6,7 +6,7 @@
 
     <groupId>me</groupId>
     <artifactId>Mapbot</artifactId>
-    <version>0.7.0beta</version>
+    <version>0.8.0beta</version>
     <packaging>jar</packaging>
 
     <name>MapBot</name>

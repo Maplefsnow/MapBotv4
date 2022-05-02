@@ -50,6 +50,22 @@ public class PluginManager {
                                 name, version, author, github_url)));
             }
 
+            case "plugins": case "插件": {
+                StringBuilder pluginInfoStrBuilder = new StringBuilder();
+
+                for(Class <? extends MapbotPlugin> singleClass : pluginClasses){
+                    Map<String, Object> pluginInfo = (Map<String, Object>) singleClass.getMethod("register").invoke(singleClass.getDeclaredConstructor().newInstance());
+
+                    pluginInfoStrBuilder.append(String.format("%s - %s\nv%s\nAuthor: %s\n\n",
+                            pluginInfo.get("name"), pluginInfo.get("description"), pluginInfo.get("version"), pluginInfo.get("author")));
+                }
+
+                String pluginInfoStr = pluginInfoStrBuilder.toString();
+                pluginInfoStr = pluginInfoStr.trim();
+
+                return MessageUtils.newChain(new PlainText(pluginInfoStr));
+            }
+
             default: {
                 for(Class<? extends MapbotPlugin> singleClass : pluginClasses){
                     Map<String, Object> pluginInfo = (Map<String, Object>) singleClass.getMethod("register").invoke(singleClass.getDeclaredConstructor().newInstance());

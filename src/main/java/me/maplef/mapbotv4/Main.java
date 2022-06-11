@@ -23,6 +23,7 @@ import java.util.Objects;
 public class Main extends JavaPlugin implements Listener {
     private FileConfiguration messageConfig;
     private FileConfiguration onlineTimeConfig;
+    private FileConfiguration autoReplyConfig;
     private static Main instance;
     private static Economy econ = null;
 
@@ -39,12 +40,13 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().warning("请在生成的配置文件中修改相关配置再启动本插件");
             this.saveDefaultConfig();
             this.saveResource("messages.yml", false);
+            this.saveResource("auto_reply.yml", false);
             this.saveResource("cat_images/catImageSample.jpg", false);
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        if (!setupEconomy() ) {
+        if (!setupEconomy()) {
             Bukkit.getServer().getLogger().severe(String.format("[%s] 找不到前置插件 vault，请安装该插件！", getDescription().getName()));
             getServer().getPluginManager().disablePlugin(this);
             return;
@@ -107,6 +109,7 @@ public class Main extends JavaPlugin implements Listener {
     public void registerConfig() {
         messageConfig = YamlConfiguration.loadConfiguration(new File(".\\plugins\\MapBot\\messages.yml"));
         onlineTimeConfig = YamlConfiguration.loadConfiguration(new File(".\\plugins\\PlayTimeTracker\\database.yml"));
+        autoReplyConfig = YamlConfiguration.loadConfiguration(new File(".\\plugins\\MapBot\\auto_reply.yml"));
     }
 
     public FileConfiguration getMessageConfig() {
@@ -115,5 +118,9 @@ public class Main extends JavaPlugin implements Listener {
 
     public FileConfiguration getOnlineTimeConfig() {
         return onlineTimeConfig;
+    }
+
+    public FileConfiguration getAutoReplyConfig() {
+        return autoReplyConfig;
     }
 }

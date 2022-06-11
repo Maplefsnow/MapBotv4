@@ -25,15 +25,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class PlayerGroupListeners extends SimpleListenerHost {
-    final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
+    final FileConfiguration config = Main.getInstance().getConfig();
     final FileConfiguration messages = Main.getInstance().getMessageConfig();
+    final FileConfiguration autoReply = Main.getInstance().getAutoReplyConfig();
 
     private final Bot bot = BotOperator.getBot();
 
@@ -44,7 +42,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     static MessageChain repeatedMessage = null;
     static int repeatCount = 0;
 
-    private final String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s[\\u4E00-\\u9FA5A-Za-z0-9_\\s]+)?$";
+    private final String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\s]|[^\\x00-\\xff])+)?$";
 
     @EventHandler
     public void onCommandReceive(GroupMessageEvent e){
@@ -56,19 +54,22 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         int size = msgSplit.size();
         String[] args = msgSplit.toArray(new String[size]);
 
-        MessageChainBuilder message = new MessageChainBuilder();
-        try {
-            message.append(PluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), args));
-        } catch (CommandNotFoundException ex) {
-            message.append(ex.getMessage());
-        } catch (Exception ex){
-            ex.printStackTrace();
-        }
-        BotOperator.sendGroupMessage(e.getGroup().getId(), message.build());
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            MessageChainBuilder message = new MessageChainBuilder();
+            try {
+                message.append(PluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), args));
+            } catch (CommandNotFoundException ex) {
+                message.append(ex.getMessage());
+            } catch (Exception ex){
+                ex.printStackTrace();
+            }
+            BotOperator.sendGroupMessage(e.getGroup().getId(), message.build());
+        });
     }
 
     @EventHandler
-    public void onMessageForward_New(GroupMessageEvent e){
+    public void onMessageForward(GroupMessageEvent e){
+        if(!config.getBoolean("message-forward.group-to-server")) return;
         if(e.getGroup().getId() != playerGroup) return;
         if(Pattern.matches(commandPattern, e.getMessage().contentToString())) return;
 
@@ -155,6 +156,31 @@ public class PlayerGroupListeners extends SimpleListenerHost {
                 break;
             }
         }
+    }
+
+    @EventHandler
+    public void onAutoReply(GroupMessageEvent e){
+        if(e.getGroup().getId() != playerGroup) return;
+        if(!config.getBoolean("bot-auto-reply")) return;
+
+        System.out.println("qwq!!!");
+
+        String message = e.getMessage().contentToString();
+        Set<String> rules = autoReply.getKeys(false);
+        System.out.println(rules);
+
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            for(String ruleKey : rules){
+                List<String> triggers = autoReply.getStringList(ruleKey + ".trigger");
+                for(String trigger : triggers){
+                    System.out.println(TextComparator.getSimilarity(message, trigger));
+                    if(TextComparator.getSimilarity(message, trigger) * 100 >= autoReply.getInt(ruleKey + ".similarity", 100)){
+                        BotOperator.sendGroupMessage(e.getGroup().getId(), autoReply.getString(ruleKey + ".reply", "null"));
+                        return;
+                    }
+                }
+            }
+        });
     }
 
     @EventHandler
@@ -248,6 +274,8 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         if(e.getMessage().contentToString().contains("test")){
             Bukkit.getServer().getLogger().info("tested!");
+
+            System.out.println(config.getKeys(false));
         }
     }
 }

@@ -11,6 +11,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.*;
@@ -69,7 +70,9 @@ public class QQMessageHandler {
         }
 
         assert quoteComponent != null;
-        return quoteComponent.append(Component.text(" ").append(messageComponent));
+        return quoteComponent.append(Component.text(" ").append(messageComponent)
+                .style(Style.empty())
+                .hoverEvent(null));
     }
 
     private static Component lightAppHandler(MessageChain message){

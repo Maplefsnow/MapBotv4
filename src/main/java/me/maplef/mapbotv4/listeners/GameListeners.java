@@ -30,7 +30,9 @@ public class GameListeners implements Listener {
     private final String msgPrefix = messages.getString("message-prefix");
 
     @EventHandler
-    public void MessageReceive(AsyncChatEvent e) {
+    public void onMessageReceive(AsyncChatEvent e) {
+        if(!config.getBoolean("message-forward.server-to-group")) return;
+
         MessageChainBuilder msg = new MessageChainBuilder();
         Player player = e.getPlayer();
 

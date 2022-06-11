@@ -17,7 +17,12 @@ mysql-password:
 
 QWeather-APIKey: 'qwq'  # 和风天气API密钥
 
+message-forward:
+  group-to-server: true
+  server-to-group: true
+
 bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility, set to 0 to disable
+bot-auto-reply: true  # see in auto_reply.yml
 haste-per-minute-cost: 3.0
 
 message-head-format: '&f<&b{SENDER}&f> '
@@ -36,7 +41,7 @@ tps-check:
   threshold: 17.0  # ticks  # when server TPS is lower than this number, send a warning message to the op-group above
 
 online-player-record:
-  enable: true
+  enable: false
   cron: '0 0/10 * * * ?'
 
 message-length-limit:

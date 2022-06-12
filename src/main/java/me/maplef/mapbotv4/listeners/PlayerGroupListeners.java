@@ -163,18 +163,16 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         if(e.getGroup().getId() != playerGroup) return;
         if(!config.getBoolean("bot-auto-reply")) return;
 
-        System.out.println("qwq!!!");
-
         String message = e.getMessage().contentToString();
         Set<String> rules = autoReply.getKeys(false);
-        System.out.println(rules);
 
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
             for(String ruleKey : rules){
                 List<String> triggers = autoReply.getStringList(ruleKey + ".trigger");
                 for(String trigger : triggers){
-                    System.out.println(TextComparator.getSimilarity(message, trigger));
-                    if(TextComparator.getSimilarity(message, trigger) * 100 >= autoReply.getInt(ruleKey + ".similarity", 100)){
+                    double similarity = TextComparator.getLSTSimilarity(message, trigger) * 60
+                                    + TextComparator.getCosSimilarity(message, trigger) * 40;
+                    if(similarity >= autoReply.getInt(ruleKey + ".similarity", 100)){
                         BotOperator.sendGroupMessage(e.getGroup().getId(), autoReply.getString(ruleKey + ".reply", "null"));
                         return;
                     }
@@ -225,6 +223,13 @@ public class PlayerGroupListeners extends SimpleListenerHost {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), whitelistDelCommand);
                 }
             }.runTask(Main.getPlugin(Main.class));
+
+            String bindDelCommand = String.format("DELETE FROM PLAYER WHERE NAME = '%s';", ID);
+            try {
+                DatabaseOperator.executeCommand(bindDelCommand);
+            } catch (SQLException ex) {
+                Bukkit.getServer().getLogger().warning(ex.getMessage());
+            }
 
             opGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))
                     .replace("{PLAYER}", ID)

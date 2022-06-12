@@ -6,27 +6,52 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class TextComparator {
-    public static double getSimilarity(String doc1, String doc2) {
+    public static double getLSTSimilarity(String str1 , String str2){
+        int str1Len = str1.length(), str2Len = str2.length();
+        if (str1Len == 0 || str2Len == 0) return 0;
+
+        int[][] distance = new int[str1Len + 1][str2Len + 1];
+
+        int maxLen = Math.max(str1Len, str2Len);
+        for (int num = 0; num < maxLen + 1; num++){
+            if (num < str1Len + 1) distance[num][0] = num;
+            if (num < str2Len + 1) distance[0][num] = num;
+        }
+
+        for (int row = 1; row < str1Len+1; row++){
+            char c1 = str1.charAt(row - 1);
+            for (int col = 1; col < str2Len+1; col++){
+                char c2 = str2.charAt(col - 1);
+                if (c1 == c2)
+                    distance[row][col] = distance[row - 1][col - 1];
+                else
+                    distance[row][col] = Math.min(Math.min(distance[row-1][col], distance[row][col-1]), distance[row-1][col-1]) + 1;
+            }
+        }
+
+        int notSimilarNum = distance[str1Len][str2Len];
+
+        return 1 - (double)notSimilarNum / maxLen;
+    }
+
+    public static double getCosSimilarity(String doc1, String doc2) {
         if (doc1 != null && doc1.trim().length() > 0 && doc2 != null && doc2.trim().length() > 0) {
 
             Map<Integer, int[]> AlgorithmMap = new HashMap<>();
 
-            //将两个字符串中的中文字符以及出现的总数封装到，AlgorithmMap中
             for (int i = 0; i < doc1.length(); i++) {
                 char d1 = doc1.charAt(i);
-                if(isHanZi(d1) || ((int)d1>=65 && (int)d1<=90) || ((int)d1>=97 && (int)d1<=122)){//标点和数字不处理
-                    int charIndex = getGB2312Id(d1);//保存字符对应的GB2312编码
+                if(isHanZi(d1) || ((int)d1>=65 && (int)d1<=90) || ((int)d1>=97 && (int)d1<=122)){
+                    int charIndex = getGB2312Id(d1);
                     if(charIndex == -1) charIndex = d1;
-                    if(charIndex != -1){
-                        int[] fq = AlgorithmMap.get(charIndex);
-                        if(fq != null && fq.length == 2){
-                            fq[0]++;//已有该字符，加1
-                        }else {
-                            fq = new int[2];
-                            fq[0] = 1;
-                            fq[1] = 0;
-                            AlgorithmMap.put(charIndex, fq);//新增字符入map
-                        }
+                    int[] fq = AlgorithmMap.get(charIndex);
+                    if(fq != null && fq.length == 2){
+                        fq[0]++;//已有该字符，加1
+                    }else {
+                        fq = new int[2];
+                        fq[0] = 1;
+                        fq[1] = 0;
+                        AlgorithmMap.put(charIndex, fq);
                     }
                 }
             }
@@ -36,16 +61,14 @@ public class TextComparator {
                 if(isHanZi(d2) || ((int)d2>=65 && (int)d2<=90) || ((int)d2>=97 && (int)d2<=122)){
                     int charIndex = getGB2312Id(d2);
                     if(charIndex == -1) charIndex = d2;
-                    if(charIndex != -1){
-                        int[] fq = AlgorithmMap.get(charIndex);
-                        if(fq != null && fq.length == 2){
-                            fq[1]++;
-                        }else {
-                            fq = new int[2];
-                            fq[0] = 0;
-                            fq[1] = 1;
-                            AlgorithmMap.put(charIndex, fq);
-                        }
+                    int[] fq = AlgorithmMap.get(charIndex);
+                    if(fq != null && fq.length == 2){
+                        fq[1]++;
+                    }else {
+                        fq = new int[2];
+                        fq[0] = 0;
+                        fq[1] = 1;
+                        AlgorithmMap.put(charIndex, fq);
                     }
                 }
             }

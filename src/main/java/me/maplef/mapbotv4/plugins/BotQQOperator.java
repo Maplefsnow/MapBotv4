@@ -3,9 +3,11 @@ package me.maplef.mapbotv4.plugins;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
+import me.maplef.mapbotv4.exceptions.NoPermissionException;
 import me.maplef.mapbotv4.listeners.CheckInGroupListeners;
 import me.maplef.mapbotv4.listeners.PlayerGroupListeners;
 import me.maplef.mapbotv4.utils.BotOperator;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.network.WrongPasswordException;
 import org.bukkit.Bukkit;
@@ -21,6 +23,7 @@ import static org.bukkit.Bukkit.getServer;
 public class BotQQOperator implements MapbotPlugin {
     static final FileConfiguration config = Main.getInstance().getConfig();
     static final FileConfiguration messageConfig = Main.getInstance().getMessageConfig();
+    static final Bot bot = BotOperator.getBot();
 
     public static final Long botAcc = config.getLong("bot-account");
     private static final String botPassword = config.getString("bot-password");
@@ -53,6 +56,7 @@ public class BotQQOperator implements MapbotPlugin {
     public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
         if(args.length == 0)
             throw new InvalidSyntaxException();
+        if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
 
         if(args[0].equals("login")) login();
         else if(args[0].equals("logout")) logout();

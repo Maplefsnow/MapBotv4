@@ -125,8 +125,9 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void onRandom(GroupMessageEvent e){
+    public void onRandomSpeak(GroupMessageEvent e){
         if(e.getGroup().getId() != playerGroup) return;
+        if(repeatCount > 1) return;
 
         Random random = new Random();
         int score = random.nextInt(100);
@@ -161,7 +162,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     @EventHandler
     public void onAutoReply(GroupMessageEvent e){
         if(e.getGroup().getId() != playerGroup) return;
-        if(!config.getBoolean("bot-auto-reply")) return;
+        if(!autoReply.getBoolean("enable-in-group")) return;
 
         String message = e.getMessage().contentToString();
         Set<String> rules = autoReply.getKeys(false);

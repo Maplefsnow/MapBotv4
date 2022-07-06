@@ -1,14 +1,11 @@
 package me.maplef.mapbotv4.commands;
 
 import me.maplef.mapbotv4.Main;
-import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.plugins.BotQQOperator;
 import me.maplef.mapbotv4.plugins.Hitokoto;
 import me.maplef.mapbotv4.plugins.StopServer;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -21,18 +18,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Mapbot implements CommandExecutor, TabExecutor {
-    private final FileConfiguration config = Main.getInstance().getConfig();
     private final FileConfiguration messages = Main.getInstance().getMessageConfig();
     private final String msgHeader = "&b&l============ &d小枫4号 &b&l============&f\n";
     private final String msgFooter = "\n&b&l==============================";
-
-    private final Economy econ = Main.getEconomy();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -60,31 +53,6 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                 break;
             }
 
-            case "keepinv": {
-                if(!(sender instanceof Player)){
-                    Bukkit.getServer().getLogger().info("该指令只能由玩家执行！");
-                    return true;
-                }
-
-                Player player = (Player) sender;
-
-                try {
-                    int keepinvFlag = (Integer) DatabaseOperator.query(player.getName()).get("KEEPINV");
-                    if(keepinvFlag == 1){
-                        DatabaseOperator.executeCommand(String.format("UPDATE PLAYER SET KEEPINV = 0 WHERE NAME = '%s';", player.getName()));
-                        player.sendMessage(CU.t(msgStart + "积分兑换死亡不掉落功能已 &4&l关闭"));
-                    } else {
-                        DatabaseOperator.executeCommand(String.format("UPDATE PLAYER SET KEEPINV = 1 WHERE NAME = '%s';", player.getName()));
-                        player.sendMessage(CU.t(msgStart + "积分兑换死亡不掉落功能已 &a&l开启"));
-                    }
-                    return true;
-                } catch (SQLException | PlayerNotFoundException e) {
-                    e.printStackTrace();
-                    player.sendMessage(msgStart + "发生了亿点点错误...");
-                    return true;
-                }
-            }
-
             case "receive": {
                 if(!(sender instanceof Player)){
                     Bukkit.getServer().getLogger().info("该指令只能由玩家执行！");
@@ -108,46 +76,6 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                     Bukkit.getLogger().warning(e.getClass().getName() + ": " + e.getMessage());
                     return false;
                 }
-            }
-
-            case "haste": {
-                if(!(sender instanceof Player)){
-                    Bukkit.getServer().getLogger().info("该指令只能由玩家执行！");
-                    return true;
-                }
-
-                Player player = (Player) sender;
-
-                if(args.length != 2){
-                    player.sendMessage(getHelpMessage());
-                    return true;
-                }
-
-                double playerMoney = econ.getBalance(player); int time;
-
-                try{
-                    time = Integer.parseInt(args[1]);
-                } catch (NumberFormatException e){
-                    player.sendMessage(CU.t(msgStart + "&c请输入一个整数"));
-                    return true;
-                }
-
-                double cost = time * config.getDouble("haste-per-minute-cost");
-                if(playerMoney < cost){
-                    player.sendMessage(CU.t(msgStart + String.format("兑换 &e%d &b分钟的急迫V共需要 &e%.1f &b猫猫积分，&4你没有足够的积分", time, cost)));
-                    return true;
-                }
-
-                EconomyResponse r = econ.withdrawPlayer(player, cost);
-                if(r.transactionSuccess()){
-                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(),
-                            String.format("effect give %s minecraft:haste %d 4", player.getName(), time * 60));
-                    player.sendMessage(CU.t(msgStart + String.format("&a成功&b兑换 &e%d &b分钟的急迫V效果", time)));
-                } else {
-                    player.sendMessage(CU.t(msgStart + "&4发生错误：" + r.errorMessage));
-                }
-
-                return true;
             }
 
             case "stopserver":{
@@ -262,9 +190,7 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                 "&a[帮助菜单]\n" +
                 "&e/mapbot help &f- 显示此菜单\n" +
                 "&e/mapbot hitokoto &f- 获取一言\n" +
-                "&e/mapbot keepinv &f- 切换是否自动使用猫猫积分免疫死亡掉落\n" +
                 "&e/mapbot receive &f- 切换是否接收群消息\n" +
-                "&e/mapbot haste &f- 积分购买急迫V\n" +
                 msgFooter;
         return CU.t(msg);
     }
@@ -273,7 +199,7 @@ public class Mapbot implements CommandExecutor, TabExecutor {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if(args.length == 1){
-            String[] allCommands = {"help", "hitokoto", "keepinv", "receive", "haste", "stopserver", "cancelstopserver", "login"};
+            String[] allCommands = {"help", "hitokoto", "receive", "stopserver", "cancelstopserver", "login"};
 
             List<String> commandList = new ArrayList<>();
             for(String commandName : allCommands)

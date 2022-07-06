@@ -1,5 +1,6 @@
 bot-account: 123  # QQ bot account
 bot-password: 'No_BUG_Report'  # QQ bot password
+bot-login-device: 'ANDROID_PHONE'  # ANDROID_PHONE, ANDROID_PAD, ANDROID_WATCH, IPAD, MACOS
 
 super-admin-account: [123, 456]  # super administrator accounts
 
@@ -22,8 +23,6 @@ message-forward:
   server-to-group: true
 
 bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility, set to 0 to disable
-bot-auto-reply: true  # see in auto_reply.yml
-haste-per-minute-cost: 3.0
 
 message-head-format: '&f<&b{SENDER}&f> '
 
@@ -48,11 +47,6 @@ message-length-limit:
   enable: true
   ignore-ops: true
   maximum-length: 60  # chars
-
-keep-inventory:
-  enable: true
-  death-log: true  # log the death location to console
-  cost: 40
 
 # Stp is needed
 stop-server:

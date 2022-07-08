@@ -76,6 +76,19 @@ block-words:
     - '（脏话）'
     - '（敏感词）'
 
+cat-images:
+  get-image:
+    enable: true
+  upload-image:
+    enable: true
+    # using Baidu AI API to detect cat, see in https://ai.baidu.com/ai-doc/IMAGERECOGNITION/Zk3bcxdfr
+    cat-detect:
+      enable: true
+      api-key: vn3fu4i67oxxxxxxx
+      secret-key: XXXXXXXXXXXXXX
+      access-token: 24.xxxxxx  # you MUST NOT modify this
+      require-score: 0.5
+
 # 除非你已接入猫猫大陆审核专用系统 COPA，否则请禁用此项
 player-group-auto-manage:
   enable: false

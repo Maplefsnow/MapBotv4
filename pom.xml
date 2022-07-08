@@ -6,7 +6,7 @@
 
     <groupId>me</groupId>
     <artifactId>Mapbot</artifactId>
-    <version>0.10.0beta</version>
+    <version>0.11.0beta</version>
     <packaging>jar</packaging>
 
     <name>MapBot</name>
@@ -131,6 +131,5 @@
             <artifactId>guava</artifactId>
             <version>31.1-jre</version>
         </dependency>
-
     </dependencies>
 </project>

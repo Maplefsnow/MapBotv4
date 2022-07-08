@@ -2,6 +2,7 @@ package me.maplef.mapbotv4;
 
 import me.maplef.mapbotv4.commands.Mapbot;
 import me.maplef.mapbotv4.listeners.GameListeners;
+import me.maplef.mapbotv4.loops.BaiduAccessTokenUpdate;
 import me.maplef.mapbotv4.managers.LoopJobManager;
 import me.maplef.mapbotv4.plugins.BotQQOperator;
 import me.maplef.mapbotv4.utils.CU;
@@ -67,6 +68,8 @@ public class Main extends JavaPlugin implements Listener {
         } catch (SQLException e){
             e.printStackTrace();
         }
+
+        if(this.getConfig().getBoolean("cat-images.upload-image.cat-detect.enable")) BaiduAccessTokenUpdate.updateAuth();
 
         LoopJobManager.register();
 

@@ -27,27 +27,50 @@ public class DatabaseOperator {
 
     public static void init() throws SQLException{
         if(config.getBoolean("use-mysql")){
-            PreparedStatement ps = c.prepareStatement("CREATE TABLE IF NOT EXISTS PLAYER (" +
+            PreparedStatement ps = c.prepareStatement(
+                    "CREATE TABLE IF NOT EXISTS PLAYER (" +
                     "    NAME    TEXT    NOT NULL," +
                     "    QQ      TEXT    NOT NULL," +
                     "    UUID    TEXT," +
-                    "    KEEPINV BOOLEAN DEFAULT 0," +
                     "    MSGREC  BOOLEAN DEFAULT 1" +
                     ");");
             ps.execute();
+
+            ps = c.prepareStatement(
+                    "CREATE TABLE IF NOT EXISTS cat_images (" +
+                    "`id`               bigint      UNSIGNED NOT NULL AUTO_INCREMENT," +
+                    "`uploaded_time`    timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "`uploader`         text        CHARACTER SET utf8 NULL," +
+                    "`base64`           longtext    NOT NULL," +
+                    "`url`              text        NULL," +
+                    "`cat_name`         text        NULL," +
+                    "PRIMARY KEY (`id`)" +
+                    ");");
+            ps.execute();
+
             ps.close();
         } else {
-            PreparedStatement ps = c.prepareStatement("CREATE TABLE IF NOT EXISTS PLAYER (" +
+            PreparedStatement ps = c.prepareStatement(
+                    "CREATE TABLE IF NOT EXISTS PLAYER (" +
                     "    NAME    TEXT    NOT NULL," +
                     "    QQ      TEXT    NOT NULL," +
                     "    UUID    TEXT," +
-                    "    KEEPINV BOOLEAN DEFAULT (0)," +
                     "    MSGREC  BOOLEAN DEFAULT (1)," +
                     "    PRIMARY KEY (" +
                     "        NAME" +
                     "    )" +
                     ");");
             ps.execute();
+
+            ps = c.prepareStatement(
+                    "CREATE TABLE IF NOT EXISTS CAT_IMAGES (" +
+                    "    id            INTEGER   PRIMARY KEY AUTOINCREMENT," +
+                    "    uploaded_time TIMESTAMP DEFAULT (datetime('now', 'localtime') )," +
+                    "    uploader      TEXT," +
+                    "    base64        TEXT      NOT NULL" +
+                    ");");
+            ps.execute();
+
             ps.close();
         }
     }
@@ -74,7 +97,7 @@ public class DatabaseOperator {
         }
     }
 
-    public static Map<String, Object> query(Object arg) throws SQLException, PlayerNotFoundException {
+    public static Map<String, Object> queryPlayer(Object arg) throws SQLException, PlayerNotFoundException {
         Map<String, Object> queryRes = new HashMap<>();
 
         String name = "[-]"; long QQ = -1L; boolean found = false;

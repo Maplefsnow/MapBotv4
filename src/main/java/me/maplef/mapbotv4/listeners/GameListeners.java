@@ -44,7 +44,7 @@ public class GameListeners implements Listener {
             String atName = atMsg.split(" ")[0];
 
             try {
-                long atQQ = Long.parseLong(DatabaseOperator.query(atName).get("QQ").toString());
+                long atQQ = Long.parseLong(DatabaseOperator.queryPlayer(atName).get("QQ").toString());
                 msg.append(player.getName()).append(": ").append(new At(atQQ)).append(atMsg.substring(atName.length())).build();
             } catch (SQLException | PlayerNotFoundException ex) {
                 Bukkit.getServer().getLogger().warning(ex.getClass().getName() + ": " + ex.getMessage());

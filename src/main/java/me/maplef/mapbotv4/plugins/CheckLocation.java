@@ -5,10 +5,7 @@ import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.exceptions.NoPermissionException;
 import me.maplef.mapbotv4.utils.BotOperator;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
-import net.mamoe.mirai.message.data.MessageUtils;
-import net.mamoe.mirai.message.data.PlainText;
+import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -24,11 +21,11 @@ public class CheckLocation implements MapbotPlugin {
     private static final Long opGroup = config.getLong("op-group");
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
         if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
 
-        String targetPlayer = args[0];
+        String targetPlayer = args[0].contentToString();
 
         String playerInfo;
         String msg = "";
@@ -57,8 +54,8 @@ public class CheckLocation implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("location", CheckLocation.class.getMethod("onEnable", Long.class, Long.class, String[].class));
-        commands.put("位置", CheckLocation.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("location", CheckLocation.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("位置", CheckLocation.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("location", "#location <玩家ID> - 获取指定玩家位置");
         usages.put("位置", "#位置 <玩家ID> - 获取指定玩家位置");

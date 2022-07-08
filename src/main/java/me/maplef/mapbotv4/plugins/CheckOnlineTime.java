@@ -5,6 +5,7 @@ import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,7 +19,7 @@ public class CheckOnlineTime implements MapbotPlugin {
     private static final FileConfiguration onlineTimes = Main.getInstance().getOnlineTimeConfig();
 
     public static int check(String name, int mode) throws SQLException, PlayerNotFoundException {
-        String playerUUID = DatabaseOperator.query(name).get("UUID").toString();
+        String playerUUID = DatabaseOperator.queryPlayer(name).get("UUID").toString();
 
         int dailyTime = onlineTimes.getInt(playerUUID.concat(".daily_play_time")) / 60000;
         int weeklyTime = onlineTimes.getInt(playerUUID.concat(".weekly_play_time")) / 60000;
@@ -35,16 +36,16 @@ public class CheckOnlineTime implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
 
-        String fixedName = (String) DatabaseOperator.query(args[0]).get("NAME"); int onlineTime = 0;
+        String fixedName = (String) DatabaseOperator.queryPlayer(args[0]).get("NAME"); int onlineTime;
         String[] timeText = {"今天", "本周", "本月", "总计"};
 
         int mode = 0;
         if(args.length > 1){
             try{
-                mode = Integer.parseInt(args[1]);
+                mode = Integer.parseInt(args[1].contentToString());
             } catch (NumberFormatException e){
                 throw new Exception("请输入一个整数");
             }
@@ -61,8 +62,8 @@ public class CheckOnlineTime implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("onlinetime", CheckOnlineTime.class.getMethod("onEnable", Long.class, Long.class, String[].class));
-        commands.put("在线时长", CheckOnlineTime.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("onlinetime", CheckOnlineTime.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("在线时长", CheckOnlineTime.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("onlinetime", "#onlinetime <玩家ID> [时段] - 查询玩家在线时长\n" +
                 "其中时段一项为可选参数，0：当天，1：当周，2：当月，3：总计");

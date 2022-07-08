@@ -8,10 +8,7 @@ import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Member;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageUtils;
-import net.mamoe.mirai.message.data.PlainText;
+import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -48,7 +45,7 @@ public class MutePlayers implements MapbotPlugin {
 
     }
 
-    public MessageChain onMute(Long groupID, Long senderID, String[] args) throws Exception {
+    public MessageChain onMute(Long groupID, Long senderID, Message[] args) throws Exception {
         if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
         if(args.length < 2)
@@ -56,27 +53,27 @@ public class MutePlayers implements MapbotPlugin {
 
         int muteTime;
         try {
-            muteTime = Integer.parseInt(args[1]);
+            muteTime = Integer.parseInt(args[1].contentToString());
         } catch (NumberFormatException e){
             throw new Exception("请输入一个整数");
         }
 
-        String playerName = DatabaseOperator.query(args[0]).get("NAME").toString();
-        long playerQQ = Long.parseLong(DatabaseOperator.query(args[0]).get("QQ").toString());
+        String playerName = DatabaseOperator.queryPlayer(args[0]).get("NAME").toString();
+        long playerQQ = Long.parseLong(DatabaseOperator.queryPlayer(args[0]).get("QQ").toString());
 
         mute(playerName, playerQQ, muteTime);
 
         return MessageUtils.newChain(new At(senderID), new PlainText(String.format(" 禁言了 %s %d 分钟", playerName, muteTime)));
     }
 
-    public MessageChain onUnMute(Long groupID, Long senderID, String[] args) throws Exception {
+    public MessageChain onUnMute(Long groupID, Long senderID, Message[] args) throws Exception {
         if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
         if(args.length < 1)
             throw new InvalidSyntaxException();
 
-        String playerName = DatabaseOperator.query(args[0]).get("NAME").toString();
-        long playerQQ = Long.parseLong(DatabaseOperator.query(args[0]).get("QQ").toString());
+        String playerName = DatabaseOperator.queryPlayer(args[0].contentToString()).get("NAME").toString();
+        long playerQQ = Long.parseLong(DatabaseOperator.queryPlayer(args[0].contentToString()).get("QQ").toString());
 
         unmute(playerName, playerQQ);
 
@@ -84,7 +81,7 @@ public class MutePlayers implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
         return null;
     }
 
@@ -94,10 +91,10 @@ public class MutePlayers implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("mute", MutePlayers.class.getMethod("onMute", Long.class, Long.class, String[].class));
-        commands.put("禁言", MutePlayers.class.getMethod("onMute", Long.class, Long.class, String[].class));
-        commands.put("unmute", MutePlayers.class.getMethod("onUnMute", Long.class, Long.class, String[].class));
-        commands.put("解除禁言", MutePlayers.class.getMethod("onUnMute", Long.class, Long.class, String[].class));
+        commands.put("mute", MutePlayers.class.getMethod("onMute", Long.class, Long.class, Message[].class));
+        commands.put("禁言", MutePlayers.class.getMethod("onMute", Long.class, Long.class, Message[].class));
+        commands.put("unmute", MutePlayers.class.getMethod("onUnMute", Long.class, Long.class, Message[].class));
+        commands.put("解除禁言", MutePlayers.class.getMethod("onUnMute", Long.class, Long.class, Message[].class));
 
         usages.put("mute", "#mute <player> <minutes> - 在群和游戏内禁言某个玩家");
         usages.put("禁言", "#禁言 <玩家> <分钟数> - 在群和游戏内禁言某个玩家");

@@ -3,10 +3,11 @@ package me.maplef.mapbotv4.plugins;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
-import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.utils.HttpClient4;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.Bukkit;
@@ -82,9 +83,9 @@ public class Weather implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String [] args) throws Exception{
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
-        return new MessageChainBuilder().append(WeatherMessage(args[0])).build();
+        return new MessageChainBuilder().append(WeatherMessage(args[0].contentToString())).build();
     }
 
     @Override
@@ -93,8 +94,8 @@ public class Weather implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("weather", Weather.class.getMethod("onEnable", Long.class, Long.class, String[].class));
-        commands.put("天气", Weather.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("weather", Weather.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("天气", Weather.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("weather", "#weather <城市名> - 查询指定城市的天气");
         usages.put("天气", "#天气 <城市名> - 查询指定城市的天气");

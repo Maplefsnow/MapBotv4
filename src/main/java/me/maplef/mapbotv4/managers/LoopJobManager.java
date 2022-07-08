@@ -35,6 +35,8 @@ public class LoopJobManager {
                 Scheduler.registerJob("InnerGroupKick", String.valueOf(inner_group_kick_cron), InnerGroupKick.class);
             if(config.getBoolean("online-player-record.enable"))
                 Scheduler.registerJob("OnlinePlayerRecorder", String.valueOf(online_player_record_cron), OnlinePlayerRecorder.class);
+            if(config.getBoolean("cat-images.upload-image.cat-detect.enable"))
+                Scheduler.registerJob("UpdateBaiduAccessToken", "0 0 0 /10 * ? *", BaiduAccessTokenUpdate.class);
 
             Scheduler.scheduler.start();
         } catch (SchedulerException exception){

@@ -32,7 +32,7 @@ public class InnerGroupKick implements Job {
 
         for(NormalMember member : inner_players) {
             try {
-                String player_name = DatabaseOperator.query(member.getId()).get("NAME").toString();
+                String player_name = DatabaseOperator.queryPlayer(member.getId()).get("NAME").toString();
 
                 if(whitelist.contains(player_name)) continue;
 

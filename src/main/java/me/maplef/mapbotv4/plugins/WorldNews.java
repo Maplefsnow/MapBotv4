@@ -42,7 +42,7 @@ public class WorldNews implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args){
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args){
         return SendNews(groupID);
     }
 
@@ -52,8 +52,8 @@ public class WorldNews implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("news", WorldNews.class.getMethod("onEnable", Long.class, Long.class, String[].class));
-        commands.put("新闻", WorldNews.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("news", WorldNews.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("新闻", WorldNews.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("news", "#news - 获取今日新闻");
         usages.put("新闻", "#新闻 - 获取今日新闻");

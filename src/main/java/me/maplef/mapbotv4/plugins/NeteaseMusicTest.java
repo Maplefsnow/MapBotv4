@@ -8,6 +8,7 @@ import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.utils.HttpClient4;
 import me.maplef.mapbotv4.utils.UrlUtils;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageUtils;
 import net.mamoe.mirai.message.data.PlainText;
@@ -91,14 +92,14 @@ public class NeteaseMusicTest implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
-        switch (args[0]) {
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
+        switch (args[0].contentToString()) {
             case "login": {
                 return login();
             }
             case "search": {
                 if (args.length < 2) throw new InvalidSyntaxException();
-                return search(args[1]);
+                return search(args[1].contentToString());
             }
             default:
                 throw new IllegalStateException("未知的参数: " + args[0]);
@@ -111,7 +112,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("netease", NeteaseMusicTest.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("netease", NeteaseMusicTest.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("netease", "#netease - 网易云音乐（测试版）");
 

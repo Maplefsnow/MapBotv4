@@ -8,6 +8,7 @@ import me.maplef.mapbotv4.listeners.CheckInGroupListeners;
 import me.maplef.mapbotv4.listeners.PlayerGroupListeners;
 import me.maplef.mapbotv4.utils.BotOperator;
 import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.network.WrongPasswordException;
 import org.bukkit.Bukkit;
@@ -53,13 +54,13 @@ public class BotQQOperator implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
         if(args.length == 0)
             throw new InvalidSyntaxException();
         if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
 
-        if(args[0].equals("login")) login();
-        else if(args[0].equals("logout")) logout();
+        if(args[0].contentToString().equals("login")) login();
+        else if(args[0].contentToString().equals("logout")) logout();
         else throw new IllegalArgumentException("未知的参数: " + args[0]);
 
         return null;
@@ -71,7 +72,7 @@ public class BotQQOperator implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("bot", BotQQOperator.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("bot", BotQQOperator.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("bot", "#bot - 操作bot账号");
 

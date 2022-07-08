@@ -65,7 +65,7 @@ public class CatSaying implements MapbotPlugin {
 
         String urlPattern = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]";
 
-        String playerName = DatabaseOperator.query(senderID).get("NAME").toString();
+        String playerName = DatabaseOperator.queryPlayer(senderID).get("NAME").toString();
         LinkedHashMap<String, String> params = new LinkedHashMap<>();
 
         params.put("gamename", playerName);
@@ -89,7 +89,7 @@ public class CatSaying implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
         return null;
     }
 

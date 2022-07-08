@@ -6,6 +6,7 @@ import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import net.milkbowl.vault.economy.Economy;
@@ -14,7 +15,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.lang.reflect.Method;
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -30,7 +31,7 @@ public class CheckMoney implements MapbotPlugin {
     public static double check(Object[] args) throws InvalidSyntaxException, PlayerNotFoundException, SQLException {
         if(args[0].toString().isEmpty()) throw new InvalidSyntaxException();
 
-        String UUIDString = (String) DatabaseOperator.query(args[0]).get("UUID");
+        String UUIDString = (String) DatabaseOperator.queryPlayer(args[0]).get("UUID");
 
         UUID uuid = UUID.fromString(UUIDString);
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
@@ -39,7 +40,7 @@ public class CheckMoney implements MapbotPlugin {
     }
 
     public static double check(Object arg) throws PlayerNotFoundException, SQLException {
-        String UUIDString = (String) DatabaseOperator.query(arg).get("UUID");
+        String UUIDString = (String) DatabaseOperator.queryPlayer(arg).get("UUID");
 
         UUID uuid = UUID.fromString(UUIDString);
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
@@ -48,15 +49,15 @@ public class CheckMoney implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
         MessageChainBuilder msg = new MessageChainBuilder();
         String playerName;
 
         if(Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID) && args.length > 0){
-            playerName = (String) DatabaseOperator.query(args[0]).get("NAME");
-            msg.append(String.format("%s 的%s为 %.1f", playerName, messages.getString("currency-name"), check(args)));
+            playerName = (String) DatabaseOperator.queryPlayer(args[0].contentToString()).get("NAME");
+            msg.append(String.format("%s 的%s为 %.1f", playerName, messages.getString("currency-name"), check(args[0].contentToString())));
         } else {
-            playerName = (String) DatabaseOperator.query(senderID).get("NAME");
+            playerName = (String) DatabaseOperator.queryPlayer(senderID).get("NAME");
             msg.append(String.format("%s 的%s为 %.1f", playerName, messages.getString("currency-name"), check(senderID)));
         }
 
@@ -69,8 +70,8 @@ public class CheckMoney implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("money", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, String[].class));
-        commands.put("钱钱", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("money", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("钱钱", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("money", "#money - 查询自己的货币数");
         usages.put("钱钱", "#钱钱 - 查询自己的货币数");

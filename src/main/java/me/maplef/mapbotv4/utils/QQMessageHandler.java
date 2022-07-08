@@ -36,7 +36,7 @@ public class QQMessageHandler {
         Long quoteFromID = null; String quotePlayerNAME = null;
         try {
             quoteFromID = quoteSource.getFromId();
-            quotePlayerNAME = (String) DatabaseOperator.query(quoteSource.getFromId()).get("NAME");
+            quotePlayerNAME = (String) DatabaseOperator.queryPlayer(quoteSource.getFromId()).get("NAME");
         } catch (SQLException | PlayerNotFoundException ex) {
             ex.printStackTrace();
         }
@@ -46,7 +46,7 @@ public class QQMessageHandler {
         if(quoteFromID.equals(bot.getId())){
             String[] msgSplit = quoteOriginalMessage.contentToString().split(": ", 2);
             try{
-                DatabaseOperator.query(msgSplit[0]);
+                DatabaseOperator.queryPlayer(msgSplit[0]);
                 quoteHover = HoverEvent.showText(Component.text(String.format("%s:\n%s", msgSplit[0], msgSplit[1])));
                 quoteComponent = Component.text(String.format("[回复%s的消息]", msgSplit[0]))
                         .color(NamedTextColor.GRAY)
@@ -143,7 +143,7 @@ public class QQMessageHandler {
 
                 String atID = "";
                 try {
-                    atID = (String) DatabaseOperator.query(atNum).get("NAME");
+                    atID = (String) DatabaseOperator.queryPlayer(atNum).get("NAME");
                     atList.add(atID);
                 } catch (SQLException ex) {
                     ex.printStackTrace();

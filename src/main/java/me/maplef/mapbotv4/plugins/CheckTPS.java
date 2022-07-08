@@ -3,6 +3,7 @@ package me.maplef.mapbotv4.plugins;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.GroupNotAllowedException;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.Bukkit;
@@ -20,7 +21,7 @@ public class CheckTPS implements MapbotPlugin {
     private static final Long playerGroup = config.getLong("player-group");
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception{
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
         if(!Objects.equals(groupID, opGroup) && !Objects.equals(groupID, playerGroup))
             throw new GroupNotAllowedException();
 
@@ -34,7 +35,7 @@ public class CheckTPS implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("tps", CheckTPS.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("tps", CheckTPS.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("tps", "#tps - 查询服务器当前tps");
 

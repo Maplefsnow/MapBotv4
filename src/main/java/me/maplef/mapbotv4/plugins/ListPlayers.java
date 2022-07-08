@@ -2,6 +2,7 @@ package me.maplef.mapbotv4.plugins;
 
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.Bukkit;
@@ -26,7 +27,7 @@ public class ListPlayers implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args){
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args){
         List<String> onlineList = list();
 
         StringBuilder msgBuilder = new StringBuilder();
@@ -46,8 +47,8 @@ public class ListPlayers implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("list", ListPlayers.class.getMethod("onEnable", Long.class, Long.class, String[].class));
-        commands.put("在线", ListPlayers.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("list", ListPlayers.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("在线", ListPlayers.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("list", "#list - 获取在线玩家列表");
         usages.put("在线", "#在线 - 获取在线玩家列表");

@@ -1,12 +1,13 @@
 package me.maplef.mapbotv4.plugins;
 
+import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.NoPermissionException;
-import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.CU;
 import net.kyori.adventure.text.Component;
 import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.Bukkit;
@@ -60,7 +61,7 @@ public class StopServer implements MapbotPlugin {
         }
     }
 
-    public static MessageChain stopLater(Long groupID, Long senderID, String[] args) throws Exception{
+    public static MessageChain stopLater(Long groupID, Long senderID, Message[] args) throws Exception{
         if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
         if(stopFlag) throw new Exception("已存在一个正在进行的关服定时任务");
@@ -70,7 +71,7 @@ public class StopServer implements MapbotPlugin {
         int time = 60;
         if(args.length > 0){
             try{
-                time = Integer.parseInt(args[0]);
+                time = Integer.parseInt(args[0].contentToString());
                 if(time < 30) throw new Exception("请给定一个不小于 30 的整数");
             } catch (NumberFormatException e){
                 throw new Exception("请给定一个不小于 30 的整数");
@@ -105,7 +106,7 @@ public class StopServer implements MapbotPlugin {
         return new MessageChainBuilder().append(new At(senderID)).append(msg).build();
     }
 
-    public static MessageChain stopCancel(Long groupID, Long senderID, String[] args) throws Exception{
+    public static MessageChain stopCancel(Long groupID, Long senderID, Message[] args) throws Exception{
         if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
 
@@ -118,7 +119,7 @@ public class StopServer implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args) throws Exception {
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
         return null;
     }
 
@@ -128,10 +129,10 @@ public class StopServer implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("stopserver", StopServer.class.getMethod("stopLater", Long.class, Long.class, String[].class));
-        commands.put("关服", StopServer.class.getMethod("stopLater", Long.class, Long.class, String[].class));
-        commands.put("stopcancel", StopServer.class.getMethod("stopCancel", Long.class, Long.class, String[].class));
-        commands.put("取消关服", StopServer.class.getMethod("stopCancel", Long.class, Long.class, String[].class));
+        commands.put("stopserver", StopServer.class.getMethod("stopLater", Long.class, Long.class, Message[].class));
+        commands.put("关服", StopServer.class.getMethod("stopLater", Long.class, Long.class, Message[].class));
+        commands.put("stopcancel", StopServer.class.getMethod("stopCancel", Long.class, Long.class, Message[].class));
+        commands.put("取消关服", StopServer.class.getMethod("stopCancel", Long.class, Long.class, Message[].class));
 
         usages.put("stopserver", "#stopserver [时间/秒] - 设定一个停服倒计时");
         usages.put("关服", "#关服 [时间/秒] - 设定一个停服倒计时");

@@ -42,18 +42,26 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     static MessageChain repeatedMessage = null;
     static int repeatCount = 0;
 
-    private final String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\s]|[^\\x00-\\xff])+)?$";
+    private final String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
 
     @EventHandler
     public void onCommandReceive(GroupMessageEvent e){
-        if(!Pattern.matches(commandPattern, e.getMessage().contentToString())) return;
+        if(!Pattern.matches(commandPattern, e.getMessage().get(1).contentToString())) return;
 
-        ArrayList<String> msgSplit = new ArrayList<>(List.of(e.getMessage().contentToString().split(" ")));
-        String command = msgSplit.get(0).substring(1);
-        msgSplit.remove(0);
-        int size = msgSplit.size();
-        String[] args = msgSplit.toArray(new String[size]);
+        String command = e.getMessage().get(1).contentToString().split(" ", 2)[0].substring(1);
 
+        List<Message> argsList = new ArrayList<>();
+        for(Message message : e.getMessage()){
+            if(message instanceof PlainText){
+                for(String arg : message.contentToString().split(" "))
+                    argsList.add(new PlainText(arg));
+            } else {
+                argsList.add(message);
+            }
+        }
+        argsList.remove(0); argsList.remove(0);
+
+        Message[] args = argsList.toArray(new Message[0]);
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
             MessageChainBuilder message = new MessageChainBuilder();
             try {
@@ -75,7 +83,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         ClickEvent clickMsgHead = null; Component msgHeadComponent;
         try{
-            clickMsgHead = ClickEvent.suggestCommand("@" + DatabaseOperator.query(e.getSender().getId()).get("NAME") + " ");
+            clickMsgHead = ClickEvent.suggestCommand("@" + DatabaseOperator.queryPlayer(e.getSender().getId()).get("NAME") + " ");
         } catch (Exception ignored){}
         String msgHead = Objects.requireNonNull(config.getString("message-head-format")).replace("{SENDER}", e.getSender().getNameCard());
         msgHeadComponent = Component.text(CU.t(msgHead)).clickEvent(clickMsgHead);
@@ -85,7 +93,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             for(Player player : Bukkit.getServer().getOnlinePlayers()) {
                 int sendFlag = 1;
                 try {
-                    sendFlag = (Integer) DatabaseOperator.query(player.getName()).get("MSGREC");
+                    sendFlag = (Integer) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
                 } catch (SQLException ex) {
                     Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
                 } catch (PlayerNotFoundException ignored) {}
@@ -202,7 +210,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         String playerGroupMsg, opGroupMsg;
 
         try{
-            ID = DatabaseOperator.query(QQ).get("NAME").toString();
+            ID = DatabaseOperator.queryPlayer(QQ).get("NAME").toString();
         } catch (SQLException ex){
             ex.printStackTrace();
         } catch (PlayerNotFoundException ignored){}
@@ -280,8 +288,6 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         if(e.getMessage().contentToString().contains("test")){
             Bukkit.getServer().getLogger().info("tested!");
-
-            System.out.println(config.getKeys(false));
         }
     }
 }

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.utils.HttpClient4;
+import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 
@@ -22,7 +23,7 @@ public class Hitokoto implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, String[] args){
+    public MessageChain onEnable(Long groupID, Long senderID, Message[] args){
         return new MessageChainBuilder().append(HitokotoMessage()).build();
     }
 
@@ -32,8 +33,8 @@ public class Hitokoto implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("hitokoto", Hitokoto.class.getMethod("onEnable", Long.class, Long.class, String[].class));
-        commands.put("一言", Hitokoto.class.getMethod("onEnable", Long.class, Long.class, String[].class));
+        commands.put("hitokoto", Hitokoto.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("一言", Hitokoto.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
 
         usages.put("hitokoto", "#hitokoto - 获取一言");
         usages.put("一言", "#一言 - 获取一言");

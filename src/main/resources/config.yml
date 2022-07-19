@@ -36,12 +36,12 @@ bind-id-and-qq:
 
 tps-check:
   enable: true
-  cron: '0 0/1 * * * ?'  # to decide the frequency of TPS-Check
+  interval: 1  # minutes
   threshold: 17.0  # ticks  # when server TPS is lower than this number, send a warning message to the op-group above
 
 online-player-record:
   enable: false
-  cron: '0 0/10 * * * ?'
+  interval: 10  # minutes
 
 message-length-limit:
   enable: true
@@ -87,7 +87,12 @@ cat-images:
       api-key: vn3fu4i67oxxxxxxx
       secret-key: XXXXXXXXXXXXXX
       access-token: 24.xxxxxx  # you MUST NOT modify this
-      require-score: 0.5
+      require-score: 0.1
+    limit:
+      enable: true
+      max-image-size: 2048  # kb
+      cooldown: 5  # minutes
+      max-images-per-day: 10
 
 # 除非你已接入猫猫大陆审核专用系统 COPA，否则请禁用此项
 player-group-auto-manage:

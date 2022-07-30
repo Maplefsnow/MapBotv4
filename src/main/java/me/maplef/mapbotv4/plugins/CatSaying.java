@@ -9,6 +9,8 @@ import me.maplef.mapbotv4.utils.*;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -21,13 +23,13 @@ import java.util.regex.Pattern;
 public class CatSaying implements MapbotPlugin {
     private static final Bot bot = BotOperator.getBot();
 
-    private final static String GET_URL = "https://sslapi.cdn.v2.copa-api.fun/?s=App.CatSaying.GetRandomCatsaying";
-    private final static String SUBMIT_URL = "https://sslapi.cdn.v2.copa-api.fun/?s=App.CatSaying.SubmitCatSaying";
+    private static final String GET_URL = "https://sslapi.cdn.v2.copa-api.fun/?s=App.CatSaying.GetRandomCatsaying";
+    private static final String SUBMIT_URL = "https://sslapi.cdn.v2.copa-api.fun/?s=App.CatSaying.SubmitCatSaying";
 
     public static MessageChain getCatSayingMessage(Long groupID) throws Exception{
-        String resString = HttpClient4.doGet(GET_URL);
-        if(resString == null) resString = HttpClient4.doGet(GET_URL);
-        if(resString == null) throw new Exception("获取猫言猫语失败");
+        String resString = HttpUtils.doGet(GET_URL);
+        if(resString.equals("")) resString = HttpUtils.doGet(GET_URL);
+        if(resString.equals("")) throw new Exception("获取猫言猫语失败");
 
         JSONObject jsonRes = JSON.parseObject(resString);
 
@@ -77,7 +79,7 @@ public class CatSaying implements MapbotPlugin {
 
         String url = UrlUtils.addParams(SUBMIT_URL, params);
 
-        String resString = HttpClient4.doGet(url);
+        String resString = HttpUtils.doGet(url);
         if(resString.isEmpty()) throw new Exception("提交猫言失败");
         JSONObject jsonRes = JSON.parseObject(resString);
         if(jsonRes.getInteger("ret") != 200) throw new Exception("提交猫言失败");
@@ -89,7 +91,7 @@ public class CatSaying implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
         return null;
     }
 

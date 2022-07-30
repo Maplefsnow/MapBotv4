@@ -1,7 +1,7 @@
 package me.maplef.mapbotv4.utils;
 
-import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -11,21 +11,22 @@ import java.util.Locale;
 import java.util.Map;
 
 public class DatabaseOperator {
-    static final FileConfiguration config = Main.getInstance().getConfig();
+    ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 
-    static final String MYSQL_HOST = config.getString("mysql-host");
-    static final String PORT = config.getString("mysql-port");
-    static final String DB_NAME = config.getString("mysql-database");
-    static final String DB_URL = "jdbc:mysql://" + MYSQL_HOST + ":" + PORT + "/" + DB_NAME;
+    final String MYSQL_HOST = config.getString("mysql-host");
+    final String PORT = config.getString("mysql-port");
+    final String DB_NAME = config.getString("mysql-database");
+    final String DB_URL = "jdbc:mysql://" + MYSQL_HOST + ":" + PORT + "/" + DB_NAME;
 
-    static final String USERNAME = config.getString("mysql-username");
-    static final String PASSWORD = config.getString("mysql-password");
+    final String USERNAME = config.getString("mysql-username");
+    final String PASSWORD = config.getString("mysql-password");
 
-    public static final Connection c = connect();
+    private final Connection c = connect();
 
-    public static void init() throws SQLException{
+    public void init() throws SQLException{
         if(config.getBoolean("use-mysql")){
             PreparedStatement ps = c.prepareStatement(
                     "CREATE TABLE IF NOT EXISTS PLAYER (" +
@@ -75,7 +76,9 @@ public class DatabaseOperator {
         }
     }
 
-    private static Connection connect() {
+    private Connection connect() {
+        FileConfiguration config = configManager.getConfig();
+
         if(config.getBoolean("use-mysql")){
             Connection conn = null;
             try{
@@ -100,30 +103,32 @@ public class DatabaseOperator {
     public static Map<String, Object> queryPlayer(Object arg) throws SQLException, PlayerNotFoundException {
         Map<String, Object> queryRes = new HashMap<>();
 
-        String name = "[-]"; long QQ = -1L; boolean found = false;
+        String name = "[-]"; long QQ = -1L;
         if(arg instanceof String) name = (String) arg;
         else if (arg instanceof Long) QQ = (Long) arg;
 
-        try(Statement stmt = c.createStatement()){
+        try(Statement stmt = new DatabaseOperator().getConnect().createStatement()){
             ResultSet res = stmt.executeQuery("SELECT * FROM PLAYER;");
             while(res.next()){
                 if(res.getString("NAME").toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT)) || res.getLong("QQ") == QQ){
-                    found = true;
                     ResultSetMetaData data = res.getMetaData();
                     for(int i = 1; i <= data.getColumnCount(); ++i)
                         queryRes.put(data.getColumnName(i), res.getObject(data.getColumnName(i)));
-                    break;
+                    return queryRes;
                 }
             }
         }
 
-        if(found) return queryRes;
-        else throw new PlayerNotFoundException();
+        throw new PlayerNotFoundException();
     }
 
-    public static void executeCommand(String sqlCommand) throws SQLException{
+    public void executeCommand(String sqlCommand) throws SQLException{
         try(Statement stmt = c.createStatement()){
             stmt.execute(sqlCommand);
         }
+    }
+
+    public Connection getConnect(){
+        return c;
     }
 }

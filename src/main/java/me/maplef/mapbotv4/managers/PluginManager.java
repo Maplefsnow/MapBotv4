@@ -16,16 +16,16 @@ import java.util.Set;
 
 public class PluginManager {
     @SuppressWarnings("unchecked")
-    public static MessageChain commandHandler(String command, Long groupID, Long senderID , Message[] args) throws Exception{
+    public static MessageChain commandHandler(String command, Long groupID, Long senderID , Message[] args, QuoteReply quoteReply) throws Exception{
         Reflections reflections = new Reflections("me.maplef.mapbotv4.plugins");
         Set<Class<? extends MapbotPlugin>> pluginClasses = reflections.getSubTypesOf(MapbotPlugin.class);
 
-        switch (command){
-            case "help": case "菜单": {
+        switch (command) {
+            case "help", "菜单" -> {
                 MessageChainBuilder helpMsg = new MessageChainBuilder();
                 helpMsg.append(new At(senderID)).append(" 你好，以下是我支持的命令\n(其中\"<>\"内的为必填参数，\"[]\"内的为可选参数)\n——————\n");
 
-                for(Class<? extends MapbotPlugin> singleClass : pluginClasses){
+                for (Class<? extends MapbotPlugin> singleClass : pluginClasses) {
                     Map<String, Object> pluginInfo = (Map<String, Object>) singleClass.getMethod("register").invoke(singleClass.getDeclaredConstructor().newInstance());
                     Map<String, String> pluginUsage = (Map<String, String>) pluginInfo.get("usages");
 
@@ -35,8 +35,7 @@ public class PluginManager {
 
                 return helpMsg.build();
             }
-
-            case "about": case "关于": {
+            case "about", "关于" -> {
                 PluginDescriptionFile description = Main.getInstance().getDescription();
                 String name = description.getName();
                 String author = description.getAuthors().get(0);
@@ -44,16 +43,16 @@ public class PluginManager {
                 String github_url = "https://github.com/Maplefsnow/MapBotv4";
 
                 return MessageUtils.newChain(new PlainText(String.format(
-                                "%s v%s\n" +
+                        "%s v%s\n" +
                                 "Author: %s\n" +
-                                "GitHub: %s",
-                                name, version, author, github_url)));
+                                "GitHub: %s\n" +
+                                "技术支持Q群: 835413855",
+                        name, version, author, github_url)));
             }
-
-            case "plugins": case "插件": {
+            case "plugins", "插件" -> {
                 StringBuilder pluginInfoStrBuilder = new StringBuilder();
 
-                for(Class <? extends MapbotPlugin> singleClass : pluginClasses){
+                for (Class<? extends MapbotPlugin> singleClass : pluginClasses) {
                     Map<String, Object> pluginInfo = (Map<String, Object>) singleClass.getMethod("register").invoke(singleClass.getDeclaredConstructor().newInstance());
 
                     pluginInfoStrBuilder.append(String.format("%s - %s\nv%s\nAuthor: %s\n\n",
@@ -65,27 +64,27 @@ public class PluginManager {
 
                 return MessageUtils.newChain(new PlainText(pluginInfoStr));
             }
-
-            default: {
-                for(Class<? extends MapbotPlugin> singleClass : pluginClasses){
+            default -> {
+                for (Class<? extends MapbotPlugin> singleClass : pluginClasses) {
                     Map<String, Object> pluginInfo = (Map<String, Object>) singleClass.getMethod("register").invoke(singleClass.getDeclaredConstructor().newInstance());
                     Map<String, Method> pluginCommands = (Map<String, Method>) pluginInfo.get("commands");
 
-                    if(pluginCommands.containsKey(command)){
-                        try{
-                            return (MessageChain) pluginCommands.get(command).invoke(singleClass.getDeclaredConstructor().newInstance(), groupID, senderID, args);
-                        } catch (InvocationTargetException e){
+                    if (pluginCommands.containsKey(command)) {
+                        try {
+                            return (MessageChain) pluginCommands.get(command).invoke(singleClass.getDeclaredConstructor().newInstance(), groupID, senderID, args, quoteReply);
+                        } catch (InvocationTargetException e) {
                             MessageChainBuilder errorMsg = new MessageChainBuilder();
                             errorMsg.append(new At(senderID)).append(" ");
 
-                            if(e.getTargetException() instanceof InvalidSyntaxException){
+                            if (e.getTargetException() instanceof InvalidSyntaxException) {
                                 Map<String, String> pluginUsage = (Map<String, String>) pluginInfo.get("usages");
                                 errorMsg.append(" 语法错误\n用法: ").append(pluginUsage.get(command));
-                            } else if(e.getTargetException() instanceof SQLException){
+                            } else if (e.getTargetException() instanceof SQLException) {
                                 errorMsg.append(" 数据库繁忙，请稍后重试");
                                 e.getTargetException().printStackTrace();
                             } else {
                                 errorMsg.append(e.getTargetException().getMessage());
+                                e.getTargetException().printStackTrace();
                             }
 
                             return errorMsg.build();

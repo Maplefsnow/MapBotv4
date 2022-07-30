@@ -3,6 +3,7 @@ package me.maplef.mapbotv4.listeners;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
@@ -23,15 +24,14 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class GameListeners implements Listener {
-    final FileConfiguration config = Main.getInstance().getConfig();
-    final FileConfiguration messages = Main.getInstance().getMessageConfig();
-    final FileConfiguration autoReply = Main.getInstance().getAutoReplyConfig();
-
-    private final Long groupID = config.getLong("player-group");
-    private final String msgPrefix = messages.getString("message-prefix");
+    ConfigManager configManager = new ConfigManager();
 
     @EventHandler
     public void onMessageForward(AsyncChatEvent e) {
+        FileConfiguration config = configManager.getConfig();
+
+        Long groupID = config.getLong("player-group");
+
         if(!config.getBoolean("message-forward.server-to-group")) return;
         if(e.isCancelled()) return;
 
@@ -58,6 +58,11 @@ public class GameListeners implements Listener {
 
     @EventHandler
     public void onAutoReply(AsyncChatEvent e){
+        FileConfiguration messages = configManager.getMessageConfig();
+        FileConfiguration autoReply = configManager.getAutoReplyConfig();
+
+        String msgPrefix = messages.getString("message-prefix");
+
         if(!autoReply.getBoolean("enable-in-group")) return;
 
         String message = ((TextComponent) e.message()).content();

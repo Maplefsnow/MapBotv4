@@ -1,6 +1,6 @@
 package me.maplef.mapbotv4.listeners;
 
-import me.maplef.mapbotv4.Main;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
 import net.mamoe.mirai.Mirai;
 import net.mamoe.mirai.event.EventHandler;
@@ -12,13 +12,14 @@ import net.mamoe.mirai.message.data.MessageChainBuilder;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class CheckInGroupListeners extends SimpleListenerHost {
-    final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
-    final FileConfiguration messages = Main.getInstance().getMessageConfig();
-
-    private final Long checkInGroup = config.getLong("check-in-group");
+    ConfigManager configManager = new ConfigManager();
 
     @EventHandler
     public void onJoinGroupRequest(MemberJoinRequestEvent e){
+        FileConfiguration config = configManager.getConfig();
+
+        long checkInGroup = config.getLong("check-in-group");
+
         if(!config.getBoolean("check-in-group-auto-manage.enable")) return;
         if(e.getGroupId() != checkInGroup) return;
 
@@ -34,6 +35,11 @@ public class CheckInGroupListeners extends SimpleListenerHost {
 
     @EventHandler
     public void onNewCome(MemberJoinEvent e){
+        FileConfiguration config = configManager.getConfig();
+        FileConfiguration messages = configManager.getMessageConfig();
+
+        long checkInGroup = config.getLong("check-in-group");
+
         if(!config.getBoolean("check-in-group-auto-manage.enable")) return;
         if(e.getGroupId() != checkInGroup) return;
 

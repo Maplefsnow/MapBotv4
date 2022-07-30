@@ -6,13 +6,12 @@ import com.alibaba.fastjson.JSONObject;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
-import me.maplef.mapbotv4.utils.HttpClient4;
+import me.maplef.mapbotv4.utils.HttpUtils;
 import me.maplef.mapbotv4.utils.UrlUtils;
-import net.mamoe.mirai.message.data.Message;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageUtils;
-import net.mamoe.mirai.message.data.PlainText;
+import net.mamoe.mirai.message.data.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
 
         String loginUrl = UrlUtils.addParams(address, params);
 
-        JSONObject loginRes = JSON.parseObject(HttpClient4.doGet(loginUrl));
+        JSONObject loginRes = JSON.parseObject(HttpUtils.doGet(loginUrl));
 
         int code = loginRes.getInteger("code");
         if(code == 200) {
@@ -54,7 +53,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
 
         String searchUrl = UrlUtils.addParams(address, params);
 
-        JSONObject searchRes = JSON.parseObject(HttpClient4.doGet(searchUrl));
+        JSONObject searchRes = JSON.parseObject(HttpUtils.doGet(searchUrl));
 
         JSONArray songs = searchRes.getJSONObject("result").getJSONArray("songs");
         StringBuilder resStringBuilder = new StringBuilder();
@@ -86,23 +85,22 @@ public class NeteaseMusicTest implements MapbotPlugin {
 
         String searchUrl = UrlUtils.addParams(address, params);
 
-        JSONObject searchRes = JSON.parseObject(HttpClient4.doGet(searchUrl));
+        JSONObject searchRes = JSON.parseObject(HttpUtils.doGet(searchUrl));
 
         return searchRes.getJSONObject("result").getJSONArray("songs").getJSONObject(0).getString("id");
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
         switch (args[0].contentToString()) {
-            case "login": {
+            case "login" -> {
                 return login();
             }
-            case "search": {
+            case "search" -> {
                 if (args.length < 2) throw new InvalidSyntaxException();
                 return search(args[1].contentToString());
             }
-            default:
-                throw new IllegalStateException("未知的参数: " + args[0]);
+            default -> throw new IllegalStateException("未知的参数: " + args[0]);
         }
     }
 
@@ -112,7 +110,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("netease", NeteaseMusicTest.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("netease", NeteaseMusicTest.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("netease", "#netease - 网易云音乐（测试版）");
 

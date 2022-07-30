@@ -1,13 +1,16 @@
 package me.maplef.mapbotv4.plugins;
 
-import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.QuoteReply;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -16,7 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ListPlayers implements MapbotPlugin {
-    static FileConfiguration messages = Main.getInstance().getMessageConfig();
+    ConfigManager configManager = new ConfigManager();
+    FileConfiguration messages = configManager.getMessageConfig();
 
     public static List<String> list(){
         List<String> onlineList = new ArrayList<>();
@@ -27,7 +31,7 @@ public class ListPlayers implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args){
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply){
         List<String> onlineList = list();
 
         StringBuilder msgBuilder = new StringBuilder();
@@ -47,8 +51,8 @@ public class ListPlayers implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("list", ListPlayers.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
-        commands.put("在线", ListPlayers.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("list", ListPlayers.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("在线", ListPlayers.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("list", "#list - 获取在线玩家列表");
         usages.put("在线", "#在线 - 获取在线玩家列表");

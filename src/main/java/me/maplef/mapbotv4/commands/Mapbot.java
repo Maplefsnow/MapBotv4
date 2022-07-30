@@ -1,6 +1,6 @@
 package me.maplef.mapbotv4.commands;
 
-import me.maplef.mapbotv4.Main;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.plugins.BotQQOperator;
 import me.maplef.mapbotv4.plugins.Hitokoto;
 import me.maplef.mapbotv4.plugins.StopServer;
@@ -23,12 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Mapbot implements CommandExecutor, TabExecutor {
-    private final FileConfiguration messages = Main.getInstance().getMessageConfig();
+    ConfigManager configManager = new ConfigManager();
+
     private final String msgHeader = "&b&l============ &d小枫4号 &b&l============&f\n";
     private final String msgFooter = "\n&b&l==============================";
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        FileConfiguration messages = configManager.getMessageConfig();
         String msgStart = messages.getString("message-prefix");
 
         if(args.length == 0 || args[0].equals("help")){
@@ -41,55 +43,52 @@ public class Mapbot implements CommandExecutor, TabExecutor {
             return true;
         }
 
-        switch (args[0]){
-            case "hitokoto": {
+        switch (args[0]) {
+            case "hitokoto" -> {
                 String msg = msgHeader + Hitokoto.HitokotoMessage() + msgFooter;
-                if(sender instanceof Player){
+                if (sender instanceof Player) {
                     Player player = (Player) sender;
                     player.sendMessage(CU.t(msg));
                 } else {
                     Bukkit.getServer().getLogger().info(CU.t(msg));
                 }
-                break;
             }
-
-            case "receive": {
-                if(!(sender instanceof Player)){
+            case "receive" -> {
+                if (!(sender instanceof Player)) {
                     Bukkit.getServer().getLogger().info("该指令只能由玩家执行！");
                     return true;
                 }
 
                 Player player = (Player) sender;
 
-                Connection c = DatabaseOperator.c;
-                try (Statement stmt = c.createStatement();
-                    ResultSet res = stmt.executeQuery(String.format("SELECT * FROM PLAYER WHERE NAME = '%s';", player.getName()))){
-                        if(res.getBoolean("MSGREC")){
-                            stmt.executeUpdate(String.format("UPDATE PLAYER SET MSGREC = 0 WHERE NAME = '%s';", player.getName()));
-                            player.sendMessage(CU.t(msgStart + "你 &4&l关闭 &b了群消息接收"));
-                        } else {
-                            stmt.executeUpdate(String.format("UPDATE PLAYER SET MSGREC = 1 WHERE NAME = '%s';", player.getName()));
-                            player.sendMessage(CU.t(msgStart + "你 &a&l开启 &b了群消息接收"));
-                        }
+                try (Connection c = new DatabaseOperator().getConnect();
+                     Statement stmt = c.createStatement();
+                     ResultSet res = stmt.executeQuery(String.format("SELECT * FROM PLAYER WHERE NAME = '%s';", player.getName()))) {
+                    if (res.getBoolean("MSGREC")) {
+                        stmt.executeUpdate(String.format("UPDATE PLAYER SET MSGREC = 0 WHERE NAME = '%s';", player.getName()));
+                        player.sendMessage(CU.t(msgStart + "你 &4&l关闭 &b了群消息接收"));
+                    } else {
+                        stmt.executeUpdate(String.format("UPDATE PLAYER SET MSGREC = 1 WHERE NAME = '%s';", player.getName()));
+                        player.sendMessage(CU.t(msgStart + "你 &a&l开启 &b了群消息接收"));
+                    }
                     return true;
-                } catch (Exception e){
+                } catch (Exception e) {
                     Bukkit.getLogger().warning(e.getClass().getName() + ": " + e.getMessage());
                     return false;
                 }
             }
-
-            case "stopserver":{
-                if(sender instanceof Player){
+            case "stopserver" -> {
+                if (sender instanceof Player) {
                     Player player = (Player) sender;
-                    if(!player.hasPermission("mapbot.stopserver")){
+                    if (!player.hasPermission("mapbot.stopserver")) {
                         player.sendMessage(CU.t(msgStart + "&c你没有使用该命令的权限"));
                         return true;
                     }
                 }
 
-                if(args.length == 1){
-                    StopServer.stopLater(60);
-                    if(sender instanceof Player){
+                if (args.length == 1) {
+                    new StopServer().stopLater(60);
+                    if (sender instanceof Player) {
                         Player player = (Player) sender;
                         player.sendMessage(CU.t(msgStart + "停服定时任务已&a启动"));
                     } else {
@@ -99,10 +98,10 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                 }
 
                 int time;
-                try{
+                try {
                     time = Integer.parseInt(args[1]);
-                } catch (NumberFormatException e){
-                    if(sender instanceof Player){
+                } catch (NumberFormatException e) {
+                    if (sender instanceof Player) {
                         Player player = (Player) sender;
                         player.sendMessage(CU.t(msgStart + "&c请输入一个整数"));
                     } else {
@@ -111,8 +110,8 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                if(time < 30){
-                    if(sender instanceof Player){
+                if (time < 30) {
+                    if (sender instanceof Player) {
                         Player player = (Player) sender;
                         player.sendMessage(CU.t(msgStart + "&c请设定一个不小于30秒的倒计时"));
                     } else {
@@ -121,8 +120,8 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                     return true;
                 }
 
-                StopServer.stopLater(time);
-                if(sender instanceof Player) {
+                new StopServer().stopLater(time);
+                if (sender instanceof Player) {
                     Player player = (Player) sender;
                     player.sendMessage(CU.t(msgStart + "停服定时任务已&a启动"));
                 } else {
@@ -130,38 +129,36 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                 }
                 return true;
             }
-
-            case "cancelstopserver":{
-                if(sender instanceof Player){
+            case "cancelstopserver" -> {
+                if (sender instanceof Player) {
                     Player player = (Player) sender;
-                    if(!player.hasPermission("mapbot.stopserver")){
+                    if (!player.hasPermission("mapbot.stopserver")) {
                         player.sendMessage(CU.t(msgStart + "&c你没有使用该命令的权限"));
                         return true;
                     }
                 }
 
-                if(StopServer.stopCancel()){
-                    if(sender instanceof Player) {
+                if (new StopServer().stopCancel()) {
+                    if (sender instanceof Player) {
                         Player player = (Player) sender;
                         player.sendMessage(CU.t(msgStart + "停服定时任务已&c取消"));
                     } else {
-                        Bukkit.getServer().getLogger().info(CU.t( "停服定时任务已&c取消"));
+                        Bukkit.getServer().getLogger().info(CU.t("停服定时任务已&c取消"));
                     }
                 } else {
-                    if(sender instanceof Player) {
+                    if (sender instanceof Player) {
                         Player player = (Player) sender;
                         player.sendMessage(CU.t(msgStart + "&c没有正在进行的停服计划"));
                     } else {
-                        Bukkit.getServer().getLogger().info(CU.t( "&c没有正在进行的停服计划"));
+                        Bukkit.getServer().getLogger().info(CU.t("&c没有正在进行的停服计划"));
                     }
                 }
                 return true;
             }
-
-            case "login":{
-                if(sender instanceof Player){
+            case "login" -> {
+                if (sender instanceof Player) {
                     Player player = (Player) sender;
-                    if(!player.hasPermission("mapbot.login")){
+                    if (!player.hasPermission("mapbot.login")) {
                         player.sendMessage(CU.t(msgStart + "&c你没有使用该命令的权限"));
                         return true;
                     }
@@ -171,15 +168,14 @@ public class Mapbot implements CommandExecutor, TabExecutor {
 
                 return true;
             }
-
-            default: {
-                if(sender instanceof Player) {
+            default -> {
+                if (sender instanceof Player) {
                     Player player = (Player) sender;
                     player.sendMessage(CU.t(msgStart + "未知的指令"));
                 } else {
                     Bukkit.getServer().getLogger().info(CU.t("未知的指令"));
                 }
-            } break;
+            }
         }
 
         return true;

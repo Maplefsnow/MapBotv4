@@ -3,16 +3,16 @@ package me.maplef.mapbotv4.plugins;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.NoPermissionException;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.CU;
 import net.kyori.adventure.text.Component;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.Message;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -20,14 +20,16 @@ import java.util.Map;
 import java.util.Objects;
 
 public class StopServer implements MapbotPlugin {
-    static final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
-    static final FileConfiguration messages = Main.getPlugin(Main.class).getMessageConfig();
-    private static final Long opGroup = config.getLong("op-group");
+    ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
+    FileConfiguration messages = configManager.getMessageConfig();
+
+    private final Long opGroup = config.getLong("op-group");
+    private final String msgStart = messages.getString("message-prefix");
 
     private static boolean stopFlag = false;
-    private static final String msgStart = messages.getString("message-prefix");
 
-    public static void stopLater(int time){
+    public void stopLater(int time){
         stopFlag = true;
 
         new BukkitRunnable(){
@@ -51,7 +53,7 @@ public class StopServer implements MapbotPlugin {
         }.runTaskTimer(Main.getPlugin(Main.class), 0, 20);
     }
 
-    public static boolean stopCancel(){
+    public boolean stopCancel(){
         if(stopFlag){
             stopFlag = false;
             Bukkit.getServer().broadcast(Component.text(CU.t(msgStart + "&e&l关服操作被管理员取消")));
@@ -61,7 +63,7 @@ public class StopServer implements MapbotPlugin {
         }
     }
 
-    public static MessageChain stopLater(Long groupID, Long senderID, Message[] args) throws Exception{
+    public MessageChain stopLater(Long groupID, Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception{
         if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
         if(stopFlag) throw new Exception("已存在一个正在进行的关服定时任务");
@@ -106,7 +108,7 @@ public class StopServer implements MapbotPlugin {
         return new MessageChainBuilder().append(new At(senderID)).append(msg).build();
     }
 
-    public static MessageChain stopCancel(Long groupID, Long senderID, Message[] args) throws Exception{
+    public MessageChain stopCancel(Long groupID, Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception{
         if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID))
             throw new NoPermissionException();
 
@@ -119,7 +121,7 @@ public class StopServer implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
         return null;
     }
 
@@ -129,10 +131,10 @@ public class StopServer implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("stopserver", StopServer.class.getMethod("stopLater", Long.class, Long.class, Message[].class));
-        commands.put("关服", StopServer.class.getMethod("stopLater", Long.class, Long.class, Message[].class));
-        commands.put("stopcancel", StopServer.class.getMethod("stopCancel", Long.class, Long.class, Message[].class));
-        commands.put("取消关服", StopServer.class.getMethod("stopCancel", Long.class, Long.class, Message[].class));
+        commands.put("stopserver", StopServer.class.getMethod("stopLater", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("关服", StopServer.class.getMethod("stopLater", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("stopcancel", StopServer.class.getMethod("stopCancel", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("取消关服", StopServer.class.getMethod("stopCancel", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("stopserver", "#stopserver [时间/秒] - 设定一个停服倒计时");
         usages.put("关服", "#关服 [时间/秒] - 设定一个停服倒计时");

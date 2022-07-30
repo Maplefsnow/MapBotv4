@@ -3,15 +3,17 @@ package me.maplef.mapbotv4.plugins;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
-import me.maplef.mapbotv4.utils.HttpClient4;
+import me.maplef.mapbotv4.managers.ConfigManager;
+import me.maplef.mapbotv4.utils.HttpUtils;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
-import org.bukkit.Bukkit;
+import net.mamoe.mirai.message.data.QuoteReply;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -19,9 +21,10 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Weather implements MapbotPlugin {
-    static final FileConfiguration config = Main.getInstance().getConfig();
+    ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
 
-    public static String WeatherMessage(String location) throws Exception{
+    public String WeatherMessage(String location) throws Exception{
         StringBuilder msg = new StringBuilder();
 
         // Weather API Key
@@ -34,8 +37,8 @@ public class Weather implements MapbotPlugin {
         String getFutureURL = "https://devapi.qweather.com/v7/weather/3d?key=".concat(KEY).concat("&location=");
 
         // Not found exception
-        String idString = HttpClient4.doGet(getIdURL);
-        if(idString.isEmpty()) idString = HttpClient4.doGet(getIdURL);
+        String idString = HttpUtils.doGet(getIdURL);
+        if(idString.isEmpty()) idString = HttpUtils.doGet(getIdURL);
         JSONObject cityRes = JSON.parseObject(idString);
         if(cityRes.getString("code").equals("404"))
             throw new Exception("未找到该城市");
@@ -49,10 +52,10 @@ public class Weather implements MapbotPlugin {
         getFutureURL = getFutureURL.concat(id.get("id").toString());
 
         try{
-            String nowRes = HttpClient4.doGet(getNowURL);
-            if(nowRes.isEmpty()) nowRes = HttpClient4.doGet(getNowURL);
-            String futureRes = HttpClient4.doGet(getFutureURL);
-            if(futureRes.isEmpty()) futureRes = HttpClient4.doGet(getFutureURL);
+            String nowRes = HttpUtils.doGet(getNowURL);
+            if(nowRes.isEmpty()) nowRes = HttpUtils.doGet(getNowURL);
+            String futureRes = HttpUtils.doGet(getFutureURL);
+            if(futureRes.isEmpty()) futureRes = HttpUtils.doGet(getFutureURL);
 
             JSONObject now = JSON.parseObject(nowRes).getJSONObject("now");
             JSONArray future = JSON.parseObject(futureRes).getJSONArray("daily");
@@ -60,8 +63,8 @@ public class Weather implements MapbotPlugin {
             JSONObject afterTomorrow = future.getJSONObject(2);
 
             if(inChina){
-                String nowAirRes = HttpClient4.doGet(getNowAirURL);
-                if(nowAirRes.isEmpty()) nowAirRes = HttpClient4.doGet(getNowAirURL);
+                String nowAirRes = HttpUtils.doGet(getNowAirURL);
+                if(nowAirRes.isEmpty()) nowAirRes = HttpUtils.doGet(getNowAirURL);
                 JSONObject nowAir = JSON.parseObject(nowAirRes).getJSONObject("now");
                 msg.append(String.format("%s现在的天气为%s，气温%s摄氏度，体感温度%s摄氏度，%s%s级，空气质量%s，空气质量指数%s，气压%s百帕\n",
                         id.get("name"), now.get("text"), now.get("temp"), now.get("feelsLike"), now.get("windDir"), now.get("windScale"), nowAir.get("category"), nowAir.get("aqi"), now.get("pressure")));
@@ -77,13 +80,12 @@ public class Weather implements MapbotPlugin {
 
             return msg.toString();
         } catch (Exception e){
-            Bukkit.getLogger().warning(e.toString());
             throw new Exception("查询天气信息失败，请稍后重试");
         }
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
         return new MessageChainBuilder().append(WeatherMessage(args[0].contentToString())).build();
     }
@@ -94,8 +96,8 @@ public class Weather implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("weather", Weather.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
-        commands.put("天气", Weather.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("weather", Weather.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("天气", Weather.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("weather", "#weather <城市名> - 查询指定城市的天气");
         usages.put("天气", "#天气 <城市名> - 查询指定城市的天气");

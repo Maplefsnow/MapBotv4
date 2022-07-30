@@ -1,6 +1,6 @@
 package me.maplef.mapbotv4.loops;
 
-import me.maplef.mapbotv4.Main;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.plugins.CheckOnlineTime;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
@@ -16,19 +16,21 @@ import java.util.List;
 import java.util.Objects;
 
 public class InnerGroupInvite implements Job {
-    final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
-    private final Long opGroup = config.getLong("op-group");
-    private final Long playerGroup = config.getLong("player-group");
-    private final Long innerGroup = config.getLong("inner-player-group");
+    ConfigManager configManager = new ConfigManager();
+
     final Bot bot = BotOperator.getBot();
 
     @Override
     public void execute(JobExecutionContext context){
-        Connection c = DatabaseOperator.c;
+        FileConfiguration config = configManager.getConfig();
+        final long opGroup = config.getLong("op-group");
+        final long playerGroup = config.getLong("player-group");
+        final long innerGroup = config.getLong("inner-player-group");
 
         List<String> blacklist = config.getStringList("inner-player-group-auto-manage.invite.blacklist");
 
-        try (Statement stmt = c.createStatement();
+        try (Connection c = new DatabaseOperator().getConnect();
+             Statement stmt = c.createStatement();
              ResultSet res = stmt.executeQuery("SELECT * FROM PLAYER;")){
             while(res.next()){
                 String playerName = res.getString("NAME");

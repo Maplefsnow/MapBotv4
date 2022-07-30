@@ -4,15 +4,19 @@ import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.QuoteReply;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;
@@ -22,9 +26,9 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class CheckMoney implements MapbotPlugin {
-    static final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
-    static final FileConfiguration messages = Main.getInstance().getMessageConfig();
-    private static final Long opGroup = config.getLong("op-group");
+    ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
+    FileConfiguration messages = configManager.getMessageConfig();
 
     private static final Economy econ = Main.getEconomy();
 
@@ -49,7 +53,9 @@ public class CheckMoney implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception{
+        long opGroup = config.getLong("op-group");
+
         MessageChainBuilder msg = new MessageChainBuilder();
         String playerName;
 
@@ -70,8 +76,8 @@ public class CheckMoney implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("money", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
-        commands.put("钱钱", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("money", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("钱钱", CheckMoney.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("money", "#money - 查询自己的货币数");
         usages.put("钱钱", "#钱钱 - 查询自己的货币数");

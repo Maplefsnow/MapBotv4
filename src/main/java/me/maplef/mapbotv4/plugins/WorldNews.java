@@ -6,10 +6,12 @@ import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DownloadImage;
-import me.maplef.mapbotv4.utils.HttpClient4;
+import me.maplef.mapbotv4.utils.HttpUtils;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -26,7 +28,7 @@ public class WorldNews implements MapbotPlugin {
             if(tmp.delete());
 
         String apiUrl = "https://api.03c3.cn/zb/api.php";
-        JSONObject imageUrlRes = JSON.parseObject(HttpClient4.doGet(apiUrl));
+        JSONObject imageUrlRes = JSON.parseObject(HttpUtils.doGet(apiUrl));
         String imageUrl = imageUrlRes.getString("imageUrl");
 
         File newsImg; ExternalResource imageResource;
@@ -42,7 +44,7 @@ public class WorldNews implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args){
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply){
         return SendNews(groupID);
     }
 
@@ -52,8 +54,8 @@ public class WorldNews implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("news", WorldNews.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
-        commands.put("新闻", WorldNews.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("news", WorldNews.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("新闻", WorldNews.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("news", "#news - 获取今日新闻");
         usages.put("新闻", "#新闻 - 获取今日新闻");

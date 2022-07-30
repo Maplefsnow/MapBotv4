@@ -1,10 +1,11 @@
 package me.maplef.mapbotv4.utils;
 
 import me.maplef.mapbotv4.Main;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactory;
 import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.network.WrongPasswordException;
+import net.mamoe.mirai.network.LoginFailedException;
 import net.mamoe.mirai.utils.BotConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -14,9 +15,10 @@ import java.util.Objects;
 
 public class BotOperator {
     private static Bot bot;
-    static final FileConfiguration config = Main.getInstance().getConfig();
 
-    public static void login(Long qq, String password) throws WrongPasswordException{
+    public static void login(Long qq, String password) throws LoginFailedException {
+        ConfigManager configManager = new ConfigManager();
+        FileConfiguration config = configManager.getConfig();
         File logPath = new File(Main.getInstance().getDataFolder(), "logs");
 
         bot = BotFactory.INSTANCE.newBot(qq, password, new BotConfiguration(){{
@@ -33,7 +35,7 @@ public class BotOperator {
             try{
                 Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
             } catch (NullPointerException e){
-                Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
+                Bukkit.getLogger().info(String.format("[%s] QQ账户正在登陆中，登陆期间的消息将不会转发", Main.getInstance().getDescription().getName()));
             }
         });
     }
@@ -43,7 +45,7 @@ public class BotOperator {
             try{
                 Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
             } catch (NullPointerException e){
-                Bukkit.getLogger().info("Mapbot正在登陆中，登陆期间的消息将不会转发");
+                Bukkit.getLogger().info(String.format("[%s] QQ账户正在登陆中，登陆期间的消息将不会转发", Main.getInstance().getDescription().getName()));
             }
         });
     }

@@ -1,14 +1,16 @@
 package me.maplef.mapbotv4.plugins;
 
-import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.exceptions.NoPermissionException;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -17,11 +19,12 @@ import java.util.Map;
 import java.util.Objects;
 
 public class CheckLocation implements MapbotPlugin {
-    static final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
-    private static final Long opGroup = config.getLong("op-group");
+    ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
+    private final Long opGroup = config.getLong("op-group");
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
         if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
 
@@ -54,8 +57,8 @@ public class CheckLocation implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("location", CheckLocation.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
-        commands.put("位置", CheckLocation.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("location", CheckLocation.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("位置", CheckLocation.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("location", "#location <玩家ID> - 获取指定玩家位置");
         usages.put("位置", "#位置 <玩家ID> - 获取指定玩家位置");

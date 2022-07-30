@@ -1,6 +1,5 @@
 package me.maplef.mapbotv4.managers;
 
-import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.loops.*;
 import me.maplef.mapbotv4.utils.Scheduler;
 import org.bukkit.Bukkit;
@@ -12,16 +11,17 @@ import java.text.ParseException;
 import java.util.Objects;
 
 public class LoopJobManager {
-    static final FileConfiguration config = Main.getInstance().getConfig();
+    ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
 
-    public static void register(){
+    public void register(){
         try{
             CronExpression morning_cron = new CronExpression(Objects.requireNonNull(config.getString("daily-greetings.morning.cron")));
             CronExpression night_cron = new CronExpression(Objects.requireNonNull(config.getString("daily-greetings.night.cron")));
-            CronExpression tpsCheck_cron = new CronExpression(Objects.requireNonNull(config.getString("tps-check.cron")));
+            CronExpression tpsCheck_cron = new CronExpression(String.format("0 0/%d * * * ?", config.getInt("tps-check.interval")));
             CronExpression inner_group_invite_cron = new CronExpression(Objects.requireNonNull(config.getString("inner-player-group-auto-manage.invite.cron")));
             CronExpression inner_group_kick_cron = new CronExpression(Objects.requireNonNull(config.getString("inner-player-group-auto-manage.kick.cron")));
-            CronExpression online_player_record_cron = new CronExpression(Objects.requireNonNull(config.getString("online-player-record.cron")));
+            CronExpression online_player_record_cron = new CronExpression(String.format("0 0/%d * * * ?", config.getInt("online-player-record.interval")));
 
             if(config.getBoolean("tps-check.enable"))
                 Scheduler.registerJob("tpsCheck", String.valueOf(tpsCheck_cron), TPSCheck.class);

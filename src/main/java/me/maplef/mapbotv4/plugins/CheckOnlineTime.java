@@ -8,7 +8,10 @@ import me.maplef.mapbotv4.utils.DatabaseOperator;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.QuoteReply;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;
@@ -18,28 +21,27 @@ import java.util.Map;
 public class CheckOnlineTime implements MapbotPlugin {
     private static final FileConfiguration onlineTimes = Main.getInstance().getOnlineTimeConfig();
 
-    public static int check(String name, int mode) throws SQLException, PlayerNotFoundException {
-        String playerUUID = DatabaseOperator.queryPlayer(name).get("UUID").toString();
-
+    public static int check(String playerUUID, int mode) throws SQLException, PlayerNotFoundException {
         int dailyTime = onlineTimes.getInt(playerUUID.concat(".daily_play_time")) / 60000;
         int weeklyTime = onlineTimes.getInt(playerUUID.concat(".weekly_play_time")) / 60000;
         int monthlyTime = onlineTimes.getInt(playerUUID.concat(".monthly_play_time")) / 60000;
         int totalTime = onlineTimes.getInt(playerUUID.concat(".total_play_time")) / 60000;
 
-        switch (mode){
-            case 0: return dailyTime;
-            case 1: return weeklyTime;
-            case 2: return monthlyTime;
-            case 3: return totalTime;
-            default: return -1;
-        }
+        return switch (mode) {
+            case 0 -> dailyTime;
+            case 1 -> weeklyTime;
+            case 2 -> monthlyTime;
+            case 3 -> totalTime;
+            default -> -1;
+        };
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception{
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception{
         if(args.length < 1) throw new InvalidSyntaxException();
 
-        String fixedName = (String) DatabaseOperator.queryPlayer(args[0]).get("NAME"); int onlineTime;
+        String fixedName = (String) DatabaseOperator.queryPlayer(args[0].contentToString()).get("NAME"); int onlineTime;
+        String playerUUID = (String) DatabaseOperator.queryPlayer(args[0].contentToString()).get("UUID");
         String[] timeText = {"今天", "本周", "本月", "总计"};
 
         int mode = 0;
@@ -51,7 +53,7 @@ public class CheckOnlineTime implements MapbotPlugin {
             }
         }
 
-        onlineTime = check(fixedName, mode);
+        onlineTime = check(playerUUID, mode);
 
         return new MessageChainBuilder().append(String.format("%s %s的在线时长为 %d 分钟", fixedName, timeText[mode], onlineTime)).build();
     }
@@ -62,8 +64,8 @@ public class CheckOnlineTime implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("onlinetime", CheckOnlineTime.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
-        commands.put("在线时长", CheckOnlineTime.class.getMethod("onEnable", Long.class, Long.class, Message[].class));
+        commands.put("onlinetime", CheckOnlineTime.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("在线时长", CheckOnlineTime.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("onlinetime", "#onlinetime <玩家ID> [时段] - 查询玩家在线时长\n" +
                 "其中时段一项为可选参数，0：当天，1：当周，2：当月，3：总计");

@@ -1,27 +1,29 @@
 package me.maplef.mapbotv4.loops;
 
 import me.maplef.mapbotv4.Main;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BaiduAuthService;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-
 import java.io.File;
 import java.io.IOException;
 
 public class BaiduAccessTokenUpdate implements Job {
-    static FileConfiguration config = Main.getInstance().getConfig();
-    private static final String API_KEY = config.getString("cat-images.upload-image.cat-detect.api-key");
-    private static final String SECRET_KEY = config.getString("cat-images.upload-image.cat-detect.secret-key");
+    ConfigManager configManager = new ConfigManager();
 
-    public static void updateAuth(){
+    public void updateAuth(){
+        FileConfiguration config = configManager.getConfig();
+        String API_KEY = config.getString("cat-images.upload-image.cat-detect.api-key");
+        String SECRET_KEY = config.getString("cat-images.upload-image.cat-detect.secret-key");
+
         String access_token = BaiduAuthService.getAuth(API_KEY, SECRET_KEY);
         config.set("cat-images.upload-image.cat-detect.access-token", access_token);
         try {
             config.save(new File(Main.getInstance().getDataFolder(), "config.yml"));
         } catch (IOException e) {
-            Bukkit.getServer().getLogger().warning("更新 token 出错");
+            Bukkit.getServer().getLogger().warning(String.format("[%s] 更新 Baidu_token 出错", Main.getInstance().getDescription().getName()));
         }
     }
 

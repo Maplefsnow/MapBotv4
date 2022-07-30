@@ -1,6 +1,6 @@
 package me.maplef.mapbotv4.loops;
 
-import me.maplef.mapbotv4.Main;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -8,14 +8,17 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 
 public class TPSCheck implements Job {
-    final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
+    ConfigManager configManager = new ConfigManager();
+
     private static int tpsLowCount = 0;
     private static boolean tpsWarnFlag = false;
-    private final Long opGroup = config.getLong("op-group");
-    private final double tpsThreshold = config.getDouble("tps-check.threshold");
 
     @Override
     public void execute(JobExecutionContext context){
+        FileConfiguration config = configManager.getConfig();
+        long opGroup = config.getLong("op-group");
+        double tpsThreshold = config.getDouble("tps-check.threshold");
+
         double tps = Bukkit.getServer().getTPS()[0];
 
         if (tps < tpsThreshold) {

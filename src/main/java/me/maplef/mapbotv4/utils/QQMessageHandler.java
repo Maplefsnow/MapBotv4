@@ -2,10 +2,10 @@ package me.maplef.mapbotv4.utils;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.exceptions.MessageContainsBlockedWordsException;
 import me.maplef.mapbotv4.exceptions.MessageLengthOutOfBoundException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class QQMessageHandler {
-    static final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
+    static ConfigManager configManager = new ConfigManager();
+    static final FileConfiguration config = configManager.getConfig();
 
     private static final Bot bot = BotOperator.getBot();
     private static final Long opGroup = config.getLong("op-group");
@@ -79,8 +80,8 @@ public class QQMessageHandler {
         JSONObject appInfo = JSON.parseObject(message.contentToString());
 
         String app = appInfo.getString("app"); JSONObject meta = appInfo.getJSONObject("meta");
-        switch(app){
-            case "com.tencent.mannounce":{
+        switch (app) {
+            case "com.tencent.mannounce" -> {
                 JSONObject mannounce = meta.getJSONObject("mannounce");
                 String text_base64 = mannounce.getString("text");
                 byte[] decodedText = Base64.getDecoder().decode(text_base64);
@@ -96,7 +97,7 @@ public class QQMessageHandler {
                                 .color(NamedTextColor.BLUE).decorate(TextDecoration.UNDERLINED)
                                 .hoverEvent(textHover));
             }
-            case "com.tencent.miniapp_01":{
+            case "com.tencent.miniapp_01" -> {
                 JSONObject detail_1 = meta.getJSONObject("detail_1");
                 String prompt = appInfo.getString("prompt");
                 String desc = detail_1.getString("desc");
@@ -110,7 +111,7 @@ public class QQMessageHandler {
                         .decorate(TextDecoration.UNDERLINED)
                         .hoverEvent(urlOpenHover).clickEvent(clickEvent);
             }
-            case "com.tencent.structmsg":{
+            case "com.tencent.structmsg" -> {
                 JSONObject news = meta.getJSONObject("news");
                 String prompt = appInfo.getString("prompt");
                 String jumpUrl = news.getString("jumpUrl");
@@ -125,7 +126,7 @@ public class QQMessageHandler {
                         .decorate(TextDecoration.UNDERLINED)
                         .hoverEvent(hoverEvent).clickEvent(clickEvent);
             }
-            default:{
+            default -> {
                 System.out.println(message.contentToString());
                 return Component.text("[小程序] 不支持的小程序类型，请至群内查看");
             }

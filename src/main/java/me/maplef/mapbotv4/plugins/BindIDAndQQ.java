@@ -8,9 +8,10 @@ import me.maplef.mapbotv4.exceptions.GroupNotAllowedException;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.exceptions.NoPermissionException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
+import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
-import me.maplef.mapbotv4.utils.HttpClient4;
+import me.maplef.mapbotv4.utils.HttpUtils;
 import net.kyori.adventure.text.Component;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.*;
@@ -18,6 +19,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;
@@ -28,13 +31,14 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
 public class BindIDAndQQ implements MapbotPlugin {
-    static final FileConfiguration config = Main.getPlugin(Main.class).getConfig();
-    private static final Long opGroup = config.getLong("op-group");
-    private static final Long playerGroup = config.getLong("player-group");
+    ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
+    private final Long opGroup = config.getLong("op-group");
+    private final Long playerGroup = config.getLong("player-group");
 
-    static final Bot bot = BotOperator.getBot();
+    Bot bot = BotOperator.getBot();
 
-    public static MessageChain bind(Long groupID, Long senderID, Message[] args) throws Exception{
+    public MessageChain bind(Long groupID, Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception{
         if(!Objects.equals(groupID, playerGroup)) throw new GroupNotAllowedException();
         if(args.length < 1) throw new InvalidSyntaxException();
 
@@ -52,7 +56,7 @@ public class BindIDAndQQ implements MapbotPlugin {
             String url = mojangUrl.concat(args[0].contentToString());
             String jsonString;
             try{
-                jsonString = HttpClient4.doGet(url);
+                jsonString = HttpUtils.doGet(url);
             } catch (Exception exception){
                 throw new Exception("该ID非正版ID，请检查输入是否正确");
             }
@@ -70,8 +74,8 @@ public class BindIDAndQQ implements MapbotPlugin {
             MCID = args[0].contentToString(); fixedUUID = "";
         }
 
-        String order = String.format("INSERT INTO PLAYER (NAME, QQ, UUID, KEEPINV, MSGREC) VALUES ('%s', '%s', '%s', 0, 1);", MCID, senderID, fixedUUID);
-        DatabaseOperator.executeCommand(order);
+        String order = String.format("INSERT INTO PLAYER (NAME, QQ, UUID, MSGREC) VALUES ('%s', '%s', '%s', 1);", MCID, senderID, fixedUUID);
+        new DatabaseOperator().executeCommand(order);
 
         if(config.getBoolean("bind-id-and-qq.whitelist")){
             String whitelistAddCommand = String.format("whitelist add %s", MCID);
@@ -93,7 +97,7 @@ public class BindIDAndQQ implements MapbotPlugin {
             return MessageUtils.newChain(new At(senderID)).plus(new PlainText(" 绑定ID成功"));
     }
 
-    public static MessageChain update(Long groupID, Long senderID, Message[] args) throws PlayerNotFoundException, SQLException {
+    public MessageChain update(Long groupID, Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws PlayerNotFoundException, SQLException {
         if(!config.getBoolean("bind-id-and-qq.online-mode")){
             return MessageUtils.newChain(new At(senderID), new PlainText(" 目前使用离线模式，无法与 mojang 服务器通信更新id，请联系管理员手动更新"));
         }
@@ -101,14 +105,14 @@ public class BindIDAndQQ implements MapbotPlugin {
         String mojangURL = "https://sessionserver.mojang.com/session/minecraft/profile/";
 
         String UUID = (String) DatabaseOperator.queryPlayer(senderID).get("UUID");
-        String jsonString = HttpClient4.doGet(mojangURL.concat(UUID));
+        String jsonString = HttpUtils.doGet(mojangURL.concat(UUID));
         JSONObject jsonRes = JSON.parseObject(jsonString);
         String nowName = jsonRes.getString("name");
-        DatabaseOperator.executeCommand(String.format("UPDATE PLAYER SET NAME = '%s' WHERE UUID = '%s';", nowName, UUID));
+        new DatabaseOperator().executeCommand(String.format("UPDATE PLAYER SET NAME = '%s' WHERE UUID = '%s';", nowName, UUID));
         return new MessageChainBuilder().append(new At(senderID)).append(" 你的id已被更新为: ").append(nowName).build();
     }
 
-    public static MessageChain unbind(Long groupID, Long senderID, Message[] args) throws Exception{
+    public MessageChain unbind(Long groupID, Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception{
         if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
         if(args.length < 1) throw new InvalidSyntaxException();
 
@@ -121,7 +125,7 @@ public class BindIDAndQQ implements MapbotPlugin {
             Objects.requireNonNull(bot.getGroup(opGroup)).contains(targetQQ))
             throw new Exception("你没有权限解绑一位op的ID");
 
-        DatabaseOperator.executeCommand(String.format("DELETE FROM PLAYER WHERE NAME = '%s';", fixedName));
+        new DatabaseOperator().executeCommand(String.format("DELETE FROM PLAYER WHERE NAME = '%s';", fixedName));
         String whitelistDelCommand = String.format("whitelist remove %s", fixedName);
         new BukkitRunnable(){
             @Override
@@ -138,7 +142,7 @@ public class BindIDAndQQ implements MapbotPlugin {
     }
 
     @Override
-    public MessageChain onEnable(Long groupID, Long senderID, Message[] args) throws Exception {
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
         return null;
     }
 
@@ -148,12 +152,12 @@ public class BindIDAndQQ implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("id", BindIDAndQQ.class.getMethod("bind", Long.class, Long.class, Message[].class));
-        commands.put("绑定", BindIDAndQQ.class.getMethod("bind", Long.class, Long.class, Message[].class));
-        commands.put("updateid", BindIDAndQQ.class.getMethod("update", Long.class, Long.class, Message[].class));
-        commands.put("更新id", BindIDAndQQ.class.getMethod("update", Long.class, Long.class, Message[].class));
-        commands.put("deleteid", BindIDAndQQ.class.getMethod("unbind", Long.class, Long.class, Message[].class));
-        commands.put("解绑", BindIDAndQQ.class.getMethod("unbind", Long.class, Long.class, Message[].class));
+        commands.put("id", BindIDAndQQ.class.getMethod("bind", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("绑定", BindIDAndQQ.class.getMethod("bind", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("updateid", BindIDAndQQ.class.getMethod("update", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("更新id", BindIDAndQQ.class.getMethod("update", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("deleteid", BindIDAndQQ.class.getMethod("unbind", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("解绑", BindIDAndQQ.class.getMethod("unbind", Long.class, Long.class, Message[].class, QuoteReply.class));
 
         usages.put("id", "#id <游戏ID> - 绑定ID");
         usages.put("绑定", "#绑定 <游戏ID> - 绑定ID");

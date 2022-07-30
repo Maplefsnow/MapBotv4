@@ -6,7 +6,7 @@
 
     <groupId>me</groupId>
     <artifactId>Mapbot</artifactId>
-    <version>0.11.0beta</version>
+    <version>0.12.0beta</version>
     <packaging>jar</packaging>
 
     <name>MapBot</name>
@@ -23,8 +23,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>10</source>
-                    <target>10</target>
+                    <source>14</source>
+                    <target>14</target>
                 </configuration>
             </plugin>
 
@@ -102,11 +102,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
-        </dependency>
-        <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>
@@ -125,11 +120,6 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.36.0.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
         </dependency>
     </dependencies>
 </project>

@@ -1,6 +1,6 @@
 name: MapBot
 author: Maplef
-version: 0.12.0
+version: 0.13.0
 main: me.maplef.mapbotv4.Main
 api-version: 1.18
 depend:
@@ -35,6 +35,9 @@ permissions:
   mapbot.receive:
     description: receive messages from QQ group or not
     default: true
+  mapbot.reload:
+    description: reload mapbot
+    default: op
   mapbot.stopserver:
     description: start a server stopping countdown, send all players to a safer server before shutdown
     default: op

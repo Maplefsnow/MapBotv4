@@ -38,9 +38,7 @@ public class QQMessageHandler {
         try {
             quoteFromID = quoteSource.getFromId();
             quotePlayerNAME = (String) DatabaseOperator.queryPlayer(quoteSource.getFromId()).get("NAME");
-        } catch (SQLException | PlayerNotFoundException ex) {
-            ex.printStackTrace();
-        }
+        } catch (SQLException | PlayerNotFoundException ignored) {}
 
         HoverEvent<Component> quoteHover; Component quoteComponent = null;
 

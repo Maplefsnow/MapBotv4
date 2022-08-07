@@ -8,7 +8,6 @@ import me.maplef.mapbotv4.listeners.CheckInGroupListeners;
 import me.maplef.mapbotv4.listeners.PlayerGroupListeners;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
-import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.Message;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.QuoteReply;
@@ -26,7 +25,6 @@ import java.util.Objects;
 public class BotQQOperator implements MapbotPlugin {
     static final FileConfiguration config = new ConfigManager().getConfig();
     static final FileConfiguration messageConfig = new ConfigManager().getMessageConfig();
-    static final Bot bot = BotOperator.getBot();
 
     public static final Long botAcc = config.getLong("bot-account");
     private static final String botPassword = config.getString("bot-password");
@@ -58,7 +56,7 @@ public class BotQQOperator implements MapbotPlugin {
     public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
         if(args.length == 0)
             throw new InvalidSyntaxException();
-        if(!Objects.requireNonNull(bot.getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
+        if(!Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).contains(senderID)) throw new NoPermissionException();
 
         if(args[0].contentToString().equals("login")) login();
         else if(args[0].contentToString().equals("logout")) logout();

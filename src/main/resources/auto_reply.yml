@@ -2,16 +2,29 @@ enable-in-game: true
 enable-in-group: true
 
 ip-ask:
-  mode: "similarity"  # "similarity" or "contains"
+  mode: "contains"  # "similarity" or "contains"
   trigger:
-    - '服务器ip多少'
+    - '服务器ip'
     - 'ip多少'
   similarity: 80  # ignore this if the mode is "contains"
-  reply: '请至猫猫大陆论坛 www.catland.top 查阅ip地址'
+  reply:
+    type: "text"  # "text" or "command"
+    content: '请至猫猫大陆论坛 www.catland.top 查阅ip地址'
 
 favorite-food:
   mode: "similarity"
   trigger:
     - '小枫喜欢吃什么'
   similarity: 80
-  reply: '双层牛肉起司堡！'
+  reply:
+    type: "text"
+    content:  '双层牛肉起司堡！'
+
+auto-list:
+  mode: "similarity"
+  trigger:
+    - '来点猫片'
+  similarity: 60
+  reply:
+    type: "command"
+    content: 'cat'

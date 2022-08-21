@@ -23,15 +23,11 @@ public class HttpUtils {
             conn.setRequestProperty("Accept", "application/json");
 
             conn.connect();
-            if (200 == conn.getResponseCode()){
-                is = conn.getInputStream();
-                br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-                String line;
-                while ((line = br.readLine()) != null){
-                    result.append(line);
-                }
-            } else {
-                return "";
+            is = conn.getInputStream();
+            br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            String line;
+            while ((line = br.readLine()) != null){
+                result.append(line);
             }
         } catch (Exception e){
             e.printStackTrace();

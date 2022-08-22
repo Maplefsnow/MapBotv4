@@ -1,6 +1,6 @@
 name: MapBot
 author: Maplef
-version: 0.13.0
+version: 0.14.0_pre1
 main: me.maplef.mapbotv4.Main
 api-version: 1.18
 depend:

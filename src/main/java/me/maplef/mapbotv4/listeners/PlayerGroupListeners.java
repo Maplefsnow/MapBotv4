@@ -122,7 +122,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         try{
             clickMsgHead = ClickEvent.suggestCommand("@" + DatabaseOperator.queryPlayer(e.getSender().getId()).get("NAME") + " ");
         } catch (Exception ignored){}
-        String msgHead = config.getString("message-head-format", "&f<&b{SENDER}&f> ").replace("{SENDER}", e.getSender().getNameCard());
+        String msgHead = config.getString("message-head-format", "&f<&b{SENDER}&f> ").replace("{SENDER}",getMemberName(e));
         msgHeadComponent = Component.text(CU.t(msgHead)).clickEvent(clickMsgHead);
 
         try {
@@ -426,6 +426,15 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         if(e.getMessage().contentToString().contains("test")){
             Bukkit.getServer().getLogger().info("[Mapbot] tested!");
+        }
+    }
+
+    public String getMemberName(GroupMessageEvent e) {
+        String nameCard = e.getSender().getNameCard();
+        if (nameCard.isEmpty()) {
+            return e.getSender().getNick();
+        }else {
+            return nameCard;
         }
     }
 }

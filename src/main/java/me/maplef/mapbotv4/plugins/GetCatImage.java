@@ -27,17 +27,22 @@ public class GetCatImage implements MapbotPlugin {
     FileConfiguration config = configManager.getConfig();
     private static final Bot bot = BotOperator.getBot();
 
-    public static MessageChain getRandomImage(Long groupID) {
+    public static MessageChain getRandomImage(Long groupID, boolean isMySQL) {
         int id;
         String uploader, imageBase64str, catName;
         Timestamp uploaded_time;
 
+        String querySql = isMySQL ?
+                "SELECT * " +
+                "FROM cat_images AS t1 JOIN (SELECT ROUND(RAND() * ((SELECT MAX(id) FROM cat_images)-(SELECT MIN(id) FROM cat_images))+(SELECT MIN(id) FROM cat_images)) AS id) AS t2 " +
+                "WHERE t1.id >= t2.id " +
+                "ORDER BY t1.id LIMIT 1;"
+                :
+                "SELECT * FROM cat_images ORDER BY RANDOM() limit 1;";
+
         try(Connection c = new DatabaseOperator().getConnect();
             Statement stmt = c.createStatement();
-            ResultSet res = stmt.executeQuery("SELECT * " +
-                    "FROM cat_images AS t1 JOIN (SELECT ROUND(RAND() * ((SELECT MAX(id) FROM cat_images)-(SELECT MIN(id) FROM cat_images))+(SELECT MIN(id) FROM cat_images)) AS id) AS t2 " +
-                    "WHERE t1.id >= t2.id " +
-                    "ORDER BY t1.id LIMIT 1;")){
+            ResultSet res = stmt.executeQuery(querySql)){
             if(res.next()){
                 id = res.getInt("id");
                 uploader = res.getString("uploader");
@@ -47,7 +52,7 @@ public class GetCatImage implements MapbotPlugin {
             } else return MessageUtils.newChain(new PlainText("FAILED!"));
         } catch (SQLException e){
             e.printStackTrace();
-            return MessageUtils.newChain(new PlainText("数据库异常"));
+            return MessageUtils.newChain(new PlainText("数据库异常，请查看控制台报错信息"));
         }
 
         String timeStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(uploaded_time);
@@ -56,10 +61,11 @@ public class GetCatImage implements MapbotPlugin {
         InputStream is = new ByteArrayInputStream(imageDecode);
         Image image = ExternalResource.uploadAsImage(is, Objects.requireNonNull(bot.getGroup(groupID)));
 
-        String catImageInfo = String.format("猫片ID: %d\n" +
-                                            "品种: %s\n" +
-                                            "上传者: %s\n" +
-                                            "上传时间: %s", id, catName, uploader, timeStr);
+        String catImageInfo = String.format("""
+                猫片ID: %d
+                品种: %s
+                上传者: %s
+                上传时间: %s""", id, catName, uploader, timeStr);
         return MessageUtils.newChain(image).plus("\n\n").plus(catImageInfo);
     }
 
@@ -78,7 +84,7 @@ public class GetCatImage implements MapbotPlugin {
             } else return MessageUtils.newChain(new At(senderID)).plus(" 找不到此猫片");
         } catch (SQLException e){
             e.printStackTrace();
-            return MessageUtils.newChain(new PlainText("数据库异常"));
+            return MessageUtils.newChain(new PlainText("数据库异常，请查看控制台报错信息"));
         }
 
         String timeStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(uploaded_time);
@@ -87,10 +93,11 @@ public class GetCatImage implements MapbotPlugin {
         InputStream is = new ByteArrayInputStream(imageDecode);
         Image image = ExternalResource.uploadAsImage(is, Objects.requireNonNull(bot.getGroup(groupID)));
 
-        String catImageInfo = String.format("猫片ID: %d\n" +
-                "品种: %s\n" +
-                "上传者: %s\n" +
-                "上传时间: %s", id, catName, uploader, timeStr);
+        String catImageInfo = String.format("""
+                猫片ID: %d
+                品种: %s
+                上传者: %s
+                上传时间: %s""", id, catName, uploader, timeStr);
         return MessageUtils.newChain(image).plus("\n\n").plus(catImageInfo);
     }
 
@@ -108,7 +115,7 @@ public class GetCatImage implements MapbotPlugin {
             }
             return getImageByID(senderID, groupID, id);
         } else
-            return getRandomImage(groupID);
+            return getRandomImage(groupID, config.getBoolean("use-mysql"));
     }
 
     @Override

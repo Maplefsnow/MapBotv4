@@ -6,6 +6,7 @@ import me.maplef.mapbotv4.loops.BaiduAccessTokenUpdate;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.managers.LoopJobManager;
 import me.maplef.mapbotv4.plugins.BotQQOperator;
+import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.Scheduler;
@@ -37,6 +38,7 @@ public class Main extends JavaPlugin {
             this.saveDefaultConfig();
             this.saveResource("messages.yml", false);
             this.saveResource("auto_reply.yml", false);
+            configManager = new ConfigManager();
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -72,6 +74,7 @@ public class Main extends JavaPlugin {
         new LoopJobManager().register();
 
         getServer().broadcast(Component.text(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("enable-message.server"))));
+
     }
 
     @Override
@@ -85,7 +88,7 @@ public class Main extends JavaPlugin {
             Bukkit.getLogger().warning(e.getClass().getName() + ": " + e.getMessage());
         }
 
-        BotQQOperator.logout();
+        if(BotOperator.getBot() != null) BotQQOperator.logout();
 
         getServer().broadcast(Component.text(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("disable-message.server"))));
         Bukkit.getServer().getLogger().info(String.format("[%s] %s", getDescription().getName(), messageConfig.getString("disable-message.console")));

@@ -14,6 +14,7 @@ import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.HttpUtils;
 import net.kyori.adventure.text.Component;
 import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.contact.MemberPermission;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -88,7 +89,10 @@ public class BindIDAndQQ implements MapbotPlugin {
         }
 
         if(config.getBoolean("bind-id-and-qq.modify-namecard")){
-            Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(playerGroup)).get(senderID)).setNameCard(MCID);
+            if(Objects.requireNonNull(bot.getGroup(playerGroup)).getBotPermission().compareTo(MemberPermission.ADMINISTRATOR) >= 0)
+                Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(playerGroup)).get(senderID)).setNameCard(MCID);
+            else
+                BotOperator.sendGroupMessage(playerGroup, "修改群名片需要群管理员权限，请给bot设置管理员权限");
         }
 
         if(config.getBoolean("bind-id-and-qq.whitelist"))

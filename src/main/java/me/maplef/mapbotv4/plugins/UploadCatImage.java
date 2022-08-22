@@ -3,8 +3,11 @@ package me.maplef.mapbotv4.plugins;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import me.maplef.mapbotv4.MapbotPlugin;
+import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.ConfigManager;
+import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -26,15 +29,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @SuppressWarnings("unused")
 public class UploadCatImage implements MapbotPlugin {
     ConfigManager configManager = new ConfigManager();
     FileConfiguration config = configManager.getConfig();
+
+    Bot bot = BotOperator.getBot();
 
     private JSONObject detectCat(Image image) throws Exception{
         String imageUrl = Image.queryUrl(image);
@@ -156,11 +158,21 @@ public class UploadCatImage implements MapbotPlugin {
         } else {
             image = (Image) args[0];
         }
-        String uploader = (String) DatabaseOperator.queryPlayer(senderID).get("NAME");
+        String uploader;
+        try{
+            uploader = (String) DatabaseOperator.queryPlayer(senderID).get("NAME");
+        } catch (PlayerNotFoundException e){
+            return MessageUtils.newChain(new At(senderID)).plus(" 请先绑定id再使用此功能");
+        }
 
-        String uploadLimitMsg = uploadLimitCheck(uploader, image);
-        if(!uploadLimitMsg.equals("OK"))
-            return MessageUtils.newChain(new At(senderID)).plus(" ").plus(uploadLimitMsg);
+        if(config.getBoolean("cat-images.upload-image.limit.enable")){
+            if(!(config.getBoolean("cat-images.upload-image.limit.bypass-op") &&
+                    Objects.requireNonNull(bot.getGroup(config.getLong("op-group"))).contains(senderID))){
+                String uploadLimitMsg = uploadLimitCheck(uploader, image);
+                if(!uploadLimitMsg.equals("OK"))
+                    return MessageUtils.newChain(new At(senderID)).plus(" ").plus(uploadLimitMsg);
+            }
+        }
 
         String catName = "未知"; double score = -1.0;
         if(config.getBoolean("cat-images.upload-image.cat-detect.enable")){
@@ -174,7 +186,7 @@ public class UploadCatImage implements MapbotPlugin {
         }
 
         if(config.getBoolean("cat-images.upload-image.cat-detect.enable")){
-            if(catName.contains("猫") && score >= config.getDouble("cat-images.upload-image.cat-detect.require-score")){
+            if(catName.endsWith("猫") && (!catName.contains("熊猫")) && score >= config.getDouble("cat-images.upload-image.cat-detect.require-score")){
                 try{
                     uploadImage(uploader, image, catName);
                     String msg = String.format(" 哇，是一只可爱的%s捏，猫片上传成功！", catName);

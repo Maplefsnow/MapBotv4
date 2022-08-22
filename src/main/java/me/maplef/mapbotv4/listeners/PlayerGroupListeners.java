@@ -11,7 +11,9 @@ import me.maplef.mapbotv4.managers.PluginManager;
 import me.maplef.mapbotv4.plugins.WelcomeNew;
 import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.PermissionDeniedException;
 import net.mamoe.mirai.event.EventHandler;
@@ -22,6 +24,7 @@ import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
 import net.mamoe.mirai.event.events.MemberLeaveEvent;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -30,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class PlayerGroupListeners extends SimpleListenerHost {
@@ -50,7 +54,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     public void onCommandReceive(GroupMessageEvent e){
         FileConfiguration config = configManager.getConfig();
 
-        String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
+        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
 
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
         if(messageContent == null) return;
@@ -94,13 +98,27 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
         if(messageContent == null) return;
         String textString = messageContent.contentToString().trim();
-        String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
+        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
         if(Pattern.matches(commandPattern, textString)) return;
 
-        if(!config.getBoolean("message-forward.group-to-server")) return;
+        if(!config.getBoolean("message-forward.group-to-server.enable")) return;
         if(e.getGroup().getId() != config.getLong("player-group")) return;
 
-        ClickEvent clickMsgHead = null; Component msgHeadComponent;
+        switch (config.getString("message-forward.group-to-server.mode", "all")) {
+            case "all" -> {}
+
+            case "prefix" -> {
+                String prefix = config.getString("message-forward.group-to-server.prefix", ".");
+                if(!textString.startsWith(prefix)) return;
+            }
+
+            default -> {
+                Bukkit.getServer().getLogger().warning(String.format("[%s] config.yml: message-forward.group-to-server.mode 选择错误，请重新填写", Main.getInstance().getDescription().getName()));
+                return;
+            }
+        }
+
+        ClickEvent clickMsgHead = null; Component msgHeadComponent, msgContextComponent;
         try{
             clickMsgHead = ClickEvent.suggestCommand("@" + DatabaseOperator.queryPlayer(e.getSender().getId()).get("NAME") + " ");
         } catch (Exception ignored){}
@@ -108,21 +126,23 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         msgHeadComponent = Component.text(CU.t(msgHead)).clickEvent(clickMsgHead);
 
         try {
-            Component msgContextComponent = QQMessageHandler.handle(e.getSender().getId(), e.getMessage());
-            for(Player player : Bukkit.getServer().getOnlinePlayers()) {
-                int sendFlag = 1;
-                try {
-                    sendFlag = (Integer) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
-                } catch (SQLException ex) {
-                    Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
-                } catch (PlayerNotFoundException ignored) {}
-                if (sendFlag == 0) continue;
-
-                player.sendMessage(msgHeadComponent.append(msgContextComponent));
-            }
+            msgContextComponent = QQMessageHandler.handle(e.getSender().getId(), e.getMessage());
         } catch (MessageLengthOutOfBoundException ex) {
             BotOperator.sendGroupMessage(e.getGroup().getId(), "本条消息过长，将不转发至服务器");
-        } catch (MessageContainsBlockedWordsException ignored){}
+            return;
+        } catch (MessageContainsBlockedWordsException ignored){return;}
+
+        for(Player player : Bukkit.getServer().getOnlinePlayers()) {
+            int sendFlag = 1;
+            try {
+                sendFlag = (Integer) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
+            } catch (SQLException ex) {
+                Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
+            } catch (PlayerNotFoundException ignored) {}
+            if (sendFlag == 0) continue;
+
+            player.sendMessage(msgHeadComponent.append(msgContextComponent));
+        }
     }
 
     @EventHandler
@@ -134,7 +154,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
         if(messageContent == null) return;
         String textString = messageContent.contentToString().trim();
-        String commandPattern = "^" + config.getString("command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
+        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
         if(Pattern.matches(commandPattern, textString)) return;
 
         if(repeatedMessage == null){
@@ -210,35 +230,91 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         Set<String> rules = autoReply.getKeys(false);
 
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
-            for(String ruleKey : rules){
-                String mode = autoReply.getString("ip-ask.mode", "similarity");
+            String replyContent = "";
 
-                String reply;
+            for(String ruleKey : rules){
+                String mode = autoReply.getString(ruleKey + ".mode", "similarity");
+
                 switch (mode) {
                     case "similarity" -> {
                         List<String> triggers = autoReply.getStringList(ruleKey + ".trigger");
-                        for(String trigger : triggers){
+                        for (String trigger : triggers) {
                             double similarity = TextComparator.getLSTSimilarity(message, trigger) * 60
                                     + TextComparator.getCosSimilarity(message, trigger) * 40;
-                            if(similarity >= autoReply.getInt(ruleKey + ".similarity", 100)){
-                                reply = autoReply.getString(ruleKey + ".reply", "null");
-                                BotOperator.sendGroupMessage(e.getGroup().getId(), reply);
+                            if (similarity >= autoReply.getInt(ruleKey + ".similarity", 100)) {
+                                replyContent = autoReply.getString(ruleKey + ".reply.content", "null");
                             }
                         }
                     }
                     case "contains" -> {
                         List<String> triggers = autoReply.getStringList(ruleKey + ".trigger");
-                        for(String trigger : triggers){
-                            if(message.contains(trigger)){
-                                reply = autoReply.getString(ruleKey + ".reply", "null");
-                                BotOperator.sendGroupMessage(e.getGroup().getId(), reply);
+                        for (String trigger : triggers) {
+                            if (message.contains(trigger)) {
+                                replyContent = autoReply.getString(ruleKey + ".reply.content", "null");
                                 break;
                             }
                         }
                     }
+                    default -> {
+                        Bukkit.getServer().getLogger().warning(String.format("[%s] auto_reply.yml: %s.mode 选择错误，请重新填写", Main.getInstance().getDescription().getName(), ruleKey));
+                        return;
+                    }
                 }
+
+                if(replyContent.isEmpty()) continue;
+
+                switch (autoReply.getString(ruleKey + ".reply.type", "text")) {
+                    case "text" -> BotOperator.sendGroupMessage(e.getGroup().getId(), replyContent);
+
+                    case "command" -> {
+                        String command = replyContent.split(" ", 2)[0];
+                        ArrayList<Message> argsList = new ArrayList<>();
+                        for(String str : replyContent.split(" ")) argsList.add(new PlainText(str));
+                        argsList.remove(0);
+
+                        MessageChainBuilder cmdRes = new MessageChainBuilder();
+                        try {
+                            cmdRes.append(PluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), argsList.toArray(new Message[0]), null));
+                        } catch (CommandNotFoundException ex) {
+                            cmdRes.append(ex.getMessage());
+                        } catch (Exception ex){
+                            ex.printStackTrace();
+                        }
+                        BotOperator.sendGroupMessage(e.getGroup().getId(), cmdRes.build());
+                    }
+
+                    default -> Bukkit.getServer().getLogger().warning(String.format("[%s] auto_reply.yml: %s.reply.type 选择错误，请重新填写", Main.getInstance().getDescription().getName(), ruleKey));
+                }
+
+                break;
             }
         });
+    }
+
+    @EventHandler
+    public void onConsoleCommandReceive(GroupMessageEvent e){
+        FileConfiguration config = configManager.getConfig();
+
+        MessageContent messageContent = e.getMessage().get(PlainText.Key);
+        if(messageContent == null) return;
+        String textString = messageContent.contentToString().trim();
+
+        String consoleCommandPrefix = config.getString("console-command-prefix", "/");
+
+        if(!textString.startsWith(consoleCommandPrefix)) return;
+        if(!config.getLongList("super-admin-account").contains(e.getSender().getId())) return;
+
+        StringBuilder resBuilder = new StringBuilder();
+        Consumer<ComponentLike> consumer = res -> resBuilder.append(PlainTextComponentSerializer.plainText().serialize(res.asComponent())).append("\n");
+        CommandSender commandSender = Bukkit.createCommandSender(consumer);
+        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(commandSender, textString.substring(consoleCommandPrefix.length())));
+
+        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+            if(resBuilder.isEmpty())
+                BotOperator.sendGroupMessage(e.getGroup().getId(), "控制台指令已发送，但未获取到返回信息");
+            else
+                BotOperator.sendGroupMessage(e.getGroup().getId(), resBuilder.toString().trim());
+        }, 5);
     }
 
     @EventHandler

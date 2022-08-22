@@ -37,6 +37,9 @@ welcome-new-message:
 
 congratulation-message: '恭喜 {PLAYER} 通过了审核，正式成为猫猫大陆的一员！'
 
+player-login-message: ""  # set to "" to disable
+player-logout-message: ""
+
 exit-player-group-message:
   player-group: '玩家 {PLAYER} 掉出了这个世界！'
   op-group: '{PLAYER} 已退出玩家群'

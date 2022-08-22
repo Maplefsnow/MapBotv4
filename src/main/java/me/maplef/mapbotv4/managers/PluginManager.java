@@ -43,10 +43,11 @@ public class PluginManager {
                 String github_url = "https://github.com/Maplefsnow/MapBotv4";
 
                 return MessageUtils.newChain(new PlainText(String.format(
-                        "%s v%s\n" +
-                                "Author: %s\n" +
-                                "GitHub: %s\n" +
-                                "技术支持Q群: 835413855",
+                        """
+                                %s v%s
+                                Author: %s
+                                GitHub: %s
+                                技术支持Q群: 835413855""",
                         name, version, author, github_url)));
             }
             case "plugins", "插件" -> {

@@ -36,6 +36,8 @@ public class BotOperator {
                 Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
             } catch (NullPointerException e){
                 Bukkit.getLogger().info(String.format("[%s] QQ账户正在登陆中，登陆期间的消息将不会转发", Main.getInstance().getDescription().getName()));
+            } catch (IllegalStateException e){
+                Bukkit.getServer().getLogger().severe(String.format("[%s] 发送消息失败，QQ账户可能被风控，请及时处理", Main.getInstance().getDescription().getName()));
             }
         });
     }
@@ -46,6 +48,8 @@ public class BotOperator {
                 Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
             } catch (NullPointerException e){
                 Bukkit.getLogger().info(String.format("[%s] QQ账户正在登陆中，登陆期间的消息将不会转发", Main.getInstance().getDescription().getName()));
+            } catch (IllegalStateException e){
+                Bukkit.getServer().getLogger().severe(String.format("[%s] 发送消息失败，QQ账户可能被风控，请及时处理", Main.getInstance().getDescription().getName()));
             }
         });
     }

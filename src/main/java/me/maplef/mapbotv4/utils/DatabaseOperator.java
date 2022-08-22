@@ -68,7 +68,9 @@ public class DatabaseOperator {
                     "    id            INTEGER   PRIMARY KEY AUTOINCREMENT," +
                     "    uploaded_time TIMESTAMP DEFAULT (datetime('now', 'localtime') )," +
                     "    uploader      TEXT," +
-                    "    base64        TEXT      NOT NULL" +
+                    "    base64        TEXT      NOT NULL," +
+                    "    url           TEXT      NULL," +
+                    "    cat_name      TEXT      NULL" +
                     ");");
             ps.execute();
 

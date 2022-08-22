@@ -10,17 +10,23 @@ import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.TextComparator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class GameListeners implements Listener {
@@ -32,28 +38,55 @@ public class GameListeners implements Listener {
 
         Long groupID = config.getLong("player-group");
 
-        if(!config.getBoolean("message-forward.server-to-group")) return;
+        if(!config.getBoolean("message-forward.server-to-group.enable")) return;
         if(e.isCancelled()) return;
 
-        MessageChainBuilder msg = new MessageChainBuilder();
+        MessageChain msg = null;
+
         Player player = e.getPlayer();
-
         String pattern = "^[@][\\w]*\\s\\w+$"; String receivedMessage = ((TextComponent) e.message()).content();
-        if (Pattern.matches(pattern, receivedMessage)) {
-            String atMsg = receivedMessage.substring(1);
-            String atName = atMsg.split(" ")[0];
 
-            try {
-                long atQQ = Long.parseLong(DatabaseOperator.queryPlayer(atName).get("QQ").toString());
-                msg.append(player.getName()).append(": ").append(new At(atQQ)).append(atMsg.substring(atName.length())).build();
-            } catch (SQLException | PlayerNotFoundException ex) {
-                Bukkit.getServer().getLogger().warning(ex.getClass().getName() + ": " + ex.getMessage());
+        switch (config.getString("message-forward.server-to-group.mode", "all")) {
+            case "all" -> {
+                if (Pattern.matches(pattern, receivedMessage)) {
+                    String atMsg = receivedMessage.substring(1);
+                    String atName = atMsg.split(" ")[0];
+
+                    try {
+                        long atQQ = Long.parseLong(DatabaseOperator.queryPlayer(atName).get("QQ").toString());
+                        msg = MessageUtils.newChain(new PlainText(player.getName() + ": ")).plus(new At(atQQ)).plus(atMsg.substring(atName.length()));
+                    } catch (SQLException | PlayerNotFoundException ex) {
+                        Bukkit.getServer().getLogger().warning(ex.getClass().getName() + ": " + ex.getMessage());
+                    }
+                } else {
+                    msg = MessageUtils.newChain(new PlainText(player.getName() + ": " + receivedMessage));
+                }
+                BotOperator.sendGroupMessage(groupID, msg);
             }
-        } else {
-            msg.append(player.getName()).append(": ").append(receivedMessage);
-        }
 
-        BotOperator.sendGroupMessage(groupID, msg.build());
+            case "prefix" -> {
+                String prefix = config.getString("message-forward.server-to-group.prefix", ".");
+                if(!receivedMessage.startsWith(prefix)) return;
+                receivedMessage = receivedMessage.substring(prefix.length());
+
+                if (Pattern.matches(pattern, receivedMessage)) {
+                    String atMsg = receivedMessage.substring(1);
+                    String atName = atMsg.split(" ")[0];
+
+                    try {
+                        long atQQ = Long.parseLong(DatabaseOperator.queryPlayer(atName).get("QQ").toString());
+                        msg = MessageUtils.newChain(new PlainText(player.getName() + ": ")).plus(new At(atQQ)).plus(atMsg.substring(atName.length()));
+                    } catch (SQLException | PlayerNotFoundException ex) {
+                        Bukkit.getServer().getLogger().warning(ex.getClass().getName() + ": " + ex.getMessage());
+                    }
+                } else {
+                    msg = MessageUtils.newChain(new PlainText(player.getName() + ": " + receivedMessage));
+                }
+                BotOperator.sendGroupMessage(groupID, msg);
+            }
+
+            default -> Bukkit.getServer().getLogger().warning(String.format("[%s] config.yml: message-forward.server-to-group.mode 选择错误，请重新填写", Main.getInstance().getDescription().getName()));
+        }
     }
 
     @EventHandler
@@ -82,4 +115,60 @@ public class GameListeners implements Listener {
             }
         });
     }
+
+    @EventHandler
+    public void onUpdateOfflineUUID(PlayerLoginEvent e){
+        FileConfiguration config = configManager.getConfig();
+        FileConfiguration messages = configManager.getMessageConfig();
+        if(config.getBoolean("bind-id-and-qq.online-mode")) return;
+
+        String msgPrefix = messages.getString("message-prefix");
+
+        Player player = e.getPlayer();
+        String playerName = player.getName();
+        UUID uuid = player.getUniqueId();
+
+        Connection c = new DatabaseOperator().getConnect();
+        try(PreparedStatement ps = c.prepareStatement("UPDATE PLAYER SET UUID = ? WHERE NAME = ?;")){
+            ps.setString(1, uuid.toString());
+            ps.setString(2, playerName);
+            ps.execute();
+        } catch (SQLException ex){
+            ex.printStackTrace();
+            player.sendMessage(CU.t(msgPrefix + "更新离线玩家UUID失败，请联系管理员检查控制台报错"));
+        }
+    }
+
+    @EventHandler
+    public void onJoinLeave(PlayerLoginEvent loginEvent, PlayerQuitEvent quitEvent){
+        FileConfiguration config = configManager.getConfig();
+        FileConfiguration messages = configManager.getMessageConfig();
+
+        long playerGroup = config.getLong("player-group");
+
+        String loginMessage = messages.getString("player-login-message", "");
+        String quitMessage = messages.getString("player-quit-message", "");
+
+        if(loginEvent != null && !loginMessage.isEmpty()){
+            BotOperator.sendGroupMessage(playerGroup, loginMessage.replace("{PLAYER}", loginEvent.getPlayer().getName()));
+        } else if (quitEvent != null && !quitMessage.isEmpty()){
+            BotOperator.sendGroupMessage(playerGroup, quitMessage.replace("{PLAYER}", quitEvent.getPlayer().getName()));
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent e){
+        FileConfiguration config = configManager.getConfig();
+        long playerGroup = config.getLong("player-group");
+
+        if(!config.getBoolean("message-forward.death-message.enable")) return;
+
+        Component deathMessageComponent = e.deathMessage();
+        if(deathMessageComponent == null) return;
+
+        String deathMessage = PlainTextComponentSerializer.plainText().serialize(deathMessageComponent);
+
+        BotOperator.sendGroupMessage(playerGroup, deathMessage);
+    }
+
 }

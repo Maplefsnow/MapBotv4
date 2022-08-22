@@ -10,13 +10,16 @@ import me.maplef.mapbotv4.utils.DatabaseOperator;
 import me.maplef.mapbotv4.utils.TextComparator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -135,4 +138,37 @@ public class GameListeners implements Listener {
             player.sendMessage(CU.t(msgPrefix + "更新离线玩家UUID失败，请联系管理员检查控制台报错"));
         }
     }
+
+    @EventHandler
+    public void onJoinLeave(PlayerLoginEvent loginEvent, PlayerQuitEvent quitEvent){
+        FileConfiguration config = configManager.getConfig();
+        FileConfiguration messages = configManager.getMessageConfig();
+
+        long playerGroup = config.getLong("player-group");
+
+        String loginMessage = messages.getString("player-login-message", "");
+        String quitMessage = messages.getString("player-quit-message", "");
+
+        if(loginEvent != null && !loginMessage.isEmpty()){
+            BotOperator.sendGroupMessage(playerGroup, loginMessage.replace("{PLAYER}", loginEvent.getPlayer().getName()));
+        } else if (quitEvent != null && !quitMessage.isEmpty()){
+            BotOperator.sendGroupMessage(playerGroup, quitMessage.replace("{PLAYER}", quitEvent.getPlayer().getName()));
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent e){
+        FileConfiguration config = configManager.getConfig();
+        long playerGroup = config.getLong("player-group");
+
+        if(!config.getBoolean("message-forward.death-message.enable")) return;
+
+        Component deathMessageComponent = e.deathMessage();
+        if(deathMessageComponent == null) return;
+
+        String deathMessage = PlainTextComponentSerializer.plainText().serialize(deathMessageComponent);
+
+        BotOperator.sendGroupMessage(playerGroup, deathMessage);
+    }
+
 }

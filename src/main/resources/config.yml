@@ -27,6 +27,8 @@ message-forward:
     enable: true
     mode: "all"
     prefix: "."
+  death-message:
+    enable: true
 
 bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility, set to 0 to disable
 

@@ -186,7 +186,7 @@ public class UploadCatImage implements MapbotPlugin {
         }
 
         if(config.getBoolean("cat-images.upload-image.cat-detect.enable")){
-            if(catName.contains("猫") && score >= config.getDouble("cat-images.upload-image.cat-detect.require-score")){
+            if(catName.endsWith("猫") && (!catName.contains("熊猫")) && score >= config.getDouble("cat-images.upload-image.cat-detect.require-score")){
                 try{
                     uploadImage(uploader, image, catName);
                     String msg = String.format(" 哇，是一只可爱的%s捏，猫片上传成功！", catName);

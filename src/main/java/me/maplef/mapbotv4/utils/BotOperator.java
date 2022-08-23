@@ -7,6 +7,7 @@ import net.mamoe.mirai.BotFactory;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.network.LoginFailedException;
 import net.mamoe.mirai.utils.BotConfiguration;
+import net.mamoe.mirai.utils.DeviceInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -19,13 +20,16 @@ public class BotOperator {
     public static void login(Long qq, String password) throws LoginFailedException {
         ConfigManager configManager = new ConfigManager();
         FileConfiguration config = configManager.getConfig();
-        File logPath = new File(Main.getInstance().getDataFolder(), "logs");
 
         bot = BotFactory.INSTANCE.newBot(qq, password, new BotConfiguration(){{
-            redirectNetworkLogToDirectory(logPath);
-            redirectBotLogToDirectory(logPath);
+            setWorkingDir(Main.getInstance().getDataFolder());
+            redirectNetworkLogToDirectory();
+            redirectBotLogToDirectory();
             setProtocol(MiraiProtocol.valueOf(config.getString("bot-login-device", "ANDROID_PHONE")));
             setCacheDir(new File("cache"));
+            fileBasedDeviceInfo();
+            if(new File(getWorkingDir(), "device.json").exists())
+                setDeviceInfo(bot1 -> DeviceInfo.from(new File(getWorkingDir(), "device.json")));
         }});
         bot.login();
     }

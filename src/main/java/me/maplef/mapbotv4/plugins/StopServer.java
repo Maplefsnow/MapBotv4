@@ -68,8 +68,6 @@ public class StopServer implements MapbotPlugin {
             throw new NoPermissionException();
         if(stopFlag) throw new Exception("已存在一个正在进行的关服定时任务");
 
-        stopFlag = true;
-
         int time = 60;
         if(args.length > 0){
             try{
@@ -79,6 +77,8 @@ public class StopServer implements MapbotPlugin {
                 throw new Exception("请给定一个不小于 30 的整数");
             }
         }
+
+        stopFlag = true;
 
         int finalTime = time;
         new BukkitRunnable(){

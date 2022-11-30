@@ -6,10 +6,7 @@ import me.maplef.mapbotv4.loops.BaiduAccessTokenUpdate;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.managers.LoopJobManager;
 import me.maplef.mapbotv4.plugins.BotQQOperator;
-import me.maplef.mapbotv4.utils.BotOperator;
-import me.maplef.mapbotv4.utils.CU;
-import me.maplef.mapbotv4.utils.DatabaseOperator;
-import me.maplef.mapbotv4.utils.Scheduler;
+import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -75,6 +72,7 @@ public class Main extends JavaPlugin {
 
         getServer().broadcast(Component.text(CU.t(messageConfig.getString("message-prefix") + messageConfig.getString("enable-message.server"))));
 
+        NeteaseMusicUtils.loadCookie();
     }
 
     @Override

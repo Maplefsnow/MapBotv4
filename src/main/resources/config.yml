@@ -115,9 +115,7 @@ check-in-group-auto-manage:
 
 # 测试功能
 netease-cloud-music:
-  profile:
-    phone: '10000000000'
-    password: 'qwerty123456'
+  login-mode: qrcode # qrcode二维码登录, anonymous 游客登录
 
 # 弃用功能
 inner-player-group-auto-manage:

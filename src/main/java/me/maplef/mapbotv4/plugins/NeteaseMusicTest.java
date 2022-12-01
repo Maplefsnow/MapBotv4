@@ -6,42 +6,167 @@ import com.alibaba.fastjson.JSONObject;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
+import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.HttpUtils;
+import me.maplef.mapbotv4.utils.NeteaseMusicUtils;
 import me.maplef.mapbotv4.utils.UrlUtils;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.utils.ExternalResource;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.*;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class NeteaseMusicTest implements MapbotPlugin {
     FileConfiguration config = Main.getInstance().getConfig();
 
-    private final String DOMAIN = "https://netease-cloud-music-api-one-azure-11.vercel.app";
+    private static final Bot bot = BotOperator.getBot();
+    private final String DOMAIN = "https://neteasemusic.api.buguwu.net";
 
-    private MessageChain login(){
-        String address = DOMAIN + "/login/cellphone";
+    private static String qrcodeKey;
 
-        LinkedHashMap<String, String> params = new LinkedHashMap<>();
-        params.put("phone", config.getString("netease-cloud-music.profile.phone"));
-        params.put("password", config.getString("netease-cloud-music.profile.password"));
+    private MessageChain login(long groupId){
+        String mode = config.getString("netease-cloud-music.login-mode");
+        return switch (Objects.requireNonNull(mode)) {
+            case "qrcode" -> generateQrcode(groupId);
+            case "anonymous" -> anonymousLogin();
+            default -> MessageUtils.newChain(new PlainText("Config 'netease-cloud-music.login-mode' error."));
+        };
+    }
 
-        String loginUrl = UrlUtils.addParams(address, params);
-
-        JSONObject loginRes = JSON.parseObject(HttpUtils.doGet(loginUrl));
-
-        int code = loginRes.getInteger("code");
-        if(code == 200) {
-            JSONObject profile = loginRes.getJSONObject("profile");
-            String nickname = profile.getString("nickname");
-            return MessageUtils.newChain(new PlainText(String.format("网易云音乐账户 %s 登陆成功", nickname)));
-        } else {
-            return MessageUtils.newChain(new PlainText("网易云音乐账户登陆失败，请检查控制台输出"));
+    private MessageChain anonymousLogin() {
+        JSONObject response = NeteaseMusicUtils.get("/register/anonimous",null);
+        if (response.getInteger("code") != 200) {
+            return MessageUtils.newChain(new PlainText("游客登录失败：" + response.toJSONString()));
         }
+        try {
+            NeteaseMusicUtils.saveCookie(response.getString("cookie"));
+            return MessageUtils.newChain(new PlainText("登陆成功！"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private MessageChain generateQrcode(long groupId) {
+        JSONObject response;
+        JSONObject responseData;
+        Map<String,Object> params;
+        response = NeteaseMusicUtils.get("/login/qr/key",null);
+        if (response.getInteger("code") != 200) {
+            return MessageUtils.newChain(new PlainText("获取qrcode key失败：" + response.toJSONString()));
+        }
+        responseData = response.getJSONObject("data");
+        qrcodeKey = responseData.getString("unikey");
+
+        params = new HashMap<>();
+        params.put("key",qrcodeKey);
+        response = NeteaseMusicUtils.get("/login/qr/create",params);
+        if (response.getInteger("code") != 200) {
+            return MessageUtils.newChain(new PlainText("获取二维码内容失败：" + response.toJSONString()));
+        }
+        responseData = response.getJSONObject("data");
+        String qrurl = responseData.getString("qrurl");
+
+        params = new HashMap<>();
+        params.put("qrimg",qrurl);
+        params.put("key",qrcodeKey);
+        response = NeteaseMusicUtils.get("/login/qr/create",params);
+        if (response.getInteger("code") != 200) {
+            return MessageUtils.newChain(new PlainText("生成二维码失败：" + response.toJSONString()));
+        }
+        responseData = response.getJSONObject("data");
+        String qrcodeBase64 = responseData.getString("qrimg");
+        String str1 = qrcodeBase64.substring(0, qrcodeBase64.indexOf(","));
+        String str2 = qrcodeBase64.substring(str1.length() + 1);
+        byte[] imageDecode = Base64.getDecoder().decode(str2);
+        InputStream is = new ByteArrayInputStream(imageDecode);
+        Image image = ExternalResource.uploadAsImage(is, Objects.requireNonNull(bot.getGroup(groupId)));
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            Map<String,Object> param = new HashMap<>();
+            param.put("key",qrcodeKey);
+            while (true) {
+                JSONObject responseJson = NeteaseMusicUtils.get("/login/qr/check",param);
+                if (responseJson.getInteger("code") == 803) {
+                    Objects.requireNonNull(bot.getGroup(groupId)).sendMessage(new PlainText(responseJson.getString("message")));
+                    try {
+                        NeteaseMusicUtils.saveCookie(responseJson.getString("cookie"));
+                        break;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        return MessageUtils.newChain(new PlainText("请使用网易云音乐手机客户端扫码登陆")).plus(image);
+    }
+
+    /*private MessageChain qrcodeLoginCheck() {
+        Map<String,Object> param = new HashMap<>();
+        param.put("key",qrcodeKey);
+        JSONObject qrcodeLoginCheckJson = NeteaseMusicUtils.get("/login/qr/check",param);
+        if (qrcodeLoginCheckJson.getInteger("code") != 803) {
+            if (qrcodeLoginCheckJson.getInteger("code") != 800) {
+                return MessageUtils.newChain(new PlainText("验证失败：二维码不存在或已过期"));
+            }
+            return MessageUtils.newChain(new PlainText("验证失败：其他错误 " + qrcodeLoginCheckJson.toJSONString()));
+        }
+        try {
+            NeteaseMusicUtils.saveCookie(qrcodeLoginCheckJson.getString("cookie"));
+            return MessageUtils.newChain(new PlainText("登陆成功！"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }*/
+
+    private MessageChain logout() {
+        if (NeteaseMusicUtils.getCookie() == null) {
+            return MessageUtils.newChain(new PlainText("当前未登录账号"));
+        }
+        JSONObject logoutResponse = NeteaseMusicUtils.get("/logout",null,NeteaseMusicUtils.getCookie());
+        if (logoutResponse.getInteger("code") == 200) {
+            NeteaseMusicUtils.removeCookie();
+            return MessageUtils.newChain(new PlainText("已退出登录"));
+        }else return MessageUtils.newChain(new PlainText("退出登录失败：" + logoutResponse.toJSONString()));
+    }
+
+    private JSONObject loginStatus() {
+        if (NeteaseMusicUtils.getCookie() == null) {
+            return null;
+        }
+        JSONObject responseData = NeteaseMusicUtils.get("/login/status",null,NeteaseMusicUtils.getCookie()).getJSONObject("data");
+        return responseData.getJSONObject("profile");
+    }
+
+    private MessageChain showMenu() {
+        String msg = """
+                ---网易云音乐帮助---
+                #netease login - 登录网易云音乐账号
+                #netease logout - 退出登录
+                #netease status - 查看登录、API状态
+                #netease search <歌曲名称> - 搜索歌曲
+                """;
+        return MessageUtils.newChain(new PlainText(msg));
+    }
+
+    private MessageChain showStatus() {
+        boolean apiStatus = NeteaseMusicUtils.checkAPIStatus();
+        JSONObject profile = loginStatus();
+        boolean haveProfile = profile != null;
+        String str1;
+        if (haveProfile) {
+            str1 = String.format("%s (%s)",profile.getString("nickname"),profile.getInteger("userId"));
+        }else str1 = "未登录";
+        return MessageUtils.newChain(new PlainText(String.format("登录状态：%s\nAPI状态：%s",str1,apiStatus)));
     }
 
     private MessageChain search(String songName){
@@ -92,17 +217,35 @@ public class NeteaseMusicTest implements MapbotPlugin {
 
     @Override
     public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
+        if (args.length == 0) {
+            return showMenu();
+        }
         switch (args[0].contentToString()) {
             case "login" -> {
-                return login();
+                return login(groupID);
             }
             case "search" -> {
                 if (args.length < 2) throw new InvalidSyntaxException();
                 return search(args[1].contentToString());
             }
-            default -> throw new IllegalStateException("未知的参数: " + args[0]);
+
+            /*case "qrcodeLoginCheck" -> {
+                return qrcodeLoginCheck();
+            }*/
+
+            case "logout" -> {
+                return logout();
+            }
+
+            case "status" -> {
+                return showStatus();
+            }
+
+            default -> throw new InvalidSyntaxException();
         }
     }
+
+
 
     @Override
     public Map<String, Object> register() throws NoSuchMethodException {

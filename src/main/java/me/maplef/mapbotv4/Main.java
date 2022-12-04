@@ -66,6 +66,11 @@ public class Main extends JavaPlugin {
             e.printStackTrace();
         }
 
+        // pr 就是这个 pull request
+        // 现在你修改代码左侧就会有显示
+        // 绿色代表新增，蓝色则是修改
+        // 你可以把修改后的代码上传，叫做一次提交 (commit)
+
         if(this.getConfig().getBoolean("cat-images.upload-image.cat-detect.enable")) new BaiduAccessTokenUpdate().updateAuth();
 
         new LoopJobManager().register();

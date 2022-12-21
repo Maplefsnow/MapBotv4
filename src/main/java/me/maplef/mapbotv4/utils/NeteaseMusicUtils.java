@@ -3,6 +3,7 @@ package me.maplef.mapbotv4.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Joiner;
+import io.ktor.http.auth.HttpAuthHeader;
 import me.maplef.mapbotv4.Main;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -29,7 +30,7 @@ public class NeteaseMusicUtils {
 
     private static String cookie;
 
-    public static JSONObject get(String path,Map<String,Object> params,String cookie) {
+    public static JSONObject get(String path,HashMap<String,Object> params,String cookie) {
         if (params == null) {
             params = new HashMap<>();
         }
@@ -37,7 +38,7 @@ public class NeteaseMusicUtils {
         return get(path,params);
     }
 
-    public static JSONObject get(String path, Map<String,Object> params) {
+    public static JSONObject get(String path, HashMap<String,Object> params) {
         if (params == null) {
             params = new HashMap<>();
         }
@@ -58,7 +59,7 @@ public class NeteaseMusicUtils {
         }
     }
 
-    public static HttpEntity post(String path, Map<String,Object> params) {
+    public static HttpEntity post(String path, HashMap<String,Object> params) {
         if (params == null) {
             params = new HashMap<>();
         }
@@ -110,7 +111,7 @@ public class NeteaseMusicUtils {
     }
 
     public static void saveCookie(String cookie) throws IOException {
-        setCookie(cookie);
+        NeteaseMusicUtils.cookie = cookie;
         File cookieFile = new File(Main.getInstance().getDataFolder() + "/cache/neteaseMusic.cookie");
         if (cookieFile.exists()) {
             cookieFile.delete();
@@ -128,6 +129,20 @@ public class NeteaseMusicUtils {
         loadCookie();
     }
 
+    public static void mp3ToAmr(File file) {
+        Runtime runtime = Runtime.getRuntime();
+
+    }
+
+
+
+
+    public enum SendMode {
+        card,
+        voice,
+        both
+    }
+
     public static String getAPIUrl() {
         return API_URL;
     }
@@ -142,5 +157,14 @@ public class NeteaseMusicUtils {
 
     public static void setCookie(String cookie) {
         NeteaseMusicUtils.cookie = cookie;
+        if (cookie == null) {
+            return;
+        }
+
+        try {
+            saveCookie(cookie);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

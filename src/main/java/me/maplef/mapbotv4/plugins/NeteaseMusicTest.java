@@ -1,15 +1,12 @@
 package me.maplef.mapbotv4.plugins;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.utils.BotOperator;
-import me.maplef.mapbotv4.utils.HttpUtils;
 import me.maplef.mapbotv4.utils.NeteaseMusicUtils;
-import me.maplef.mapbotv4.utils.UrlUtils;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
@@ -20,22 +17,23 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class NeteaseMusicTest implements MapbotPlugin {
     FileConfiguration config = Main.getInstance().getConfig();
 
     private static final Bot bot = BotOperator.getBot();
-    private final String DOMAIN = "https://neteasemusic.api.buguwu.net";
 
     private static String qrcodeKey;
 
     private MessageChain login(long groupId){
-        String mode = config.getString("netease-cloud-music.login-mode");
+        String mode = config.getString("netease-cloud-music.login-mode","anonymous");
         return switch (Objects.requireNonNull(mode)) {
             case "qrcode" -> generateQrcode(groupId);
             case "anonymous" -> anonymousLogin();
-            default -> MessageUtils.newChain(new PlainText("Config 'netease-cloud-music.login-mode' error."));
+            default -> MessageUtils.newChain(new PlainText("error"));
         };
     }
 
@@ -55,7 +53,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
     private MessageChain generateQrcode(long groupId) {
         JSONObject response;
         JSONObject responseData;
-        Map<String,Object> params;
+        HashMap<String,Object> params;
         response = NeteaseMusicUtils.get("/login/qr/key",null);
         if (response.getInteger("code") != 200) {
             return MessageUtils.newChain(new PlainText("获取qrcode key失败：" + response.toJSONString()));
@@ -87,7 +85,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
         InputStream is = new ByteArrayInputStream(imageDecode);
         Image image = ExternalResource.uploadAsImage(is, Objects.requireNonNull(bot.getGroup(groupId)));
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
-            Map<String,Object> param = new HashMap<>();
+            HashMap<String,Object> param = new HashMap<>();
             param.put("key",qrcodeKey);
             while (true) {
                 JSONObject responseJson = NeteaseMusicUtils.get("/login/qr/check",param);
@@ -110,24 +108,6 @@ public class NeteaseMusicTest implements MapbotPlugin {
         return MessageUtils.newChain(new PlainText("请使用网易云音乐手机客户端扫码登陆")).plus(image);
     }
 
-    /*private MessageChain qrcodeLoginCheck() {
-        Map<String,Object> param = new HashMap<>();
-        param.put("key",qrcodeKey);
-        JSONObject qrcodeLoginCheckJson = NeteaseMusicUtils.get("/login/qr/check",param);
-        if (qrcodeLoginCheckJson.getInteger("code") != 803) {
-            if (qrcodeLoginCheckJson.getInteger("code") != 800) {
-                return MessageUtils.newChain(new PlainText("验证失败：二维码不存在或已过期"));
-            }
-            return MessageUtils.newChain(new PlainText("验证失败：其他错误 " + qrcodeLoginCheckJson.toJSONString()));
-        }
-        try {
-            NeteaseMusicUtils.saveCookie(qrcodeLoginCheckJson.getString("cookie"));
-            return MessageUtils.newChain(new PlainText("登陆成功！"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }*/
-
     private MessageChain logout() {
         if (NeteaseMusicUtils.getCookie() == null) {
             return MessageUtils.newChain(new PlainText("当前未登录账号"));
@@ -147,6 +127,10 @@ public class NeteaseMusicTest implements MapbotPlugin {
         return responseData.getJSONObject("profile");
     }
 
+    private boolean isAnonymousLogin() {
+        return Objects.equals(config.getString("netease-cloud-music.login-mode"), "anonymous");
+    }
+
     private MessageChain showMenu() {
         String msg = """
                 ---网易云音乐帮助---
@@ -160,25 +144,27 @@ public class NeteaseMusicTest implements MapbotPlugin {
 
     private MessageChain showStatus() {
         boolean apiStatus = NeteaseMusicUtils.checkAPIStatus();
-        JSONObject profile = loginStatus();
-        boolean haveProfile = profile != null;
         String str1;
-        if (haveProfile) {
-            str1 = String.format("%s (%s)",profile.getString("nickname"),profile.getInteger("userId"));
-        }else str1 = "未登录";
+        if (isAnonymousLogin()) {
+            str1 = "游客登录";
+        }else {
+            JSONObject profile = loginStatus();
+            boolean haveProfile = profile != null;
+            if (haveProfile) {
+                str1 = String.format("%s (%s)",profile.getString("nickname"),profile.getInteger("userId"));
+            }else str1 = "未登录";
+        }
         return MessageUtils.newChain(new PlainText(String.format("登录状态：%s\nAPI状态：%s",str1,apiStatus)));
     }
 
     private MessageChain search(String songName){
-        String address = DOMAIN + "/cloudsearch";
+        String path = "/cloudsearch";
 
-        LinkedHashMap<String, String> params = new LinkedHashMap<>();
-        params.put("keywords", songName);
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("keywords", URLEncoder.encode(songName, StandardCharsets.UTF_8));
         params.put("limit", "10");
 
-        String searchUrl = UrlUtils.addParams(address, params);
-
-        JSONObject searchRes = JSON.parseObject(HttpUtils.doGet(searchUrl));
+        JSONObject searchRes = NeteaseMusicUtils.get(path, params);
 
         JSONArray songs = searchRes.getJSONObject("result").getJSONArray("songs");
         StringBuilder resStringBuilder = new StringBuilder();
@@ -201,18 +187,94 @@ public class NeteaseMusicTest implements MapbotPlugin {
         return MessageUtils.newChain(new PlainText(String.format("\"%s\" 的搜索结果:\n%s", songName, resString)));
     }
 
-    private String getMusicID(String songName){
-        String address = DOMAIN + "/cloudsearch";
+    private int getMusicID(String songName){
+        String path = "/cloudsearch";
 
-        LinkedHashMap<String, String> params = new LinkedHashMap<>();
-        params.put("keywords", songName);
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("keywords", URLEncoder.encode(songName, StandardCharsets.UTF_8));
         params.put("limit", "10");
 
-        String searchUrl = UrlUtils.addParams(address, params);
 
-        JSONObject searchRes = JSON.parseObject(HttpUtils.doGet(searchUrl));
+        JSONObject searchRes = NeteaseMusicUtils.get(path,params);
 
-        return searchRes.getJSONObject("result").getJSONArray("songs").getJSONObject(0).getString("id");
+        return searchRes.getJSONObject("result").getJSONArray("songs").getJSONObject(0).getInteger("id");
+    }
+
+    private JSONObject checkMusic(int id) {
+        HashMap<String,Object> param = new HashMap<>();
+        param.put("id",id);
+        return NeteaseMusicUtils.get("/check/music",param);
+    }
+
+    private MessageChain sendMusic(int id,long groupId) {
+        NeteaseMusicUtils.SendMode sendMode = NeteaseMusicUtils.SendMode.valueOf(config.getString("netease-cloud-music.music.send-mode"));
+        String soundQualityLevel = config.getString("netease-cloud-music.music.sound-quality-level", "standard");
+
+        HashMap<String, Object> params = new HashMap<>();
+        JSONObject response = checkMusic(id);
+        JSONObject responseData;
+        if (!response.getBoolean("success")){
+            return MessageUtils.newChain(new PlainText(response.getString("message")));
+        }
+        params.put("id",id);
+        params.put("level",soundQualityLevel);
+        response = NeteaseMusicUtils.get("/song/url/v1",params,NeteaseMusicUtils.getCookie());
+        if (response.getInteger("code") != 200) {
+            return MessageUtils.newChain(new PlainText("获取音乐错误: " + response.toJSONString()));
+        }
+        responseData = response.getJSONArray("data").getJSONObject(0);
+
+        if (responseData.getInteger("code") == 404) {
+            return MessageUtils.newChain(new PlainText("此音乐不存在"));
+        }else if (responseData.getInteger("code") != 200) {
+            return MessageUtils.newChain(new PlainText("获取音乐错误：" + responseData.toJSONString()));
+        }
+
+        String musicUrl = responseData.getString("url");
+
+        if (sendMode == NeteaseMusicUtils.SendMode.voice) {
+            return sendVoice(musicUrl,groupId);
+        }
+
+        params = new HashMap<>();
+        params.put("ids",id);
+        response = NeteaseMusicUtils.get("/song/detail",params);
+        JSONArray songsArray = response.getJSONArray("songs");
+        JSONObject musicInfo = songsArray.getJSONObject(0);
+
+        String musicName = musicInfo.getString("name");
+        ArrayList<String> musicAuthorList = new ArrayList<>();
+        JSONArray musicAuthors = musicInfo.getJSONArray("ar");
+
+        for (int i = 0; i < musicAuthors.size(); i++) {
+           musicAuthorList.add(musicAuthors.getJSONObject(i).getString("name"));
+        }
+
+        JSONObject musicAl = musicInfo.getJSONObject("al");
+        String musicImageUrl = musicAl.getString("picUrl");
+        if (sendMode == NeteaseMusicUtils.SendMode.both) {
+            Objects.requireNonNull(bot.getGroup(groupId)).sendMessage(sendCard(id,musicUrl,musicName,musicAuthorList,musicImageUrl));
+            return sendVoice(musicUrl,groupId);
+        } else return sendCard(id,musicUrl,musicName,musicAuthorList,musicImageUrl);
+    }
+
+    private MessageChain sendCard(int id, String musicUrl,String musicName,ArrayList<String> musicAuthors,String musicImageUrl) {
+        MusicShare share= new MusicShare(
+                MusicKind.NeteaseCloudMusic,
+                musicName,
+                String.join("/",musicAuthors),
+                "https://music.163.com/#/song?id=" + id,
+                musicImageUrl,musicUrl);
+        return MessageUtils.newChain(share);
+    }
+
+    private MessageChain sendVoice(String musicUrl, long groupId) {
+
+
+
+
+        //Audio audio = Objects.requireNonNull(bot.getGroup(groupId)).uploadAudio(ExternalResource.create())
+        return null;
     }
 
     @Override
@@ -220,6 +282,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
         if (args.length == 0) {
             return showMenu();
         }
+
         switch (args[0].contentToString()) {
             case "login" -> {
                 return login(groupID);
@@ -229,16 +292,16 @@ public class NeteaseMusicTest implements MapbotPlugin {
                 return search(args[1].contentToString());
             }
 
-            /*case "qrcodeLoginCheck" -> {
-                return qrcodeLoginCheck();
-            }*/
-
             case "logout" -> {
                 return logout();
             }
 
             case "status" -> {
                 return showStatus();
+            }
+
+            case "play" -> {
+                return sendMusic(Integer.parseInt(args[1].contentToString()),groupID);
             }
 
             default -> throw new InvalidSyntaxException();

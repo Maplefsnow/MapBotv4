@@ -28,10 +28,14 @@ public class NeteaseMusicTest implements MapbotPlugin {
 
     private static String qrcodeKey;
 
-    private MessageChain login(long groupId){
+    private static List<JSONObject> searchedList;
+
+    private long groupId;
+
+    private MessageChain login(){
         String mode = config.getString("netease-cloud-music.login-mode","anonymous");
         return switch (Objects.requireNonNull(mode)) {
-            case "qrcode" -> generateQrcode(groupId);
+            case "qrcode" -> generateQrcode();
             case "anonymous" -> anonymousLogin();
             default -> MessageUtils.newChain(new PlainText("error"));
         };
@@ -50,9 +54,10 @@ public class NeteaseMusicTest implements MapbotPlugin {
         }
     }
 
-    private MessageChain generateQrcode(long groupId) {
+    private MessageChain generateQrcode() {
         JSONObject response;
         JSONObject responseData;
+
         HashMap<String,Object> params;
         response = NeteaseMusicUtils.get("/login/qr/key",null);
         if (response.getInteger("code") != 200) {
@@ -123,6 +128,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
         if (NeteaseMusicUtils.getCookie() == null) {
             return null;
         }
+
         JSONObject responseData = NeteaseMusicUtils.get("/login/status",null,NeteaseMusicUtils.getCookie()).getJSONObject("data");
         return responseData.getJSONObject("profile");
     }
@@ -138,6 +144,8 @@ public class NeteaseMusicTest implements MapbotPlugin {
                 #netease logout - 退出登录
                 #netease status - 查看登录、API状态
                 #netease search <歌曲名称> - 搜索歌曲
+                #netease select <序号> - 选择播放
+                #netease play <ID> 使用歌曲ID播放
                 """;
         return MessageUtils.newChain(new PlainText(msg));
     }
@@ -158,6 +166,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
     }
 
     private MessageChain search(String songName){
+        searchedList = new ArrayList<>();
         String path = "/cloudsearch";
 
         HashMap<String, Object> params = new HashMap<>();
@@ -177,6 +186,8 @@ public class NeteaseMusicTest implements MapbotPlugin {
             String authorList = authorListBuilder.toString();
             authorList = authorList.substring(0, authorList.length()-2);
 
+            searchedList.add(song);
+
             String singleStr = String.format("%d. %s - %s", i+1, song.getString("name"), authorList);
             resStringBuilder.append(singleStr).append("\n");
         }
@@ -184,7 +195,7 @@ public class NeteaseMusicTest implements MapbotPlugin {
         String resString = resStringBuilder.toString();
         resString = resString.substring(0, resString.length()-1);
 
-        return MessageUtils.newChain(new PlainText(String.format("\"%s\" 的搜索结果:\n%s", songName, resString)));
+        return MessageUtils.newChain(new PlainText(String.format("\"%s\" 的搜索结果:\n%s\n使用#netease select <ID> 播放", songName, resString)));
     }
 
     private int getMusicID(String songName){
@@ -200,13 +211,22 @@ public class NeteaseMusicTest implements MapbotPlugin {
         return searchRes.getJSONObject("result").getJSONArray("songs").getJSONObject(0).getInteger("id");
     }
 
+    private MessageChain selectMusic(int id) {
+        try {
+            JSONObject song = searchedList.get(id - 1);
+            searchedList = null;
+            return sendMusic(song.getInteger("id"));
+        }catch (IndexOutOfBoundsException e) {
+            return MessageUtils.newChain(new PlainText("非法的序号"));
+        }
+    }
     private JSONObject checkMusic(int id) {
         HashMap<String,Object> param = new HashMap<>();
         param.put("id",id);
         return NeteaseMusicUtils.get("/check/music",param);
     }
 
-    private MessageChain sendMusic(int id,long groupId) {
+    private MessageChain sendMusic(int id) {
         NeteaseMusicUtils.SendMode sendMode = NeteaseMusicUtils.SendMode.valueOf(config.getString("netease-cloud-music.music.send-mode"));
         String soundQualityLevel = config.getString("netease-cloud-music.music.sound-quality-level", "standard");
 
@@ -279,13 +299,14 @@ public class NeteaseMusicTest implements MapbotPlugin {
 
     @Override
     public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
+        this.groupId = groupID;
         if (args.length == 0) {
             return showMenu();
         }
 
         switch (args[0].contentToString()) {
             case "login" -> {
-                return login(groupID);
+                return login();
             }
             case "search" -> {
                 if (args.length < 2) throw new InvalidSyntaxException();
@@ -301,7 +322,11 @@ public class NeteaseMusicTest implements MapbotPlugin {
             }
 
             case "play" -> {
-                return sendMusic(Integer.parseInt(args[1].contentToString()),groupID);
+                return sendMusic(Integer.parseInt(args[1].contentToString()));
+            }
+
+            case "select" -> {
+                return selectMusic(Integer.parseInt(args[1].contentToString()));
             }
 
             default -> throw new InvalidSyntaxException();

@@ -133,13 +133,13 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         } catch (MessageContainsBlockedWordsException ignored){return;}
 
         for(Player player : Bukkit.getServer().getOnlinePlayers()) {
-            int sendFlag = 1;
+            boolean sendFlag = true;
             try {
-                sendFlag = (Integer) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
+                sendFlag = (boolean) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
             } catch (SQLException ex) {
                 Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
             } catch (PlayerNotFoundException ignored) {}
-            if (sendFlag == 0) continue;
+            if (!sendFlag) continue;
 
             player.sendMessage(msgHeadComponent.append(msgContextComponent));
         }

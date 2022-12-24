@@ -289,12 +289,24 @@ public class NeteaseMusicTest implements MapbotPlugin {
     }
 
     private MessageChain sendVoice(String musicUrl, long groupId) {
+        //TODO
 
+        if (!NeteaseMusicUtils.downloadMusic(musicUrl)) {
+            return MessageUtils.newChain(new PlainText("下载失败"));
+        }
 
+        if (!NeteaseMusicUtils.mp3ToAmr(new File(Main.getInstance().getDataFolder() + File.separator + "tempMusic.mp3"))) {
+            return MessageUtils.newChain(new PlainText("转换失败"));
+        }
 
-
-        //Audio audio = Objects.requireNonNull(bot.getGroup(groupId)).uploadAudio(ExternalResource.create())
-        return null;
+        try {
+            ExternalResource externalResource = ExternalResource.create(new File(Main.getInstance().getDataFolder().getAbsoluteFile() + File.separator + "tempMusic.amr"));
+            Audio audio = Objects.requireNonNull(bot.getGroup(groupId)).uploadAudio(externalResource);
+            externalResource.close();
+            return MessageUtils.newChain(audio);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

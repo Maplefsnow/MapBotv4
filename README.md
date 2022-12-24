@@ -17,6 +17,7 @@ MapBotv4 是枫号机器人Mapbot的第四代，作为 Minecraft bukkit/spigot/p
 - [可选] 玩家审核群（下称`check-in-group`）
 - [可选] [和风天气](https://dev.qweather.com)API-KEY
 - [可选] [百度识图](https://ai.baidu.com/ai-doc/IMAGERECOGNITION/Zk3bcxdfr) API-KEY
+- [可选] [FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases)
 
 ### 启动
 1. 将此插件的 .jar 文件放入服务端 plugins 文件夹，并加载插件。

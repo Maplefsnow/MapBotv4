@@ -21,7 +21,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class NeteaseMusicTest implements MapbotPlugin {
+public class NeteaseMusic implements MapbotPlugin {
     FileConfiguration config = Main.getInstance().getConfig();
 
     private static final Bot bot = BotOperator.getBot();
@@ -289,12 +289,22 @@ public class NeteaseMusicTest implements MapbotPlugin {
     }
 
     private MessageChain sendVoice(String musicUrl, long groupId) {
+        if (!NeteaseMusicUtils.downloadMusic(musicUrl)) {
+            return MessageUtils.newChain(new PlainText("下载失败"));
+        }
 
+        if (!NeteaseMusicUtils.mp3ToAmr(new File(Main.getInstance().getDataFolder() + File.separator + "tempMusic.mp3"))) {
+            return MessageUtils.newChain(new PlainText("转换失败"));
+        }
 
-
-
-        //Audio audio = Objects.requireNonNull(bot.getGroup(groupId)).uploadAudio(ExternalResource.create())
-        return null;
+        try {
+            ExternalResource externalResource = ExternalResource.create(new File(Main.getInstance().getDataFolder().getAbsoluteFile() + File.separator + "tempMusic.amr"));
+            Audio audio = Objects.requireNonNull(bot.getGroup(groupId)).uploadAudio(externalResource);
+            externalResource.close();
+            return MessageUtils.newChain(audio);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -341,9 +351,9 @@ public class NeteaseMusicTest implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("netease", NeteaseMusicTest.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("netease", NeteaseMusic.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
-        usages.put("netease", "#netease - 网易云音乐（测试版）");
+        usages.put("netease", "#netease - 网易云音乐");
 
         info.put("name", "netease");
         info.put("commands", commands);

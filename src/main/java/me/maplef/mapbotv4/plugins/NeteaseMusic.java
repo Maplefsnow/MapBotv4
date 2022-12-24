@@ -21,7 +21,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class NeteaseMusicTest implements MapbotPlugin {
+public class NeteaseMusic implements MapbotPlugin {
     FileConfiguration config = Main.getInstance().getConfig();
 
     private static final Bot bot = BotOperator.getBot();
@@ -289,8 +289,6 @@ public class NeteaseMusicTest implements MapbotPlugin {
     }
 
     private MessageChain sendVoice(String musicUrl, long groupId) {
-        //TODO
-
         if (!NeteaseMusicUtils.downloadMusic(musicUrl)) {
             return MessageUtils.newChain(new PlainText("下载失败"));
         }
@@ -353,9 +351,9 @@ public class NeteaseMusicTest implements MapbotPlugin {
         Map<String, Method> commands = new HashMap<>();
         Map<String, String> usages = new HashMap<>();
 
-        commands.put("netease", NeteaseMusicTest.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
+        commands.put("netease", NeteaseMusic.class.getMethod("onEnable", Long.class, Long.class, Message[].class, QuoteReply.class));
 
-        usages.put("netease", "#netease - 网易云音乐（测试版）");
+        usages.put("netease", "#netease - 网易云音乐");
 
         info.put("name", "netease");
         info.put("commands", commands);

@@ -15,7 +15,7 @@ MapBotv4 是枫号机器人Mapbot的第四代，作为 Minecraft bukkit/spigot/p
 - [必需] 一个能正常通过手机端登陆的 QQ 小号
 - [必需] 前置插件 [Vault](https://github.com/MilkBowl/Vault) 和至少一个经济插件（如Essentials自带的经济管理）
 - [可选] 玩家审核群（下称`check-in-group`）
-- [可选] [和风天气](https://dev.qweather.com)API-KEY
+- [可选] [和风天气](https://dev.qweather.com) API-KEY
 - [可选] [百度识图](https://ai.baidu.com/ai-doc/IMAGERECOGNITION/Zk3bcxdfr) API-KEY
 - [可选] [FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases)
 

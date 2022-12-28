@@ -115,7 +115,12 @@ check-in-group-auto-manage:
 
 # 测试功能
 netease-cloud-music:
-  login-mode: qrcode # qrcode二维码登录, anonymous 游客登录
+  login-mode: qrcode # qrcode 二维码登录, anonymous 游客登录
+  ffmpeg-path: ffmpeg # ffmpeg可执行文件路径 如果不使用语音发送 请忽略此配置
+  music:
+    send-mode: card # card 以卡片形式发送 , voice 以语音形式发送 , both 我全都要！
+    sound-quality-level: standard # standard 标准, higher 较高, exhigh 极高
+
 
 # 弃用功能
 inner-player-group-auto-manage:

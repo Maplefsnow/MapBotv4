@@ -140,18 +140,29 @@ public class GameListeners implements Listener {
     }
 
     @EventHandler
-    public void onJoinLeave(PlayerLoginEvent loginEvent, PlayerQuitEvent quitEvent){
+    public void onPlayerJoin(PlayerLoginEvent loginEvent){
         FileConfiguration config = configManager.getConfig();
         FileConfiguration messages = configManager.getMessageConfig();
 
         long playerGroup = config.getLong("player-group");
 
         String loginMessage = messages.getString("player-login-message", "");
-        String quitMessage = messages.getString("player-quit-message", "");
 
         if(loginEvent != null && !loginMessage.isEmpty()){
             BotOperator.sendGroupMessage(playerGroup, loginMessage.replace("{PLAYER}", loginEvent.getPlayer().getName()));
-        } else if (quitEvent != null && !quitMessage.isEmpty()){
+        }
+    }
+
+    @EventHandler
+    public void onPlayerLeave(PlayerQuitEvent quitEvent) {
+        FileConfiguration config = configManager.getConfig();
+        FileConfiguration messages = configManager.getMessageConfig();
+
+        long playerGroup = config.getLong("player-group");
+
+        String quitMessage = messages.getString("player-quit-message", "");
+
+        if (quitEvent != null && !quitMessage.isEmpty()){
             BotOperator.sendGroupMessage(playerGroup, quitMessage.replace("{PLAYER}", quitEvent.getPlayer().getName()));
         }
     }

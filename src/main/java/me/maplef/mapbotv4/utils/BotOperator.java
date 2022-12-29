@@ -4,6 +4,7 @@ import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactory;
+import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.network.LoginFailedException;
 import net.mamoe.mirai.utils.BotConfiguration;
@@ -21,6 +22,9 @@ public class BotOperator {
         ConfigManager configManager = new ConfigManager();
         FileConfiguration config = configManager.getConfig();
 
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(GlobalEventChannel.class.getClassLoader());
+
         bot = BotFactory.INSTANCE.newBot(qq, password, new BotConfiguration(){{
             setWorkingDir(Main.getInstance().getDataFolder());
             redirectNetworkLogToDirectory();
@@ -32,6 +36,8 @@ public class BotOperator {
                 setDeviceInfo(bot1 -> DeviceInfo.from(new File(getWorkingDir(), "device.json")));
         }});
         bot.login();
+
+        Thread.currentThread().setContextClassLoader(loader);
     }
 
     public static void sendGroupMessage(Long groupID, MessageChain message){

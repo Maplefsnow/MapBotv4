@@ -1,8 +1,8 @@
 name: MapBot
 author: Maplef
-version: 0.14.1-1.17
+version: 0.14.1-1.19
 main: me.maplef.mapbotv4.Main
-api-version: 1.17
+api-version: 1.19
 depend:
   - Vault
 commands:

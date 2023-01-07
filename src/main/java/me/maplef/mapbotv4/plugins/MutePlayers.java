@@ -9,6 +9,7 @@ import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Member;
+import net.mamoe.mirai.contact.PermissionDeniedException;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -29,13 +30,12 @@ public class MutePlayers implements MapbotPlugin {
     private final Long playerGroup = config.getLong("player-group");
 
     private void mute(String playerName, Long playerQQ, int muteTime) throws Exception{
-        String commandStr = String.format("mute %s %dm", playerName, muteTime);
-
-        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandStr));
-
         Member playerMember = Objects.requireNonNull(bot.getGroup(playerGroup)).get(playerQQ);
         if(playerMember == null) throw new Exception("QQ群内未找到该玩家");
         playerMember.mute(muteTime * 60);
+
+        String commandStr = String.format("mute %s %dm", playerName, muteTime);
+        Bukkit.getScheduler().runTask(Main.getInstance(), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandStr));
     }
 
     private void unmute(String playerName, Long playerQQ) throws Exception{
@@ -62,10 +62,14 @@ public class MutePlayers implements MapbotPlugin {
             throw new Exception("请输入一个整数");
         }
 
-        String playerName = DatabaseOperator.queryPlayer(args[0]).get("NAME").toString();
-        long playerQQ = Long.parseLong(DatabaseOperator.queryPlayer(args[0]).get("QQ").toString());
+        String playerName = DatabaseOperator.queryPlayer(args[0].contentToString()).get("NAME").toString();
+        long playerQQ = Long.parseLong(DatabaseOperator.queryPlayer(args[0].contentToString()).get("QQ").toString());
 
-        mute(playerName, playerQQ, muteTime);
+        try {
+            mute(playerName, playerQQ, muteTime);
+        } catch (PermissionDeniedException ex) {
+            return MessageUtils.newChain(new At(senderID), new PlainText(String.format(" 玩家 %s 在Q群中拥有更高权限，无法禁言", playerName)));
+        }
 
         return MessageUtils.newChain(new At(senderID), new PlainText(String.format(" 禁言了 %s %d 分钟", playerName, muteTime)));
     }

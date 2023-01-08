@@ -28,7 +28,7 @@ public class TPSCheck implements Job {
             } else {
                 if(!tpsWarnFlag){
                     BotOperator.sendGroupMessage(opGroup, String.format("检测到服务器tps已低于%.1f，当前tps: %.1f", tpsThreshold, tps));
-                    BotOperator.sendGroupMessage(opGroup, String.format("服务器tps已连续3分钟低于%.1f，将暂停tps告警直至tps回升至%.1f以上", tpsThreshold, tpsThreshold));
+                    BotOperator.sendGroupMessage(opGroup, String.format("服务器tps已连续3次检测低于%.1f，将暂停tps告警直至tps回升至%.1f以上", tpsThreshold, tpsThreshold));
                     tpsWarnFlag = true;
                 }
             }

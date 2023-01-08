@@ -47,7 +47,6 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception){
         Bukkit.getServer().getLogger().severe(exception.getMessage());
-        exception.printStackTrace();
     }
 
     @EventHandler

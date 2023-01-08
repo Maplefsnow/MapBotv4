@@ -7,6 +7,7 @@ import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,7 +18,7 @@ import java.util.Set;
 public class PluginManager {
     @SuppressWarnings("unchecked")
     public static MessageChain commandHandler(String command, Long groupID, Long senderID , Message[] args, QuoteReply quoteReply) throws Exception{
-        Reflections reflections = new Reflections("me.maplef.mapbotv4.plugins");
+        Reflections reflections = new Reflections(new ConfigurationBuilder().forPackage("me.maplef.mapbotv4"));
         Set<Class<? extends MapbotPlugin>> pluginClasses = reflections.getSubTypesOf(MapbotPlugin.class);
 
         switch (command) {
@@ -85,7 +86,6 @@ public class PluginManager {
                                 e.getTargetException().printStackTrace();
                             } else {
                                 errorMsg.append(e.getTargetException().getMessage());
-                                e.getTargetException().printStackTrace();
                             }
 
                             return errorMsg.build();

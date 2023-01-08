@@ -40,6 +40,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     ConfigManager configManager = new ConfigManager();
 
     private final Bot bot = BotOperator.getBot();
+    private final PluginManager pluginManager = new PluginManager();
 
     static MessageChain repeatedMessage = null;
     static int repeatCount = 0;
@@ -80,7 +81,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
             MessageChainBuilder message = new MessageChainBuilder();
             try {
-                message.append(PluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), args, quoteReply));
+                message.append(pluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), args, quoteReply));
             } catch (CommandNotFoundException ex) {
                 message.append(ex.getMessage());
             } catch (Exception ex){
@@ -273,7 +274,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
                         MessageChainBuilder cmdRes = new MessageChainBuilder();
                         try {
-                            cmdRes.append(PluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), argsList.toArray(new Message[0]), null));
+                            cmdRes.append(pluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), argsList.toArray(new Message[0]), null));
                         } catch (CommandNotFoundException ex) {
                             cmdRes.append(ex.getMessage());
                         } catch (Exception ex){

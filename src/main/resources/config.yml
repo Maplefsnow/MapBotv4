@@ -30,7 +30,8 @@ message-forward:
   death-message:
     enable: true
 
-bot-speak-possibility: 5  # percent  # bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility, set to 0 to disable
+# bot may seldom speak something written at "messages.yml" - "bot-greetings", set this number to decide the possibility, set to 0 to disable
+bot-speak-possibility: 5  # percent
 
 message-head-format: '&f<&b{SENDER}&f> '
 
@@ -122,20 +123,20 @@ netease-cloud-music:
     sound-quality-level: standard # standard 标准, higher 较高, exhigh 极高
 
 
-# 弃用功能
+# 弃用功能，除非你知道会发生发什么，否则不要开启
 inner-player-group-auto-manage:
   invite:
-    enable: true
+    enable: false
     cron: '0 0 0/1 * * ?'
     requirement: 1000  # minutes per week
     blacklist:
-      - 'qwq'
+      - 'player_name'
       - 'qaq'
   kick:
-    enable: true
+    enable: false
     cron: '0 0 18 ? * 7'
     requirement: 1000
     whitelist:
-      - 'Maplef_snow'
-      - 'xinQi5'
+      - 'player_name'
+      - 'qwq'
 

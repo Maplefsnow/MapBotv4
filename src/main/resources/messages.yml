@@ -24,6 +24,12 @@ bot-greetings:
   - '喵喵喵喵喵'
   - '你喜欢喝什么奶茶？'
 
+bot-nudge:
+  - '再戳要戳坏啦'
+  - '自毁按钮触发，Mapbot 自毁程序已启动...'
+  - '戳我干啥，戳群友啊'
+  - '咕噜咕噜'
+
 welcome-new-message:
   player-group:
     group:

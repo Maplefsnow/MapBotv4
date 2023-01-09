@@ -13,17 +13,19 @@ import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.PermissionDeniedException;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.event.events.MemberJoinEvent;
-import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
-import net.mamoe.mirai.event.events.MemberLeaveEvent;
+import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -415,6 +417,76 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         else {
             e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
             BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
+        }
+    }
+
+    @EventHandler
+    public void onNudge(NudgeEvent e) {
+        FileConfiguration config = configManager.getConfig();
+        FileConfiguration messages = configManager.getMessageConfig();
+
+        long groupID = e.component3().getId();
+
+        if(!config.getBoolean("nudge.enable")) return;
+        if(groupID != config.getLong("player-group")) return;
+
+        if(e.getTarget().equals(e.getBot())) {
+            List<String> botNudgeMsg = messages.getStringList("bot-nudge");
+            Random random = new Random();
+            BotOperator.sendGroupMessage(groupID, MessageUtils.newChain(new At(e.getFrom().getId()),
+                    new PlainText(" " + botNudgeMsg.get(random.nextInt(botNudgeMsg.size())))));
+            return;
+        }
+
+        Bot bot = e.getBot();
+        String targetPlayerName, fromPlayerName;
+        try {
+             targetPlayerName = (String) DatabaseOperator.queryPlayer(e.getTarget().getId()).get("NAME");
+        } catch (PlayerNotFoundException ex) {
+            targetPlayerName = Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(groupID)).get(e.getTarget().getId())).getNameCard();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return;
+        }
+        try {
+            fromPlayerName = (String) DatabaseOperator.queryPlayer(e.getFrom().getId()).get("NAME");
+        } catch (PlayerNotFoundException ex) {
+            fromPlayerName = Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(groupID)).get(e.getFrom().getId())).getNameCard();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        for(Player player : Bukkit.getServer().getOnlinePlayers()) {
+            if(player.getName().toLowerCase(Locale.ROOT).equals(targetPlayerName.toLowerCase(Locale.ROOT))) {
+                if(config.getBoolean("nudge.target-player-action.message.enable")) {
+                    player.sendMessage(Component.text("[戳一戳] ").color(NamedTextColor.GREEN)
+                            .append(Component.text(fromPlayerName + e.getAction() + "你" + e.getSuffix()).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD)));
+                }
+                if(config.getBoolean("nudge.target-player-action.damage.enable")){
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                        player.damage(config.getDouble("nudge.target-player-action.damage.value"), player);
+                    });
+                }
+                if(config.getBoolean("nudge.target-player-action.sound.enable"))
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BAMBOO_HIT, (float) config.getDouble("nudge.target-player-action.sound.volume", 1.0f), 1.0f);
+                if(config.getBoolean("nudge.target-player-action.animation.enable")) {
+                    Location location = player.getLocation();
+
+                    double x = location.getX();
+                    double y = location.getY();
+                    double z = location.getZ();
+                    double r = config.getDouble("nudge.target-player-action.animation.radius");
+
+                    for(int i = 0; i <= 359; i++) {
+                        double x1 = x + r * Math.sin((double)i * Math.PI / 180.0);
+                        double z1 = z + r * Math.cos((double)i * Math.PI / 180.0);
+
+                        player.spawnParticle(Particle.valueOf(config.getString("nudge.target-player-action.animation.particle", "SNOWBALL")), new Location(player.getWorld(), x1, y, z1),
+                                config.getInt("nudge.target-player-action.animation.count", 5));
+                    }
+                }
+            }
         }
     }
 

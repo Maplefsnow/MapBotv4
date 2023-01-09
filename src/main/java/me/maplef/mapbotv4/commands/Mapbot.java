@@ -161,7 +161,7 @@ public class Mapbot implements CommandExecutor, TabExecutor {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if(args.length == 1){
-            String[] allCommands = {"help", "hitokoto", "receive", "stopserver", "cancelstopserver", "login"};
+            String[] allCommands = {"help", "hitokoto", "receive", "stopserver", "cancelstopserver", "login", "reload"};
 
             List<String> commandList = new ArrayList<>();
             for(String commandName : allCommands)

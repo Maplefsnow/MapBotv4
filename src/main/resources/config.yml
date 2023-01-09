@@ -105,6 +105,24 @@ cat-images:
       cooldown: 5  # minutes
       max-images-per-day: 10
 
+# 戳一戳
+nudge:
+  enable: true
+  target-player-action:
+    message:
+      enable: true
+    damage:
+      enable: true
+      value: 1.0
+    sound:
+      enable: true
+      volume: 1.0
+    animation:
+      enable: true
+      particle: 'SNOWBALL'  # see at https://mineplugin.org/index.php?oldid=9283
+      radius: 2.0
+      count: 5  # times the animation play at once
+
 # 除非你已接入猫猫大陆审核专用系统 COPA，否则请禁用此项
 player-group-auto-manage:
   enable: false
@@ -116,6 +134,7 @@ check-in-group-auto-manage:
 
 # 测试功能
 netease-cloud-music:
+  api-url: "https://www.qwq.qwq"
   login-mode: qrcode # qrcode 二维码登录, anonymous 游客登录
   ffmpeg-path: ffmpeg # ffmpeg可执行文件路径 如果不使用语音发送 请忽略此配置
   music:

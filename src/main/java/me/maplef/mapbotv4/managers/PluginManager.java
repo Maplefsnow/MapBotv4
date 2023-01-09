@@ -60,6 +60,7 @@ public class PluginManager {
 
                 for (Class<? extends MapbotPlugin> singleClass : this.pluginClasses) {
                     Map<String, Object> pluginInfo = (Map<String, Object>) singleClass.getMethod("register").invoke(singleClass.getDeclaredConstructor().newInstance());
+                    if(pluginInfo == null) continue;
 
                     pluginInfoStrBuilder.append(String.format("%s - %s\nv%s\nAuthor: %s\n\n",
                             pluginInfo.get("name"), pluginInfo.get("description"), pluginInfo.get("version"), pluginInfo.get("author")));
@@ -73,6 +74,8 @@ public class PluginManager {
             default -> {
                 for (Class<? extends MapbotPlugin> singleClass : this.pluginClasses) {
                     Map<String, Object> pluginInfo = (Map<String, Object>) singleClass.getMethod("register").invoke(singleClass.getDeclaredConstructor().newInstance());
+                    if(pluginInfo == null) continue;
+
                     Map<String, Method> pluginCommands = (Map<String, Method>) pluginInfo.get("commands");
 
                     if (pluginCommands.containsKey(command)) {

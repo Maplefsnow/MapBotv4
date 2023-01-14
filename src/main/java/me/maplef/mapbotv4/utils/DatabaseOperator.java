@@ -133,4 +133,23 @@ public class DatabaseOperator {
     public Connection getConnect(){
         return c;
     }
+
+    public static Map<String, Object> queryExamine(long QQ) throws SQLException, PlayerNotFoundException {
+        Map<String, Object> queryRes = new HashMap<>();
+
+        try(Statement stmt = new DatabaseOperator().getConnect().createStatement()){
+            ResultSet res = stmt.executeQuery("SELECT * FROM EXAMINE;");
+            while(res.next()){
+                if(res.getLong("QQ") == QQ){
+                    if (res.getString("CODE").equals("null")) continue;
+                    ResultSetMetaData data = res.getMetaData();
+                    for(int i = 1; i <= data.getColumnCount(); ++i)
+                        queryRes.put(data.getColumnName(i), res.getObject(data.getColumnName(i)));
+                    return queryRes;
+                }
+            }
+        }
+
+        throw new PlayerNotFoundException();
+    }
 }

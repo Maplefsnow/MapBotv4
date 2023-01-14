@@ -8,6 +8,7 @@ player-group: 10000  # the number of QQ group where players are in
 inner-player-group: 10010  # not very useful, just ignore it
 op-group: 10086  # the group where managers and operators in
 check-in-group: 10101  # the group to check in
+examine-group: 10100
 
 use-mysql: false  # use MySQL or SQLite
 mysql-host:
@@ -159,3 +160,8 @@ inner-player-group-auto-manage:
       - 'player_name'
       - 'qwq'
 
+examine:
+  api-key:
+  api-secret-key:
+  approved-template-id:
+  unapproved-template-id:

@@ -40,6 +40,10 @@ import java.util.regex.Pattern;
 
 public class PlayerGroupListeners extends SimpleListenerHost {
     ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
+    private final Long opGroup = config.getLong("op-group");
+    private final Long playerGroup = config.getLong("player-group");
+    private final Long examineGroup = config.getLong("examine-group");
 
     private final Bot bot = BotOperator.getBot();
     private final PluginManager pluginManager = new PluginManager();
@@ -55,14 +59,22 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     @EventHandler
     public void onCommandReceive(GroupMessageEvent e){
         FileConfiguration config = configManager.getConfig();
+        if (e.getGroup().getId() != opGroup && e.getGroup().getId() != playerGroup && e.getGroup().getId() != examineGroup) return;
 
         String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
+        String mailPattern = "[\\w]+@[A-Za-z]+(\\.[A-Za-z0-9]+){1,2}";
 
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
         if(messageContent == null) return;
 
+        boolean flag = false;
         String textString = messageContent.contentToString().trim();
-        if(!Pattern.matches(commandPattern, textString)) return;
+        int firstLength = textString.length();
+        textString = textString.replaceAll(mailPattern, textString);
+        if (textString.length() != firstLength) {
+            if (textString.contains("#审核") && e.getGroup().getId() == examineGroup) flag = true;
+        }
+        if (!flag && !Pattern.matches(commandPattern, textString)) return;
 
         String command = textString.split(" ", 2)[0].substring(1);
 
@@ -96,6 +108,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     @EventHandler
     public void onMessageForward(GroupMessageEvent e){
         FileConfiguration config = configManager.getConfig();
+        if (e.getGroup().getId() != opGroup && e.getGroup().getId() != playerGroup && e.getGroup().getId() != examineGroup) return;
 
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
         if(messageContent == null) return;
@@ -399,24 +412,31 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         Bukkit.getServer().getLogger().info(e.getMessage());
 
-        if(!e.getMessage().contains("IV")){
+        try {
+            DatabaseOperator.queryExamine(e.getFromId()).get("APPROVED");
+        } catch (PlayerNotFoundException ex) {
             e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
             BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
             return;
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
-        String code = e.getMessage().split("\n")[1].substring(3);
-        Bukkit.getServer().getLogger().info(code);
-        String url = "https://copa.mrzzj.top/invitecode/check.php?InviteCode=" + code;
-        String resString = HttpUtils.doGet(url);
-
-        if (resString.equals("OK")) {
-            e.accept();
-            BotOperator.sendGroupMessage(config.getLong("op-group"), "已同意 " + e.component7() + " 入群");
-        }
-        else {
-            e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
-            BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
+        String code = e.getMessage().replaceAll(".*\\n.*答案：", "");
+        try {
+            String InvCode = (String) DatabaseOperator.queryExamine(e.getFromId()).get("CODE");
+            if (InvCode.equals(code)) {
+                e.accept();
+                BotOperator.sendGroupMessage(config.getLong("op-group"), "已同意 " + e.component7() + " 入群");
+                String order = String.format("UPDATE EXAMINE SET USED = 1 WHERE QQ = '%s';", e.getFromId());
+                new DatabaseOperator().executeCommand(order);
+            }
+            else {
+                e.reject(false, "邀请码错误");
+                BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群，该玩家的邀请码为" + InvCode + "，而玩家填入的邀请码为" + code);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 

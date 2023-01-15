@@ -6,6 +6,7 @@ import com.mailjet.client.MailjetRequest;
 import com.mailjet.client.MailjetResponse;
 import com.mailjet.client.errors.MailjetException;
 import com.mailjet.client.resource.Emailv31;
+import me.maplef.mapbotv4.Main;
 import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.GroupNotAllowedException;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
@@ -13,6 +14,7 @@ import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import net.mamoe.mirai.message.data.*;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +52,13 @@ public class Examine implements MapbotPlugin {
         try {
             String order = String.format("INSERT INTO EXAMINE (QQ, MAIL, CODE, USED, APPROVED) VALUES ('%s', '%s', '%s', 0, 1);", QQ, mail, code);
             new DatabaseOperator().executeCommand(order);
-            sendApprovedMail(mail, String.valueOf(QQ), code);
+            Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+                try {
+                    sendApprovedMail(mail, String.valueOf(QQ), code);
+                } catch (MailjetException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -69,7 +77,13 @@ public class Examine implements MapbotPlugin {
         try {
             String order = String.format("INSERT INTO EXAMINE (QQ, MAIL, CODE, USED, APPROVED) VALUES ('%s', '%s', '%s', 0, 0);", QQ, mail, "null");
             new DatabaseOperator().executeCommand(order);
-            sendUnapprovedMail(mail, String.valueOf(QQ), reason);
+            Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+                try {
+                    sendUnapprovedMail(mail, String.valueOf(QQ), reason);
+                } catch (MailjetException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }

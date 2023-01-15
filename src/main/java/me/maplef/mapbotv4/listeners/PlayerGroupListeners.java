@@ -62,7 +62,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         if (e.getGroup().getId() != opGroup && e.getGroup().getId() != playerGroup && e.getGroup().getId() != examineGroup) return;
 
         String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
-        String mailPattern = "[\\w]+@[A-Za-z]+(\\.[A-Za-z0-9]+){1,2}";
+        String mailPattern = "[\\w]+@[A-Za-z0-9]+(\\.[A-Za-z0-9]+){1,2}";
 
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
         if(messageContent == null) return;

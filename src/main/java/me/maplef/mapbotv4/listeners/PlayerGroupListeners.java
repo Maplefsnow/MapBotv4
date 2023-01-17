@@ -423,6 +423,11 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         }
 
         String code = e.getMessage().replaceAll(".*\\n.*答案：", "");
+        if (code.equals("null")) {
+            e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
+            BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
+            return;
+        }
         try {
             String InvCode = (String) DatabaseOperator.queryExamine(e.getFromId()).get("CODE");
             if (InvCode.equals(code)) {

@@ -50,15 +50,9 @@ public class GameListeners implements Listener {
         Player player = e.getPlayer();
         String pattern = "^[@][\\w]*\\s\\w+$"; String receivedMessage = serializer.serialize(e.message());
 
-        System.out.println(" ");
-        System.out.println(receivedMessage);
-        System.out.println("QWQ0");
-
         switch (config.getString("message-forward.server-to-group.mode", "all")) {
             case "all" -> {
-                System.out.println("QWQ1");
                 if (Pattern.matches(pattern, receivedMessage)) {
-                    System.out.println("QWQ2");
                     String atMsg = receivedMessage.substring(1);
                     String atName = atMsg.split(" ")[0];
 
@@ -73,10 +67,8 @@ public class GameListeners implements Listener {
                         return;
                     }
                 } else {
-                    System.out.println("QWQ3");
                     msg = MessageUtils.newChain(new PlainText(player.getName() + ": " + receivedMessage));
                 }
-                System.out.println("QWQ4");
                 BotOperator.sendGroupMessage(groupID, msg);
             }
 

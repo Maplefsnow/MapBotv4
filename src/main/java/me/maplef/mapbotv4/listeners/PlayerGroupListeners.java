@@ -8,7 +8,6 @@ import me.maplef.mapbotv4.exceptions.MessageLengthOutOfBoundException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.managers.PluginManager;
-import me.maplef.mapbotv4.plugins.WelcomeNew;
 import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -50,6 +49,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception){
         Bukkit.getServer().getLogger().severe(exception.getMessage());
+        exception.printStackTrace();
     }
 
     @EventHandler
@@ -137,9 +137,11 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         for(Player player : Bukkit.getServer().getOnlinePlayers()) {
             boolean sendFlag = true;
             try {
-                sendFlag = (boolean) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
+                if((Integer) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC") != 1){
+                    sendFlag = false;
+                };
             } catch (SQLException ex) {
-                Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
+                ex.printStackTrace();
             } catch (PlayerNotFoundException ignored) {}
             if (!sendFlag) continue;
 
@@ -326,7 +328,12 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         if(e.getGroupId() != config.getLong("player-group")) return;
 
-        BotOperator.sendGroupMessage(e.getGroupId(), new WelcomeNew().WelcomeMessage());
+        StringBuilder msg = new StringBuilder();
+
+        for(String singleMsg : messages.getStringList("welcome-new-message.player-group.group"))
+            msg.append(singleMsg).append("\n");
+
+        BotOperator.sendGroupMessage(e.getGroupId(), msg.toString().trim());
         Bukkit.getServer().broadcast(Component.text(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.player-group.server"))));
         if(Objects.requireNonNull(bot.getGroup(config.getLong("check-in-group"))).contains(e.getMember().getId())){
             BotOperator.sendGroupMessage(config.getLong("check-in-group"), Objects.requireNonNull(messages.getString("congratulation-message")).replace("{PLAYER}", e.getMember().getNick()));
@@ -373,7 +380,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
                 PreparedStatement ps = new DatabaseOperator().getConnect().prepareStatement(bindDelCommand);
                 ps.execute(); ps.close();
             } catch (SQLException ex){
-                Bukkit.getServer().getLogger().warning(ex.getMessage());
+                ex.printStackTrace();
             }
 
             opGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))

@@ -29,6 +29,7 @@ public class BotQQOperator implements MapbotPlugin {
     public static final Long botAcc = config.getLong("bot-account");
     private static final String botPassword = config.getString("bot-password");
     public static final Long opGroup = config.getLong("op-group");
+    public static final Long playerGroup = config.getLong("player-group");
 
     public static void login(){
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
@@ -37,7 +38,11 @@ public class BotQQOperator implements MapbotPlugin {
                 BotOperator.login(botAcc, botPassword);
                 BotOperator.getBot().getEventChannel().registerListenerHost(new PlayerGroupListeners());
                 BotOperator.getBot().getEventChannel().registerListenerHost(new CheckInGroupListeners());
-                BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
+
+                if(!messageConfig.getString("enable-message.op-group", "").isEmpty())
+                    BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
+                if(!messageConfig.getString("enable-message.player-group", "").isEmpty())
+                    BotOperator.sendGroupMessage(playerGroup, messageConfig.getString("enable-message.player-group"));
                 Bukkit.getServer().getLogger().info(String.format("[%s] QQ账号 %d 登陆成功", Main.getInstance().getDescription().getName(), BotOperator.getBot().getId()));
             } catch (LoginFailedException e){
                 Bukkit.getServer().getLogger().severe(String.format("[%s] QQ账号 %d 登陆失败：%s",
@@ -47,7 +52,10 @@ public class BotQQOperator implements MapbotPlugin {
     }
 
     public static void logout(){
-        Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).sendMessage(Objects.requireNonNull(messageConfig.getString("disable-message.op-group")));
+        if(!messageConfig.getString("disable-message.op-group", "").isEmpty())
+            BotOperator.sendGroupMessage(opGroup, messageConfig.getString("disable-message.op-group"));
+        if(!messageConfig.getString("disable-message.player-group", "").isEmpty())
+            BotOperator.sendGroupMessage(playerGroup, messageConfig.getString("disable-message.player-group"));
         BotOperator.getBot().close();
         Bukkit.getServer().getLogger().info(String.format("[%s] QQ账号 %d 已退出登陆", Main.getInstance().getDescription().getName(), BotOperator.getBot().getId()));
     }

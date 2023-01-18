@@ -131,6 +131,6 @@ public class CatSaying implements MapbotPlugin {
         info.put("description", "进行猫言猫语相关操作");
         info.put("version", "1.1");
 
-        return info;
+        return null;
     }
 }

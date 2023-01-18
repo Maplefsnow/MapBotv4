@@ -2,7 +2,6 @@ package me.maplef.mapbotv4.utils;
 
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.ConfigManager;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.sql.*;
@@ -96,7 +95,7 @@ public class DatabaseOperator {
             try {
                 conn = DriverManager.getConnection(url);
             } catch (SQLException e) {
-                Bukkit.getLogger().warning(e.getClass().getName() + ": " + e.getMessage());
+                e.printStackTrace();
             }
             return conn;
         }

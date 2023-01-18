@@ -11,7 +11,10 @@ import me.maplef.mapbotv4.utils.TextComparator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import net.mamoe.mirai.message.data.*;
+import net.mamoe.mirai.message.data.At;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageUtils;
+import net.mamoe.mirai.message.data.PlainText;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -38,29 +41,42 @@ public class GameListeners implements Listener {
 
         Long groupID = config.getLong("player-group");
 
-        if(!config.getBoolean("message-forward.server-to-group.enable")) return;
+        if(!config.getBoolean("message-forward.server-to-group.enable", true)) return;
         if(e.isCancelled()) return;
 
         MessageChain msg = null;
+        PlainTextComponentSerializer serializer = PlainTextComponentSerializer.plainText();
 
         Player player = e.getPlayer();
-        String pattern = "^[@][\\w]*\\s\\w+$"; String receivedMessage = ((TextComponent) e.message()).content();
+        String pattern = "^[@][\\w]*\\s\\w+$"; String receivedMessage = serializer.serialize(e.message());
+
+        System.out.println(" ");
+        System.out.println(receivedMessage);
+        System.out.println("QWQ0");
 
         switch (config.getString("message-forward.server-to-group.mode", "all")) {
             case "all" -> {
+                System.out.println("QWQ1");
                 if (Pattern.matches(pattern, receivedMessage)) {
+                    System.out.println("QWQ2");
                     String atMsg = receivedMessage.substring(1);
                     String atName = atMsg.split(" ")[0];
 
                     try {
-                        long atQQ = Long.parseLong(DatabaseOperator.queryPlayer(atName).get("QQ").toString());
+                        long atQQ = (Long) DatabaseOperator.queryPlayer(atName).get("QQ");
                         msg = MessageUtils.newChain(new PlainText(player.getName() + ": ")).plus(new At(atQQ)).plus(atMsg.substring(atName.length()));
-                    } catch (SQLException | PlayerNotFoundException ex) {
+                    } catch (PlayerNotFoundException ex) {
                         Bukkit.getServer().getLogger().warning(ex.getClass().getName() + ": " + ex.getMessage());
+                        return;
+                    } catch (SQLException exception) {
+                        exception.printStackTrace();
+                        return;
                     }
                 } else {
+                    System.out.println("QWQ3");
                     msg = MessageUtils.newChain(new PlainText(player.getName() + ": " + receivedMessage));
                 }
+                System.out.println("QWQ4");
                 BotOperator.sendGroupMessage(groupID, msg);
             }
 

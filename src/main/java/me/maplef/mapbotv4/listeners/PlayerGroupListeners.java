@@ -151,9 +151,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         for(Player player : Bukkit.getServer().getOnlinePlayers()) {
             boolean sendFlag = true;
             try {
-                if((Integer) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC") != 1){
-                    sendFlag = false;
-                };
+                sendFlag = (boolean) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
             } catch (SQLException ex) {
                 ex.printStackTrace();
             } catch (PlayerNotFoundException ignored) {}
@@ -551,5 +549,14 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         }else {
             return nameCard;
         }
+    }
+
+    @EventHandler
+    public void niHao(GroupMessageEvent e){
+        if (e.getGroup().getId() != playerGroup) return;
+        try {
+            if (e.getMessage().get(PlainText.Key).toString().equals("你好"))
+                BotOperator.sendGroupMessage(playerGroup, "亻尔女子");
+        } catch (NullPointerException ignored) {}
     }
 }

@@ -160,7 +160,7 @@ public class GameListeners implements Listener {
 
         long playerGroup = config.getLong("player-group");
 
-        String quitMessage = messages.getString("player-quit-message", "");
+        String quitMessage = messages.getString("player-logout-message", "");
 
         if (quitEvent != null && !quitMessage.isEmpty()){
             BotOperator.sendGroupMessage(playerGroup, quitMessage.replace("{PLAYER}", quitEvent.getPlayer().getName()));

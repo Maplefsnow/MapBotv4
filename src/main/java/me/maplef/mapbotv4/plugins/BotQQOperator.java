@@ -38,7 +38,6 @@ public class BotQQOperator implements MapbotPlugin {
                 BotOperator.login(botAcc, botPassword);
                 BotOperator.getBot().getEventChannel().registerListenerHost(new PlayerGroupListeners());
                 BotOperator.getBot().getEventChannel().registerListenerHost(new CheckInGroupListeners());
-                BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
                 if(!messageConfig.getString("enable-message.op-group", "").isEmpty())
                     BotOperator.sendGroupMessage(opGroup, messageConfig.getString("enable-message.op-group"));
                 if(!messageConfig.getString("enable-message.player-group", "").isEmpty())
@@ -53,9 +52,9 @@ public class BotQQOperator implements MapbotPlugin {
 
     public static void logout(){
         if(!messageConfig.getString("disable-message.op-group", "").isEmpty())
-            BotOperator.sendGroupMessage(opGroup, messageConfig.getString("disable-message.op-group"));
+            Objects.requireNonNull(BotOperator.getBot().getGroup(opGroup)).sendMessage(Objects.requireNonNull(messageConfig.getString("disable-message.op-group")));
         if(!messageConfig.getString("disable-message.player-group", "").isEmpty())
-            BotOperator.sendGroupMessage(playerGroup, messageConfig.getString("disable-message.player-group"));
+            Objects.requireNonNull(BotOperator.getBot().getGroup(playerGroup)).sendMessage(Objects.requireNonNull(messageConfig.getString("disable-message.player-group")));
         BotOperator.getBot().close();
         Bukkit.getServer().getLogger().info(String.format("[%s] QQ账号 %d 已退出登陆", Main.getInstance().getDescription().getName(), BotOperator.getBot().getId()));
     }

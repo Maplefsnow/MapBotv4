@@ -8,7 +8,6 @@ import me.maplef.mapbotv4.exceptions.MessageLengthOutOfBoundException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.managers.PluginManager;
-import me.maplef.mapbotv4.plugins.WelcomeNew;
 import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -17,6 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.contact.PermissionDeniedException;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
@@ -54,6 +54,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception){
         Bukkit.getServer().getLogger().severe(exception.getMessage());
+        exception.printStackTrace();
     }
 
     @EventHandler
@@ -150,9 +151,11 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         for(Player player : Bukkit.getServer().getOnlinePlayers()) {
             boolean sendFlag = true;
             try {
-                sendFlag = (boolean) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
+                if((Integer) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC") != 1){
+                    sendFlag = false;
+                };
             } catch (SQLException ex) {
-                Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
+                ex.printStackTrace();
             } catch (PlayerNotFoundException ignored) {}
             if (!sendFlag) continue;
 
@@ -339,10 +342,16 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         if(e.getGroupId() != config.getLong("player-group")) return;
 
-        BotOperator.sendGroupMessage(e.getGroupId(), new WelcomeNew().WelcomeMessage());
+        StringBuilder msg = new StringBuilder();
+
+        for(String singleMsg : messages.getStringList("welcome-new-message.player-group.group"))
+            msg.append(singleMsg).append("\n");
+
+        BotOperator.sendGroupMessage(e.getGroupId(), msg.toString().trim());
         Bukkit.getServer().broadcast(Component.text(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.player-group.server"))));
-        if(Objects.requireNonNull(bot.getGroup(config.getLong("check-in-group"))).contains(e.getMember().getId())){
+        if(Objects.requireNonNull(bot.getGroup(config.getLong("check-in-group"))).contains(e.getMember().getId())) {
             BotOperator.sendGroupMessage(config.getLong("check-in-group"), Objects.requireNonNull(messages.getString("congratulation-message")).replace("{PLAYER}", e.getMember().getNick()));
+            bot.getGroup(config.getLong("check-in-group")).get(e.getMember().getId()).kick("您已经加入玩家群了，故将您移出审核群！");
         }
     }
 
@@ -386,7 +395,15 @@ public class PlayerGroupListeners extends SimpleListenerHost {
                 PreparedStatement ps = new DatabaseOperator().getConnect().prepareStatement(bindDelCommand);
                 ps.execute(); ps.close();
             } catch (SQLException ex){
-                Bukkit.getServer().getLogger().warning(ex.getMessage());
+                ex.printStackTrace();
+            }
+
+            try {
+                String examineDelCommand = String.format("UPDATE EXAMINE SET CODE = 'null' WHERE QQ = '%s';", QQ);
+                PreparedStatement ps = new DatabaseOperator().getConnect().prepareStatement(examineDelCommand);
+                ps.execute(); ps.close();
+            } catch (SQLException ex){
+                ex.printStackTrace();
             }
 
             opGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))
@@ -428,6 +445,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
             return;
         }
+        code = code.toUpperCase(Locale.ROOT);
         try {
             String InvCode = (String) DatabaseOperator.queryExamine(e.getFromId()).get("CODE");
             if (InvCode.equals(code)) {

@@ -38,7 +38,7 @@ public class GameListeners implements Listener {
 
         Long groupID = config.getLong("player-group");
 
-        if(!config.getBoolean("message-forward.server-to-group.enable")) return;
+        if(!config.getBoolean("message-forward.server-to-group.enable", true)) return;
         if(e.isCancelled()) return;
 
         MessageChain msg = null;

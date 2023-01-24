@@ -96,7 +96,7 @@ public class DatabaseOperator {
             try {
                 conn = DriverManager.getConnection(url);
             } catch (SQLException e) {
-                Bukkit.getLogger().warning(e.getClass().getName() + ": " + e.getMessage());
+                e.printStackTrace();
             }
             return conn;
         }

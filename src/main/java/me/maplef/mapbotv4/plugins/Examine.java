@@ -12,6 +12,7 @@ import me.maplef.mapbotv4.exceptions.GroupNotAllowedException;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.ConfigManager;
+import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
@@ -32,9 +33,7 @@ import static com.mailjet.client.resource.Emailv31.Message.TEMPLATEERROR_REPORTI
 public class Examine implements MapbotPlugin {
     ConfigManager configManager = new ConfigManager();
     FileConfiguration config = configManager.getConfig();
-    FileConfiguration messages = configManager.getMessageConfig();
 
-    private final Long opGroup = config.getLong("op-group");
     private final Long examineGroup = config.getLong("examine-group");
     private final String apiKey = config.getString("examine.api-key");
     private final String apiSecretKey = config.getString("examine.api-secret-key");
@@ -49,44 +48,36 @@ public class Examine implements MapbotPlugin {
             e.printStackTrace();
         }
         String code = generateInvitationCode();
-        try {
-            String order = String.format("INSERT INTO EXAMINE (QQ, MAIL, CODE, USED, APPROVED) VALUES ('%s', '%s', '%s', 0, 1);", QQ, mail, code);
-            new DatabaseOperator().executeCommand(order);
-            Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
-                try {
-                    sendApprovedMail(mail, String.valueOf(QQ), code);
-                } catch (MailjetException e) {
-                    e.printStackTrace();
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            try {
+                sendApprovedMail(mail, String.valueOf(QQ), code);
+                String order = String.format("INSERT INTO EXAMINE (QQ, MAIL, CODE, USED, APPROVED) VALUES ('%s', '%s', '%s', 0, 1);", QQ, mail, code);
+                new DatabaseOperator().executeCommand(order);
+            } catch (Exception e) {
+                e.printStackTrace();
+                BotOperator.sendGroupMessage(examineGroup, "出现异常，请查看控制台报错信息");
+            }
+        });
         return "执行成功";
     }
 
     public String unApproved(long QQ, String mail, String reason) {
         try {
-            DatabaseOperator.queryExamine(QQ);
-            return "该玩家已经通过审核了!";
+            if ((boolean) DatabaseOperator.queryExamine(QQ).get("APPROVED")) return "该玩家已经通过审核了!";
         } catch (PlayerNotFoundException ignored) {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        String code = generateInvitationCode();
-        try {
-            String order = String.format("INSERT INTO EXAMINE (QQ, MAIL, CODE, USED, APPROVED) VALUES ('%s', '%s', '%s', 0, 0);", QQ, mail, "null");
-            new DatabaseOperator().executeCommand(order);
-            Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
-                try {
-                    sendUnapprovedMail(mail, String.valueOf(QQ), reason);
-                } catch (MailjetException e) {
-                    e.printStackTrace();
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
+            try {
+                sendUnapprovedMail(mail, String.valueOf(QQ), reason);
+                String order = String.format("INSERT INTO EXAMINE (QQ, MAIL, CODE, USED, APPROVED) VALUES ('%s', '%s', '%s', 0, 0);", QQ, mail, "null");
+                new DatabaseOperator().executeCommand(order);
+            } catch (Exception e) {
+                e.printStackTrace();
+                BotOperator.sendGroupMessage(examineGroup, "出现异常，请查看控制台报错信息");
+            }
+        });
         return "执行成功";
     }
 
@@ -189,7 +180,7 @@ public class Examine implements MapbotPlugin {
                                 .put(Emailv31.Message.VARIABLES, new JSONObject()
                                         .put("[invite_code]", code)
                                         .put("[email_to]", mail)
-                                .put(TEMPLATEERROR_REPORTING, "lq_snow@outlook.com"))));
+                                        .put(TEMPLATEERROR_REPORTING, "lq_snow@outlook.com"))));
         response = client.post(request);
         System.out.println(response.getStatus());
         System.out.println(response.getData());

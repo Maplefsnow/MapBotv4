@@ -142,6 +142,7 @@ public class DatabaseOperator {
             while(res.next()){
                 if(res.getLong("QQ") == QQ){
                     if (res.getString("CODE").equals("null")) continue;
+                    if (res.getString("CODE").equals("已退群")) continue;
                     ResultSetMetaData data = res.getMetaData();
                     for(int i = 1; i <= data.getColumnCount(); ++i)
                         queryRes.put(data.getColumnName(i), res.getObject(data.getColumnName(i)));

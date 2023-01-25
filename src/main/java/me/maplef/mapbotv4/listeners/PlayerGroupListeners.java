@@ -351,6 +351,12 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             BotOperator.sendGroupMessage(config.getLong("check-in-group"), Objects.requireNonNull(messages.getString("congratulation-message")).replace("{PLAYER}", e.getMember().getNick()));
             bot.getGroup(config.getLong("check-in-group")).get(e.getMember().getId()).kick("您已经加入玩家群了，故将您移出审核群！");
         }
+        try {
+            String order = String.format("UPDATE EXAMINE SET USED = 1 WHERE QQ = '%s' AND CODE != 'null';", e.getMember().getId());
+            new DatabaseOperator().executeCommand(order);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     @EventHandler
@@ -389,17 +395,8 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             }.runTask(Main.getPlugin(Main.class));
 
             try {
-                String bindDelCommand = String.format("DELETE FROM PLAYER WHERE NAME = '%s';", ID);
-                PreparedStatement ps = new DatabaseOperator().getConnect().prepareStatement(bindDelCommand);
-                ps.execute(); ps.close();
-            } catch (SQLException ex){
-                ex.printStackTrace();
-            }
-
-            try {
-                String examineDelCommand = String.format("UPDATE EXAMINE SET CODE = 'null' WHERE QQ = '%s';", QQ);
-                PreparedStatement ps = new DatabaseOperator().getConnect().prepareStatement(examineDelCommand);
-                ps.execute(); ps.close();
+                String order = String.format("DELETE FROM PLAYER WHERE NAME = '%s';", ID);
+                new DatabaseOperator().executeCommand(order);
             } catch (SQLException ex){
                 ex.printStackTrace();
             }
@@ -416,6 +413,13 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         BotOperator.sendGroupMessage(config.getLong("player-group"), playerGroupMsg);
         BotOperator.sendGroupMessage(config.getLong("op-group"), opGroupMsg);
+
+        try {
+            String order = String.format("UPDATE EXAMINE SET CODE = '已退群' WHERE QQ = '%s' AND CODE != 'null';", QQ);
+            new DatabaseOperator().executeCommand(order);
+        } catch (SQLException ex){
+            ex.printStackTrace();
+        }
     }
 
     @EventHandler
@@ -438,7 +442,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         }
 
         String code = e.getMessage().replaceAll(".*\\n.*答案：", "");
-        if (code.equals("null")) {
+        if (code.equals("null") || code.equals("已退群")) {
             e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
             BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
             return;
@@ -449,8 +453,6 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             if (InvCode.equals(code)) {
                 e.accept();
                 BotOperator.sendGroupMessage(config.getLong("op-group"), "已同意 " + e.component7() + " 入群");
-                String order = String.format("UPDATE EXAMINE SET USED = 1 WHERE QQ = '%s';", e.getFromId());
-                new DatabaseOperator().executeCommand(order);
             }
             else {
                 e.reject(false, "邀请码错误");

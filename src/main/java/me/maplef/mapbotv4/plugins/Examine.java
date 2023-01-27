@@ -34,6 +34,7 @@ public class Examine implements MapbotPlugin {
     ConfigManager configManager = new ConfigManager();
     FileConfiguration config = configManager.getConfig();
 
+    private final Long checkInGroup = config.getLong("check-in-group");
     private final Long examineGroup = config.getLong("examine-group");
     private final String apiKey = config.getString("examine.api-key");
     private final String apiSecretKey = config.getString("examine.api-secret-key");
@@ -53,6 +54,10 @@ public class Examine implements MapbotPlugin {
                 sendApprovedMail(mail, String.valueOf(QQ), code);
                 String order = String.format("INSERT INTO EXAMINE (QQ, MAIL, CODE, USED, APPROVED) VALUES ('%s', '%s', '%s', 0, 1);", QQ, mail, code);
                 new DatabaseOperator().executeCommand(order);
+                try {
+                    if (BotOperator.getBot().getGroup(checkInGroup).contains(QQ))
+                        BotOperator.sendGroupMessage(checkInGroup, MessageUtils.newChain(new At(QQ)).plus(" 审核完毕，请查收邮箱"));
+                } catch (NullPointerException ignored) {}
             } catch (Exception e) {
                 e.printStackTrace();
                 BotOperator.sendGroupMessage(examineGroup, "出现异常，请查看控制台报错信息");
@@ -73,6 +78,10 @@ public class Examine implements MapbotPlugin {
                 sendUnapprovedMail(mail, String.valueOf(QQ), reason);
                 String order = String.format("INSERT INTO EXAMINE (QQ, MAIL, CODE, USED, APPROVED) VALUES ('%s', '%s', '%s', 0, 0);", QQ, mail, "null");
                 new DatabaseOperator().executeCommand(order);
+                try {
+                    if (BotOperator.getBot().getGroup(checkInGroup).contains(QQ))
+                        BotOperator.sendGroupMessage(checkInGroup, MessageUtils.newChain(new At(QQ)).plus(" 审核完毕，请查收邮箱"));
+                } catch (NullPointerException ignored) {}
             } catch (Exception e) {
                 e.printStackTrace();
                 BotOperator.sendGroupMessage(examineGroup, "出现异常，请查看控制台报错信息");

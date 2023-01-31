@@ -29,6 +29,7 @@ import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
@@ -437,6 +438,16 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
             BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
             return;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        try {
+            if ((boolean) DatabaseOperator.queryExamine(e.getFromId()).get("USED")) {
+                e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
+                BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
+                return;
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }

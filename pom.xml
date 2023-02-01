@@ -6,7 +6,7 @@
 
     <groupId>me.maplef</groupId>
     <artifactId>mapbotv4</artifactId>
-    <version>0.15.1-catland_pre4</version>
+    <version>0.15.1-catland_pre5</version>
     <packaging>jar</packaging>
 
     <name>MapBot</name>

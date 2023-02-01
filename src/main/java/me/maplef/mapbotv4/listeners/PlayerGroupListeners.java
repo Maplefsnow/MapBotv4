@@ -63,7 +63,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         FileConfiguration config = configManager.getConfig();
         if (e.getGroup().getId() != opGroup && e.getGroup().getId() != playerGroup && e.getGroup().getId() != examineGroup) return;
 
-        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
+        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff]|\\*|;|'|=|!)+)?$";
         String mailPattern = "[\\w]+@[A-Za-z0-9]+(\\.[A-Za-z0-9]+){1,2}";
 
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
@@ -571,5 +571,9 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             if (e.getMessage().get(PlainText.Key).toString().equals("你好"))
                 BotOperator.sendGroupMessage(playerGroup, "亻尔女子");
         } catch (NullPointerException ignored) {}
+    }
+
+    @EventHandler
+    public void a(MessageRecallEvent e) {
     }
 }

@@ -23,27 +23,29 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 import static com.mailjet.client.resource.Emailv31.Message.TEMPLATEERROR_REPORTING;
 
 public class Examine implements MapbotPlugin {
-    ConfigManager configManager = new ConfigManager();
-    FileConfiguration config = configManager.getConfig();
+    static ConfigManager configManager = new ConfigManager();
+    static FileConfiguration config = configManager.getConfig();
 
-    private final Long checkInGroup = config.getLong("check-in-group");
-    private final Long examineGroup = config.getLong("examine-group");
-    private final String apiKey = config.getString("examine.api-key");
-    private final String apiSecretKey = config.getString("examine.api-secret-key");
-    private final int approvedTemplateId = config.getInt("examine.approved-template-id");
-    private final int unapprovedTemplateId = config.getInt("examine.unapproved-template-id");
+    private static final Long checkInGroup = config.getLong("check-in-group");
+    private static final Long examineGroup = config.getLong("examine-group");
+    private static final String apiKey = config.getString("examine.api-key");
+    private static final String apiSecretKey = config.getString("examine.api-secret-key");
+    private static final int approvedTemplateId = config.getInt("examine.approved-template-id");
+    private static final int unapprovedTemplateId = config.getInt("examine.unapproved-template-id");
 
-    public String approved(long QQ, String mail) {
+    public static String approved(long QQ, String mail) {
+        Bukkit.getLogger().info("3");
+
         try {
-            if ((boolean) DatabaseOperator.queryExamine(QQ).get("APPROVED")) return "该玩家已经通过审核了!";
+            if ((boolean) DatabaseOperator.queryExamine(QQ).get("APPROVED")){
+                BotOperator.sendGroupMessage(examineGroup, "该玩家已经通过审核了!");
+                return null;
+            }
         } catch (PlayerNotFoundException ignored) {
         } catch (Exception e) {
             e.printStackTrace();
@@ -66,9 +68,12 @@ public class Examine implements MapbotPlugin {
         return "执行成功";
     }
 
-    public String unApproved(long QQ, String mail, String reason) {
+    public static String unApproved(long QQ, String mail, String reason) {
         try {
-            if ((boolean) DatabaseOperator.queryExamine(QQ).get("APPROVED")) return "该玩家已经通过审核了!";
+            if ((boolean) DatabaseOperator.queryExamine(QQ).get("APPROVED")) {
+                BotOperator.sendGroupMessage(examineGroup, "该玩家已经通过审核了!");
+                return null;
+            }
         } catch (PlayerNotFoundException ignored) {
         } catch (Exception e) {
             e.printStackTrace();
@@ -90,7 +95,7 @@ public class Examine implements MapbotPlugin {
         return "执行成功";
     }
 
-    public String generateInvitationCode() {
+    public static String generateInvitationCode() {
         String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         Random random = new Random();
         StringBuilder sb = new StringBuilder();
@@ -101,12 +106,7 @@ public class Examine implements MapbotPlugin {
         return sb.toString();
     }
 
-    @Override
-    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
-        if (!Objects.equals(groupID, examineGroup))
-            throw new GroupNotAllowedException();
-        if (args.length < 3) throw new InvalidSyntaxException();
-
+    public static MessageChain ProcessingCommand(Message[] args, long senderID) {
         try {
             String order = "CREATE TABLE IF NOT EXISTS EXAMINE (" +
                     "    QQ      TEXT    NOT NULL," +
@@ -119,7 +119,6 @@ public class Examine implements MapbotPlugin {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         long QQ;
         try {
             QQ = Long.parseLong(args[0].contentToString());
@@ -149,6 +148,15 @@ public class Examine implements MapbotPlugin {
     }
 
     @Override
+    public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
+        if (!Objects.equals(groupID, examineGroup))
+            throw new GroupNotAllowedException();
+        if (args.length < 3) throw new InvalidSyntaxException();
+
+        return ProcessingCommand(args, senderID);
+    }
+
+    @Override
     public Map<String, Object> register() throws NoSuchMethodException {
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
@@ -168,7 +176,7 @@ public class Examine implements MapbotPlugin {
         return info;
     }
 
-    public void sendApprovedMail(String mail, String QQ, String code) throws MailjetException {
+    public static void sendApprovedMail(String mail, String QQ, String code) throws MailjetException {
         MailjetClient client;
         MailjetRequest request;
         MailjetResponse response;
@@ -195,7 +203,7 @@ public class Examine implements MapbotPlugin {
         System.out.println(response.getData());
     }
 
-    public void sendUnapprovedMail(String mail, String QQ, String reason) throws MailjetException {
+    public static void sendUnapprovedMail(String mail, String QQ, String reason) throws MailjetException {
         MailjetClient client;
         MailjetRequest request;
         MailjetResponse response;

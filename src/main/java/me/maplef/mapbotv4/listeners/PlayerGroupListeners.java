@@ -8,6 +8,7 @@ import me.maplef.mapbotv4.exceptions.MessageLengthOutOfBoundException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.managers.PluginManager;
+import me.maplef.mapbotv4.plugins.Examine;
 import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
@@ -63,7 +64,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         FileConfiguration config = configManager.getConfig();
         if (e.getGroup().getId() != opGroup && e.getGroup().getId() != playerGroup && e.getGroup().getId() != examineGroup) return;
 
-        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff]|\\*|;|'|=|!)+)?$";
+        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff]|\\*|;|'|=|!|\\.|/|:)+)?$";
         String mailPattern = "[\\w]+@[A-Za-z0-9]+(\\.[A-Za-z0-9]+){1,2}";
 
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
@@ -100,8 +101,12 @@ public class PlayerGroupListeners extends SimpleListenerHost {
                 message.append(pluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), args, quoteReply));
             } catch (CommandNotFoundException ex) {
                 message.append(ex.getMessage());
+            } catch (NullPointerException ignored) {
             } catch (Exception ex){
                 ex.printStackTrace();
+            }
+            if (message.build().isEmpty()) {
+                return;
             }
             BotOperator.sendGroupMessage(e.getGroup().getId(), message.build());
         });
@@ -574,6 +579,36 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     }
 
     @EventHandler
-    public void a(MessageRecallEvent e) {
+    public void onExaminePlus(GroupMessageEvent e) {
+        if (e.getGroup().getId() != examineGroup) return;
+        QuoteReply quoteReply = e.getMessage().get(QuoteReply.Key);
+        if (quoteReply == null) return;
+        String message = quoteReply.getSource().getOriginalMessage().toString();
+
+        long qq;
+        try {
+            qq = Long.parseLong(DatabaseOperator.queryExaminePlus(message).get("QQ").toString());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        // 临时
+        String[] var1 = e.getMessage().get(PlainText.Key).toString().split(" ");
+        if (var1.length == 1 && var1[0].equals("通过")) {
+            Message[] messages = new Message[3];
+            messages[0] = new MessageChainBuilder().append(String.valueOf(qq)).build();
+            messages[1] = new MessageChainBuilder().append(String.valueOf(qq)).append("@qq.com").build();
+            messages[2] = new MessageChainBuilder().append("通过").build();
+            Examine.ProcessingCommand(messages, 0);
+        } else if (var1.length == 2 && var1[0].equals("不通过")) {
+            Message[] messages = new Message[4];
+            messages[0] = new MessageChainBuilder().append(String.valueOf(qq)).build();
+            messages[1] = new MessageChainBuilder().append(String.valueOf(qq)).append("@qq.com").build();
+            messages[2] = new MessageChainBuilder().append("不通过").build();
+            messages[3] = new MessageChainBuilder().append(var1[1]).build();
+            Examine.ProcessingCommand(messages, 0);
+        }
+        BotOperator.sendGroupMessage(examineGroup, "执行成功");
     }
 }

@@ -26,7 +26,7 @@ import java.util.List;
 
 public class NeteaseMusicUtils {
     private static final FileConfiguration config = Main.getInstance().getConfig();
-    private static final String API_URL = "https://neteasemusic.api.buguwu.net";
+    private static final String API_URL = config.getString("netease-cloud-music.api-url");
     private static final String UserAgent = Main.getInstance().getDescription().getName() + "/" + Main.getInstance().getDescription().getVersion();
 
     private static String cookie;

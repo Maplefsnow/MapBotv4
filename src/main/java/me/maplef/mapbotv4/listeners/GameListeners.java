@@ -38,7 +38,7 @@ public class GameListeners implements Listener {
 
         Long groupID = config.getLong("player-group");
 
-        if(!config.getBoolean("message-forward.server-to-group.enable")) return;
+        if(!config.getBoolean("message-forward.server-to-group.enable", true)) return;
         if(e.isCancelled()) return;
 
         MessageChain msg = null;
@@ -160,7 +160,7 @@ public class GameListeners implements Listener {
 
         long playerGroup = config.getLong("player-group");
 
-        String quitMessage = messages.getString("player-quit-message", "");
+        String quitMessage = messages.getString("player-logout-message", "");
 
         if (quitEvent != null && !quitMessage.isEmpty()){
             BotOperator.sendGroupMessage(playerGroup, quitMessage.replace("{PLAYER}", quitEvent.getPlayer().getName()));

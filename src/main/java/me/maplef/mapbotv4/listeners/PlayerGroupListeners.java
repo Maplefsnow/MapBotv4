@@ -8,25 +8,29 @@ import me.maplef.mapbotv4.exceptions.MessageLengthOutOfBoundException;
 import me.maplef.mapbotv4.exceptions.PlayerNotFoundException;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.managers.PluginManager;
-import me.maplef.mapbotv4.plugins.WelcomeNew;
+import me.maplef.mapbotv4.plugins.Examine;
 import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mamoe.mirai.Bot;
+import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.contact.PermissionDeniedException;
 import net.mamoe.mirai.event.EventHandler;
 import net.mamoe.mirai.event.SimpleListenerHost;
-import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.event.events.MemberJoinEvent;
-import net.mamoe.mirai.event.events.MemberJoinRequestEvent;
-import net.mamoe.mirai.event.events.MemberLeaveEvent;
+import net.mamoe.mirai.event.events.*;
 import net.mamoe.mirai.message.data.*;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,8 +42,13 @@ import java.util.regex.Pattern;
 
 public class PlayerGroupListeners extends SimpleListenerHost {
     ConfigManager configManager = new ConfigManager();
+    FileConfiguration config = configManager.getConfig();
+    private final Long opGroup = config.getLong("op-group");
+    private final Long playerGroup = config.getLong("player-group");
+    private final Long examineGroup = config.getLong("examine-group");
 
     private final Bot bot = BotOperator.getBot();
+    private final PluginManager pluginManager = new PluginManager();
 
     static MessageChain repeatedMessage = null;
     static int repeatCount = 0;
@@ -47,19 +56,28 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     @Override
     public void handleException(@NotNull CoroutineContext context, @NotNull Throwable exception){
         Bukkit.getServer().getLogger().severe(exception.getMessage());
+        exception.printStackTrace();
     }
 
     @EventHandler
     public void onCommandReceive(GroupMessageEvent e){
         FileConfiguration config = configManager.getConfig();
+        if (e.getGroup().getId() != opGroup && e.getGroup().getId() != playerGroup && e.getGroup().getId() != examineGroup) return;
 
-        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff])+)?$";
+        String commandPattern = "^" + config.getString("bot-command-prefix") + "[\\u4E00-\\u9FA5A-Za-z0-9_]+(\\s([\\u4E00-\\u9FA5A-Za-z0-9_\\[\\]\\s]|[^\\x00-\\xff]|\\*|;|'|=|!|\\.|/|:)+)?$";
+        String mailPattern = "[\\w]+@[A-Za-z0-9]+(\\.[A-Za-z0-9]+){1,2}";
 
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
         if(messageContent == null) return;
 
+        boolean flag = false;
         String textString = messageContent.contentToString().trim();
-        if(!Pattern.matches(commandPattern, textString)) return;
+        int firstLength = textString.length();
+        textString = textString.replaceAll(mailPattern, textString);
+        if (textString.length() != firstLength) {
+            if (textString.contains("#审核") && e.getGroup().getId() == examineGroup) flag = true;
+        }
+        if (!flag && !Pattern.matches(commandPattern, textString)) return;
 
         String command = textString.split(" ", 2)[0].substring(1);
 
@@ -80,11 +98,15 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         Bukkit.getScheduler().runTaskAsynchronously(Main.getInstance(), () -> {
             MessageChainBuilder message = new MessageChainBuilder();
             try {
-                message.append(PluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), args, quoteReply));
+                message.append(pluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), args, quoteReply));
             } catch (CommandNotFoundException ex) {
                 message.append(ex.getMessage());
+            } catch (NullPointerException ignored) {
             } catch (Exception ex){
                 ex.printStackTrace();
+            }
+            if (message.build().isEmpty()) {
+                return;
             }
             BotOperator.sendGroupMessage(e.getGroup().getId(), message.build());
         });
@@ -93,6 +115,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
     @EventHandler
     public void onMessageForward(GroupMessageEvent e){
         FileConfiguration config = configManager.getConfig();
+        if (e.getGroup().getId() != opGroup && e.getGroup().getId() != playerGroup && e.getGroup().getId() != examineGroup) return;
 
         MessageContent messageContent = e.getMessage().get(PlainText.Key);
         if(messageContent == null) return;
@@ -136,7 +159,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             try {
                 sendFlag = (boolean) DatabaseOperator.queryPlayer(player.getName()).get("MSGREC");
             } catch (SQLException ex) {
-                Bukkit.getLogger().warning(ex.getClass() + ": " + ex.getMessage());
+                ex.printStackTrace();
             } catch (PlayerNotFoundException ignored) {}
             if (!sendFlag) continue;
 
@@ -273,7 +296,7 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
                         MessageChainBuilder cmdRes = new MessageChainBuilder();
                         try {
-                            cmdRes.append(PluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), argsList.toArray(new Message[0]), null));
+                            cmdRes.append(pluginManager.commandHandler(command, e.getGroup().getId(), e.getSender().getId(), argsList.toArray(new Message[0]), null));
                         } catch (CommandNotFoundException ex) {
                             cmdRes.append(ex.getMessage());
                         } catch (Exception ex){
@@ -323,10 +346,22 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         if(e.getGroupId() != config.getLong("player-group")) return;
 
-        BotOperator.sendGroupMessage(e.getGroupId(), new WelcomeNew().WelcomeMessage());
+        StringBuilder msg = new StringBuilder();
+
+        for(String singleMsg : messages.getStringList("welcome-new-message.player-group.group"))
+            msg.append(singleMsg).append("\n");
+
+        BotOperator.sendGroupMessage(e.getGroupId(), msg.toString().trim());
         Bukkit.getServer().broadcast(Component.text(CU.t(messages.getString("message-prefix") + messages.getString("welcome-new-message.player-group.server"))));
-        if(Objects.requireNonNull(bot.getGroup(config.getLong("check-in-group"))).contains(e.getMember().getId())){
+        if(Objects.requireNonNull(bot.getGroup(config.getLong("check-in-group"))).contains(e.getMember().getId())) {
             BotOperator.sendGroupMessage(config.getLong("check-in-group"), Objects.requireNonNull(messages.getString("congratulation-message")).replace("{PLAYER}", e.getMember().getNick()));
+            bot.getGroup(config.getLong("check-in-group")).get(e.getMember().getId()).kick("您已经加入玩家群了，故将您移出审核群！");
+        }
+        try {
+            String order = String.format("UPDATE EXAMINE SET USED = 1 WHERE QQ = '%s' AND CODE != 'null';", e.getMember().getId());
+            new DatabaseOperator().executeCommand(order);
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -366,11 +401,10 @@ public class PlayerGroupListeners extends SimpleListenerHost {
             }.runTask(Main.getPlugin(Main.class));
 
             try {
-                String bindDelCommand = String.format("DELETE FROM PLAYER WHERE NAME = '%s';", ID);
-                PreparedStatement ps = new DatabaseOperator().getConnect().prepareStatement(bindDelCommand);
-                ps.execute(); ps.close();
+                String order = String.format("DELETE FROM PLAYER WHERE NAME = '%s';", ID);
+                new DatabaseOperator().executeCommand(order);
             } catch (SQLException ex){
-                Bukkit.getServer().getLogger().warning(ex.getMessage());
+                ex.printStackTrace();
             }
 
             opGroupMsg = Objects.requireNonNull(messages.getString("exit-player-group-message.op-group"))
@@ -385,6 +419,13 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         BotOperator.sendGroupMessage(config.getLong("player-group"), playerGroupMsg);
         BotOperator.sendGroupMessage(config.getLong("op-group"), opGroupMsg);
+
+        try {
+            String order = String.format("UPDATE EXAMINE SET CODE = '已退群' WHERE QQ = '%s' AND CODE != 'null';", QQ);
+            new DatabaseOperator().executeCommand(order);
+        } catch (SQLException ex){
+            ex.printStackTrace();
+        }
     }
 
     @EventHandler
@@ -396,24 +437,115 @@ public class PlayerGroupListeners extends SimpleListenerHost {
 
         Bukkit.getServer().getLogger().info(e.getMessage());
 
-        if(!e.getMessage().contains("IV")){
+        try {
+            DatabaseOperator.queryExamine(e.getFromId()).get("APPROVED");
+        } catch (PlayerNotFoundException ex) {
+            e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
+            BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
+            return;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        try {
+            if ((boolean) DatabaseOperator.queryExamine(e.getFromId()).get("USED")) {
+                e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
+                BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
+                return;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        String code = e.getMessage().replaceAll(".*\\n.*答案：", "");
+        if (code.equals("null") || code.equals("已退群")) {
             e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
             BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
             return;
         }
-
-        String code = e.getMessage().split("\n")[1].substring(3);
-        Bukkit.getServer().getLogger().info(code);
-        String url = "https://copa.mrzzj.top/invitecode/check.php?InviteCode=" + code;
-        String resString = HttpUtils.doGet(url);
-
-        if (resString.equals("OK")) {
-            e.accept();
-            BotOperator.sendGroupMessage(config.getLong("op-group"), "已同意 " + e.component7() + " 入群");
+        code = code.toUpperCase(Locale.ROOT);
+        try {
+            String InvCode = (String) DatabaseOperator.queryExamine(e.getFromId()).get("CODE");
+            if (InvCode.equals(code)) {
+                e.accept();
+                BotOperator.sendGroupMessage(config.getLong("op-group"), "已同意 " + e.component7() + " 入群");
+            }
+            else {
+                e.reject(false, "邀请码错误");
+                BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群，该玩家的邀请码为" + InvCode + "，而玩家填入的邀请码为" + code);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        else {
-            e.reject(false, Objects.requireNonNull(config.getString("player-group-auto-manage.reject-message")));
-            BotOperator.sendGroupMessage(config.getLong("op-group"), "已拒绝 " + e.component7() + " 入群");
+    }
+
+    @EventHandler
+    public void onNudge(NudgeEvent e) {
+        FileConfiguration config = configManager.getConfig();
+        FileConfiguration messages = configManager.getMessageConfig();
+
+        long groupID = e.component3().getId();
+
+        if(!config.getBoolean("nudge.enable")) return;
+        if(groupID != config.getLong("player-group")) return;
+
+        if(e.getTarget().equals(e.getBot())) {
+            List<String> botNudgeMsg = messages.getStringList("bot-nudge");
+            Random random = new Random();
+            BotOperator.sendGroupMessage(groupID, MessageUtils.newChain(new At(e.getFrom().getId()),
+                    new PlainText(" " + botNudgeMsg.get(random.nextInt(botNudgeMsg.size())))));
+            return;
+        }
+
+        Bot bot = e.getBot();
+        String targetPlayerName, fromPlayerName;
+        try {
+             targetPlayerName = (String) DatabaseOperator.queryPlayer(e.getTarget().getId()).get("NAME");
+        } catch (PlayerNotFoundException ex) {
+            targetPlayerName = Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(groupID)).get(e.getTarget().getId())).getNameCard();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return;
+        }
+        try {
+            fromPlayerName = (String) DatabaseOperator.queryPlayer(e.getFrom().getId()).get("NAME");
+        } catch (PlayerNotFoundException ex) {
+            fromPlayerName = Objects.requireNonNull(Objects.requireNonNull(bot.getGroup(groupID)).get(e.getFrom().getId())).getNameCard();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        for(Player player : Bukkit.getServer().getOnlinePlayers()) {
+            if(player.getName().toLowerCase(Locale.ROOT).equals(targetPlayerName.toLowerCase(Locale.ROOT))) {
+                if(config.getBoolean("nudge.target-player-action.message.enable")) {
+                    player.sendMessage(Component.text("[戳一戳] ").color(NamedTextColor.GREEN)
+                            .append(Component.text(fromPlayerName + e.getAction() + "你" + e.getSuffix()).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD)));
+                }
+                if(config.getBoolean("nudge.target-player-action.damage.enable")){
+                    Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                        player.damage(config.getDouble("nudge.target-player-action.damage.value"), player);
+                    });
+                }
+                if(config.getBoolean("nudge.target-player-action.sound.enable"))
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BAMBOO_HIT, (float) config.getDouble("nudge.target-player-action.sound.volume", 1.0f), 1.0f);
+                if(config.getBoolean("nudge.target-player-action.animation.enable")) {
+                    Location location = player.getLocation();
+
+                    double x = location.getX();
+                    double y = location.getY();
+                    double z = location.getZ();
+                    double r = config.getDouble("nudge.target-player-action.animation.radius");
+
+                    for(int i = 0; i <= 359; i++) {
+                        double x1 = x + r * Math.sin((double)i * Math.PI / 180.0);
+                        double z1 = z + r * Math.cos((double)i * Math.PI / 180.0);
+
+                        player.spawnParticle(Particle.valueOf(config.getString("nudge.target-player-action.animation.particle", "SNOWBALL")), new Location(player.getWorld(), x1, y, z1),
+                                config.getInt("nudge.target-player-action.animation.count", 5));
+                    }
+                }
+            }
         }
     }
 
@@ -435,5 +567,48 @@ public class PlayerGroupListeners extends SimpleListenerHost {
         }else {
             return nameCard;
         }
+    }
+
+    @EventHandler
+    public void niHao(GroupMessageEvent e){
+        if (e.getGroup().getId() != playerGroup) return;
+        try {
+            if (e.getMessage().get(PlainText.Key).toString().equals("你好"))
+                BotOperator.sendGroupMessage(playerGroup, "亻尔女子");
+        } catch (NullPointerException ignored) {}
+    }
+
+    @EventHandler
+    public void onExaminePlus(GroupMessageEvent e) {
+        if (e.getGroup().getId() != examineGroup) return;
+        QuoteReply quoteReply = e.getMessage().get(QuoteReply.Key);
+        if (quoteReply == null) return;
+        String message = quoteReply.getSource().getOriginalMessage().toString();
+
+        long qq;
+        try {
+            qq = Long.parseLong(DatabaseOperator.queryExaminePlus(message).get("QQ").toString());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return;
+        }
+
+        // 临时
+        String[] var1 = e.getMessage().get(PlainText.Key).toString().split(" ");
+        if (var1.length == 1 && var1[0].equals("通过")) {
+            Message[] messages = new Message[3];
+            messages[0] = new MessageChainBuilder().append(String.valueOf(qq)).build();
+            messages[1] = new MessageChainBuilder().append(String.valueOf(qq)).append("@qq.com").build();
+            messages[2] = new MessageChainBuilder().append("通过").build();
+            Examine.ProcessingCommand(messages, 0);
+        } else if (var1.length == 2 && var1[0].equals("不通过")) {
+            Message[] messages = new Message[4];
+            messages[0] = new MessageChainBuilder().append(String.valueOf(qq)).build();
+            messages[1] = new MessageChainBuilder().append(String.valueOf(qq)).append("@qq.com").build();
+            messages[2] = new MessageChainBuilder().append("不通过").build();
+            messages[3] = new MessageChainBuilder().append(var1[1]).build();
+            Examine.ProcessingCommand(messages, 0);
+        }
+        BotOperator.sendGroupMessage(examineGroup, "执行成功");
     }
 }

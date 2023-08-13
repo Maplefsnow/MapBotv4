@@ -14,6 +14,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.cssxsh.mirai.tool.FixProtocolVersion;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -39,6 +40,8 @@ public class Main extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        FixProtocolVersion.update();
 
         configManager = new ConfigManager();
         FileConfiguration messageConfig = configManager.getMessageConfig();

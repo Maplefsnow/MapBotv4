@@ -56,8 +56,7 @@ public class Pay implements MapbotPlugin {
     public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
         FileConfiguration config = new ConfigManager().getConfig();
 
-        if(groupID != config.getLong("player-group") || groupID != config.getLong("op-group"))
-            throw new GroupNotAllowedException();
+        if(groupID != config.getLong("player-group") && groupID != config.getLong("op-group")) throw new GroupNotAllowedException();
 
         if(args.length == 0)
             return MessageUtils.newChain(new At(senderID)).plus(" 请指定收款人和付款金额");

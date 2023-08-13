@@ -9,6 +9,7 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 public class DatabaseOperator {
     ConfigManager configManager = new ConfigManager();
@@ -50,31 +51,6 @@ public class DatabaseOperator {
             ps.execute();
 
             ps.close();
-        } else {
-            PreparedStatement ps = c.prepareStatement(
-                    "CREATE TABLE IF NOT EXISTS PLAYER (" +
-                    "    NAME    TEXT    NOT NULL," +
-                    "    QQ      TEXT    NOT NULL," +
-                    "    UUID    TEXT," +
-                    "    MSGREC  BOOLEAN DEFAULT (1)," +
-                    "    PRIMARY KEY (" +
-                    "        NAME" +
-                    "    )" +
-                    ");");
-            ps.execute();
-
-            ps = c.prepareStatement(
-                    "CREATE TABLE IF NOT EXISTS CAT_IMAGES (" +
-                    "    id            INTEGER   PRIMARY KEY AUTOINCREMENT," +
-                    "    uploaded_time TIMESTAMP DEFAULT (datetime('now', 'localtime') )," +
-                    "    uploader      TEXT," +
-                    "    base64        TEXT      NOT NULL," +
-                    "    url           TEXT      NULL," +
-                    "    cat_name      TEXT      NULL" +
-                    ");");
-            ps.execute();
-
-            ps.close();
         }
     }
 
@@ -96,7 +72,7 @@ public class DatabaseOperator {
             try {
                 conn = DriverManager.getConnection(url);
             } catch (SQLException e) {
-                Bukkit.getLogger().warning(e.getClass().getName() + ": " + e.getMessage());
+                e.printStackTrace();
             }
             return conn;
         }
@@ -132,5 +108,43 @@ public class DatabaseOperator {
 
     public Connection getConnect(){
         return c;
+    }
+
+    public static Map<String, Object> queryExamine(long QQ) throws SQLException, PlayerNotFoundException {
+        Map<String, Object> queryRes = new HashMap<>();
+
+        try(Statement stmt = new DatabaseOperator().getConnect().createStatement()){
+            ResultSet res = stmt.executeQuery("SELECT * FROM EXAMINE;");
+            while(res.next()){
+                if(res.getLong("QQ") == QQ){
+                    if (res.getString("CODE").equals("null")) continue;
+                    if (res.getString("CODE").equals("已退群")) continue;
+                    ResultSetMetaData data = res.getMetaData();
+                    for(int i = 1; i <= data.getColumnCount(); ++i)
+                        queryRes.put(data.getColumnName(i), res.getObject(data.getColumnName(i)));
+                    return queryRes;
+                }
+            }
+        }
+
+        throw new PlayerNotFoundException();
+    }
+
+    public static Map<String, Object> queryExaminePlus(String id) throws PlayerNotFoundException, SQLException {
+        Map<String, Object> queryRes = new HashMap<>();
+
+        try(Statement stmt = new DatabaseOperator().getConnect().createStatement()){
+            ResultSet res = stmt.executeQuery("SELECT * FROM EXAMINE_PLUS;");
+            while(res.next()){
+                if(Objects.equals(res.getString("MSG"), id)){
+                    ResultSetMetaData data = res.getMetaData();
+                    for(int i = 1; i <= data.getColumnCount(); ++i)
+                        queryRes.put(data.getColumnName(i), res.getObject(data.getColumnName(i)));
+                    return queryRes;
+                }
+            }
+        }
+
+        throw new PlayerNotFoundException();
     }
 }

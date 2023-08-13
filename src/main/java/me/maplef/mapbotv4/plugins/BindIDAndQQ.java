@@ -80,12 +80,9 @@ public class BindIDAndQQ implements MapbotPlugin {
 
         if(config.getBoolean("bind-id-and-qq.whitelist")){
             String whitelistAddCommand = String.format("whitelist add %s", MCID);
-            new BukkitRunnable(){
-                @Override
-                public void run(){
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), whitelistAddCommand);
-                }
-            }.runTask(Main.getPlugin(Main.class));
+            Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), whitelistAddCommand);
+            });
         }
 
         if(config.getBoolean("bind-id-and-qq.modify-namecard")){

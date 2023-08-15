@@ -50,7 +50,7 @@
         <dependency>
             <groupId>top.mrxiaom</groupId>
             <artifactId>qsign</artifactId>
-            <version>$QSIGN_VERSION</version>
+            <version>1.0.7</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

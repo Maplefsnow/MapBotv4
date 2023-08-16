@@ -1,6 +1,6 @@
 bot-account: 123  # QQ bot account
 bot-password: 'No_BUG_Report'  # QQ bot password
-bot-login-device: 'ANDROID_PHONE'  # ANDROID_PHONE, ANDROID_PAD, ANDROID_WATCH, IPAD, MACOS
+bot-login-device: 'ANDROID_PHONE'  # only ANDROID_PHONE hahhaha
 
 super-admin-account: [123, 456]  # super administrator accounts
 

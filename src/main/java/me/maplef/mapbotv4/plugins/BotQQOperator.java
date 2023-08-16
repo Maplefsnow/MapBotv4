@@ -16,11 +16,35 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import top.mrxiaom.qsign.QSignService;
+import com.tencent.mobileqq.dt.model.FEBound;
+import java.io.File;
+import java.util.ArrayList;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+public class CoreUsage {
+    public static void setup() {
+        // 设置签名服务路径
+        File basePath = new File("txlib/8.9.63");
+        QSignService.Factory.basePath = basePath;
+
+        // 初始化签名服务，加载协议配置文件
+        FEBound.initAssertConfig(basePath);
+        QSignService.Factory.loadConfigFromFile(new File(basePath, "config.json"));
+
+        QSignService.Factory.cmdWhiteList = new ArrayList<>();
+        // 设置使用签名服务的协议列表
+        // 必要时请使用 BotProtocolKt.applyProtocolInfo(MiraiProtocol.ANDROID_PHONE, Json.Default.parseToJsonElement(json)); 从 json 加载协议变更
+        QSignService.Factory.supportedProtocol = MiraiProtocol.ANDROID_PHONE;
+        // 注册签名服务
+        QSignService.Factory.register();
+    }
+}
+
 
 public class BotQQOperator implements MapbotPlugin {
     static final FileConfiguration config = new ConfigManager().getConfig();

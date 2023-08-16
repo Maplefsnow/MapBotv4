@@ -14,7 +14,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import xyz.cssxsh.mirai.tool.FixProtocolVersion;
+import top.mrxiaom.qsign.QSignService;
+import com.tencent.mobileqq.dt.model.FEBound;
+import java.io.File;
+import java.util.ArrayList;
 
 import java.io.File;
 import java.sql.SQLException;

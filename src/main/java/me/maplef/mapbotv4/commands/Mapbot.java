@@ -25,7 +25,7 @@ import java.util.List;
 public class Mapbot implements CommandExecutor, TabExecutor {
     ConfigManager configManager = new ConfigManager();
 
-    private final String msgHeader = "&b&l============ &d小枫4号 &b&l============&f\n";
+    private final String msgHeader = "&b&l============ &d小枫4号 with qsgin &b&l============&f\n";
     private final String msgFooter = "\n&b&l==============================";
 
     @Override

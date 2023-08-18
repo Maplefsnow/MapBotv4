@@ -8,6 +8,7 @@ import me.maplef.mapbotv4.managers.LoopJobManager;
 import me.maplef.mapbotv4.plugins.BotQQOperator;
 import me.maplef.mapbotv4.utils.*;
 import net.kyori.adventure.text.Component;
+import net.mamoe.mirai.utils.BotConfiguration;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -42,6 +43,8 @@ public class Main extends JavaPlugin {
         }
 
         FixProtocolVersion.update();
+        FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PHONE, "8.9.63");
+        FixProtocolVersion.load(BotConfiguration.MiraiProtocol.ANDROID_PHONE);
 
         configManager = new ConfigManager();
         FileConfiguration messageConfig = configManager.getMessageConfig();

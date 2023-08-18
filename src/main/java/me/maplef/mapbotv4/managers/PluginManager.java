@@ -32,6 +32,8 @@ public class PluginManager {
 
                 for (Class<? extends MapbotPlugin> singleClass : this.pluginClasses) {
                     Map<String, Object> pluginInfo = (Map<String, Object>) singleClass.getMethod("register").invoke(singleClass.getDeclaredConstructor().newInstance());
+                    if(pluginInfo == null) continue;
+
                     Map<String, String> pluginUsage = (Map<String, String>) pluginInfo.get("usages");
 
                     for (Map.Entry<String, String> entry : pluginUsage.entrySet())

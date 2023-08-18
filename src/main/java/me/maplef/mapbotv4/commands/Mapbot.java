@@ -6,6 +6,7 @@ import me.maplef.mapbotv4.plugins.Hitokoto;
 import me.maplef.mapbotv4.plugins.StopServer;
 import me.maplef.mapbotv4.utils.CU;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
+import me.maplef.mapbotv4.utils.MapbotLoginSolver;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -140,6 +141,21 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                 BotQQOperator.login();
 
                 return true;
+            }
+            case "captcha" -> {
+                if (args.length >= 2) {
+                    sender.sendMessage("已将验证码提交到服务器");
+                    MapbotLoginSolver.solve(args[1]);
+                } else sender.sendMessage("&c无效的参数！用法：/mapbot captcha <ticket>");
+            }
+            case "deviceverify" -> {
+                if (args.length == 1) {
+                    MapbotLoginSolver.solve();
+                    sender.sendMessage("&a已将验证请求提交到服务器");
+                } else if (args.length == 2) {
+                    MapbotLoginSolver.solve(args[1]);
+                    sender.sendMessage("&a已将验证码提交到服务器");
+                }
             }
             default -> sender.sendMessage(CU.t(msgStart + "未知的指令"));
         }

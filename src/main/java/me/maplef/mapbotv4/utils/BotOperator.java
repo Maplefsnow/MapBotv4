@@ -27,15 +27,19 @@ public class BotOperator {
 
         bot = BotFactory.INSTANCE.newBot(qq, password, new BotConfiguration(){{
             setWorkingDir(Main.getInstance().getDataFolder());
-            redirectNetworkLogToDirectory();
-            redirectBotLogToDirectory();
+//            redirectNetworkLogToDirectory();
+//            redirectBotLogToDirectory();
             setProtocol(MiraiProtocol.valueOf(config.getString("bot-login-device", "ANDROID_PHONE")));
+            setLoginSolver(new MapbotLoginSolver());
             setCacheDir(new File("cache"));
             fileBasedDeviceInfo();
             if(new File(getWorkingDir(), "device.json").exists())
                 setDeviceInfo(bot1 -> DeviceInfo.from(new File(getWorkingDir(), "device.json")));
         }});
+
+        Bukkit.getServer().getLogger().info(String.format("[%s] before bot.login()", Main.getInstance().getDescription().getName()));
         bot.login();
+        Bukkit.getServer().getLogger().info(String.format("[%s] after bot.login()", Main.getInstance().getDescription().getName()));
 
         Thread.currentThread().setContextClassLoader(loader);
     }

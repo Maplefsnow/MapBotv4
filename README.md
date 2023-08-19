@@ -14,23 +14,27 @@ MapBotv4 是枫号机器人Mapbot的第四代，作为 Minecraft bukkit/spigot/p
 - [必需] 至少两个 QQ 群，其一为玩家群（下称`player-group`），另一为管理人员群（下称`op-group`）
 - [必需] 一个能正常通过手机端登陆的 QQ 小号
 - [必需] 前置插件 [Vault](https://github.com/MilkBowl/Vault) 和至少一个经济插件（如Essentials自带的经济管理）
+- [必需] 自行搭建的签名服务 [QSign](https://github.com/fuqiuluo/unidbg-fetch-qsign)
 - [可选] 玩家审核群（下称`check-in-group`）
 - [可选] [和风天气](https://dev.qweather.com) API-KEY
 - [可选] [百度识图](https://ai.baidu.com/ai-doc/IMAGERECOGNITION/Zk3bcxdfr) API-KEY
 - [可选] [FFmpeg](https://github.com/BtbN/FFmpeg-Builds/releases)
 
 ### 启动
-1. 将此插件的 .jar 文件放入服务端 plugins 文件夹，并加载插件。
-2. 初次启动插件会自动生成配置文件和数据库文件。此时插件会自动卸载，请在相应文件夹下修改 config.yml 中的相关设置再次启动。
-3. QQ 登录成功后服务器控制台将显示 “QQ账号 xxx 登陆成功！”，同时 op-group 显示成功消息，正常使用即可。
+1. 按照 [QSign](https://github.com/fuqiuluo/unidbg-fetch-qsign) 的 [部署方法](https://github.com/fuqiuluo/unidbg-fetch-qsign/wiki) 自行部署并配置签名服务器，记住签名服务器的端口。
+2. 将此插件的 .jar 文件放入服务端 plugins 文件夹，并加载插件。
+3. 初次启动插件会自动生成配置文件和数据库文件。此时插件会自动卸载，请在相应文件夹下修改 config.yml 中的相关设置。
+4. 至服务器根目录编辑生成的 `KFCFactory.json` 文件，参照 [fix-protocol-version的配置文件示例](https://github.com/cssxsh/fix-protocol-version) ，按照 `config.yml` 中配置的 `qsign-qq-version` 和签名服务器端口进行修改。
+5. 重新加载插件，按照提示完成滑动验证码和设备锁验证。
+6. QQ 登录成功后服务器控制台将显示 “QQ账号 xxx 登陆成功！”，同时 op-group 显示成功消息，正常使用即可。
 
 ### 常见异常及解决方法
-- 登陆时提示需要滑块验证：[解决方法](https://docs.mirai.mamoe.net/mirai-login-solver-selenium/#%E6%89%8B%E5%8A%A8%E5%AE%8C%E6%88%90%E6%BB%91%E5%8A%A8%E9%AA%8C%E8%AF%81)
-- 登陆时提示需要设备锁验证：按照要求使用已登录此账号的手机设备扫码验证即可。
+- 登陆时提示需要滑块验证：按照控制台提示操作。
+- 登陆时提示需要设备锁验证：按照控制台提示操作。
 - 控制台提示登陆成功但 op-group 未见消息：
     - 控制台**无风控提示**：消息可能被腾讯拦截，尝试同时在电脑端登录此 QQ 号并在电脑端随意发送信息以解除拦截。
     - 控制台**有风控提示**：此账号已被腾讯风控，请用手机登录该账号并通过验证码验证以解除风控。
-- 其他异常或您认为不必要的报错信息：请**提交 issue**。
+- 其他异常或您认为不必要的报错信息：请 [提交 issue](https://github.com/Maplefsnow/MapBotv4/issues) 。
 
 ### 使用
 和 Minecraft 游戏内输入指令一样，在 player-group 或 op-group 中发送带 `#` 前缀的命令以使用各项功能，详情可发送 `#help` 查看命令使用方法。如只需查看单个命令使用方法，只需发送命令头再查看返回的报错消息即可。

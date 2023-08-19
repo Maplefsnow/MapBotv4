@@ -45,9 +45,9 @@ public class Main extends JavaPlugin {
         }
 
         FixProtocolVersion.update();
-        FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.ANDROID_PHONE, "8.9.63");
-        FixProtocolVersion.load(BotConfiguration.MiraiProtocol.ANDROID_PHONE);
-
+        FixProtocolVersion.fetch(BotConfiguration.MiraiProtocol.valueOf(this.getConfig().getString("bot-login-device", "ANDROID_PHONE")),
+                this.getConfig().getString("qsign-qq-version", "8.9.63"));
+        FixProtocolVersion.load(BotConfiguration.MiraiProtocol.valueOf(this.getConfig().getString("bot-login-device", "ANDROID_PHONE")));
 
         configManager = new ConfigManager();
         FileConfiguration messageConfig = configManager.getMessageConfig();

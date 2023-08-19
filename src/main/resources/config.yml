@@ -1,8 +1,10 @@
+qsign-qq-version: "8.9.63"
+
 bot-account: 123  # QQ bot account
 bot-password: 'No_BUG_Report'  # QQ bot password
 bot-login-device: 'ANDROID_PHONE'  # ANDROID_PHONE, ANDROID_PAD, ANDROID_WATCH, IPAD, MACOS
 
-super-admin-account: [123, 456]  # super administrator accounts
+super-admin-account: [123, 456]  # super administrator QQ accounts
 
 player-group: 10000  # the number of QQ group where players are in
 inner-player-group: 10010  # not very useful, just ignore it

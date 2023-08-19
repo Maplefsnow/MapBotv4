@@ -173,7 +173,7 @@ public class Examine implements MapbotPlugin {
         info.put("description", "审核新玩家");
         info.put("version", "1.0");
 
-        return info;
+        return null;  // disabled
     }
 
     public static void sendApprovedMail(String mail, String QQ, String code) throws MailjetException {

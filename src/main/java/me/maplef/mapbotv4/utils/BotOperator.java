@@ -14,8 +14,11 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 public class BotOperator {
+    public static final Logger logger = Main.getInstance().getLogger();
+
     private static Bot bot;
 
     public static void login(Long qq, String password) throws LoginFailedException {
@@ -27,8 +30,8 @@ public class BotOperator {
 
         bot = BotFactory.INSTANCE.newBot(qq, password, new BotConfiguration(){{
             setWorkingDir(Main.getInstance().getDataFolder());
-//            redirectNetworkLogToDirectory();
-//            redirectBotLogToDirectory();
+            redirectNetworkLogToDirectory();
+            redirectBotLogToDirectory();
             setProtocol(MiraiProtocol.valueOf(config.getString("bot-login-device", "ANDROID_PHONE")));
             setLoginSolver(new MapbotLoginSolver());
             setCacheDir(new File("cache"));
@@ -37,9 +40,7 @@ public class BotOperator {
                 setDeviceInfo(bot1 -> DeviceInfo.from(new File(getWorkingDir(), "device.json")));
         }});
 
-        Bukkit.getServer().getLogger().info(String.format("[%s] before bot.login()", Main.getInstance().getDescription().getName()));
         bot.login();
-        Bukkit.getServer().getLogger().info(String.format("[%s] after bot.login()", Main.getInstance().getDescription().getName()));
 
         Thread.currentThread().setContextClassLoader(loader);
     }
@@ -49,9 +50,9 @@ public class BotOperator {
             try{
                 Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
             } catch (NullPointerException e){
-                Bukkit.getLogger().info(String.format("[%s] QQ账户正在登陆中，登陆期间的消息将不会转发", Main.getInstance().getDescription().getName()));
+                logger.info("QQ账户正在登陆中，登陆期间的消息将不会转发");
             } catch (IllegalStateException e){
-                Bukkit.getServer().getLogger().severe(String.format("[%s] 发送消息失败，QQ账户可能被风控，请及时处理", Main.getInstance().getDescription().getName()));
+                logger.severe("发送消息失败，QQ账户可能被风控，请及时处理");
             }
         });
     }
@@ -61,9 +62,9 @@ public class BotOperator {
             try{
                 Objects.requireNonNull(bot.getGroup(groupID)).sendMessage(message);
             } catch (NullPointerException e){
-                Bukkit.getLogger().info(String.format("[%s] QQ账户正在登陆中，登陆期间的消息将不会转发", Main.getInstance().getDescription().getName()));
+                logger.info("QQ账户正在登陆中，登陆期间的消息将不会转发");
             } catch (IllegalStateException e){
-                Bukkit.getServer().getLogger().severe(String.format("[%s] 发送消息失败，QQ账户可能被风控，请及时处理", Main.getInstance().getDescription().getName()));
+                logger.severe("发送消息失败，QQ账户可能被风控，请及时处理");
             }
         });
     }

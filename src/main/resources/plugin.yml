@@ -2,7 +2,7 @@ name: MapBot
 author: Maplef
 version: '${project.version}'
 main: me.maplef.mapbotv4.Main
-api-version: 1.19
+api-version: 1.13
 depend:
   - Vault
 commands:

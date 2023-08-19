@@ -1,26 +1,28 @@
 package me.maplef.mapbotv4.plugins;
 
-import me.maplef.mapbotv4.MapbotPlugin;
 import me.maplef.mapbotv4.exceptions.GroupNotAllowedException;
 import me.maplef.mapbotv4.exceptions.InvalidSyntaxException;
 import me.maplef.mapbotv4.managers.ConfigManager;
 import me.maplef.mapbotv4.utils.BotOperator;
 import me.maplef.mapbotv4.utils.DatabaseOperator;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.contact.Group;
-import net.mamoe.mirai.message.MessageReceipt;
-import net.mamoe.mirai.message.data.*;
-import org.bukkit.Bukkit;
+import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.MessageChain;
+import net.mamoe.mirai.message.data.MessageChainBuilder;
+import net.mamoe.mirai.message.data.QuoteReply;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.lang.reflect.Method;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
-public class ExaminePlus implements MapbotPlugin {
+public class ExaminePlus {
     ConfigManager configManager = new ConfigManager();
     FileConfiguration config = configManager.getConfig();
     private final Long examineGroup = config.getLong("examine-group");
@@ -35,7 +37,7 @@ public class ExaminePlus implements MapbotPlugin {
     final String ID = config.getString("survey-project-id");
     static final Bot bot = BotOperator.getBot();
 
-    @Override
+//     @Override
     public MessageChain onEnable(@NotNull Long groupID, @NotNull Long senderID, Message[] args, @Nullable QuoteReply quoteReply) throws Exception {
         if (!Objects.equals(groupID, examineGroup))
             throw new GroupNotAllowedException();
@@ -139,7 +141,7 @@ public class ExaminePlus implements MapbotPlugin {
     }
 
 
-    @Override
+//    @Override
     public Map<String, Object> register() throws NoSuchMethodException {
         Map<String, Object> info = new HashMap<>();
         Map<String, Method> commands = new HashMap<>();
@@ -156,7 +158,7 @@ public class ExaminePlus implements MapbotPlugin {
         info.put("description", "暂无");
         info.put("version", "1.0");
 
-        return info;
+        return null;  // disabled
     }
 
     private Connection connect() {

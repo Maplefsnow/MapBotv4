@@ -44,9 +44,10 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                 String msg = msgHeader + Hitokoto.HitokotoMessage() + msgFooter;
                 sender.sendMessage(CU.t(msg));
             }
+
             case "receive" -> {
                 if (!(sender instanceof Player)) {
-                    Bukkit.getServer().getLogger().info("该指令只能由玩家执行！");
+                    sender.sendMessage("该指令只能由玩家执行！");
                     return true;
                 }
 
@@ -68,6 +69,7 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                     return false;
                 }
             }
+
             case "reload" -> {
                 if(!sender.hasPermission("mapbot.reload")){
                     sender.sendMessage((CU.t(msgStart + "&c你没有使用该命令的权限")));
@@ -81,6 +83,7 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                 sender.sendMessage((CU.t(msgStart + "配置文件重载完毕")));
                 return true;
             }
+
             case "stopserver" -> {
                 if (sender instanceof Player) {
                     Player player = (Player) sender;
@@ -113,6 +116,7 @@ public class Mapbot implements CommandExecutor, TabExecutor {
                 sender.sendMessage(CU.t(msgStart + "停服定时任务已&a启动"));
                 return true;
             }
+
             case "cancelstopserver" -> {
                 if (sender instanceof Player) {
                     Player player = (Player) sender;
@@ -129,6 +133,7 @@ public class Mapbot implements CommandExecutor, TabExecutor {
 
                 return true;
             }
+
             case "login" -> {
                 if (sender instanceof Player) {
                     Player player = (Player) sender;
@@ -142,21 +147,38 @@ public class Mapbot implements CommandExecutor, TabExecutor {
 
                 return true;
             }
+
+            case "logout" -> {
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    if (!player.hasPermission("mapbot.logout")) {
+                        player.sendMessage(CU.t(msgStart + "&c你没有使用该命令的权限"));
+                        return true;
+                    }
+                }
+
+                BotQQOperator.logout();
+
+                return true;
+            }
+
             case "captcha" -> {
                 if (args.length >= 2) {
-                    sender.sendMessage("已将验证码提交到服务器");
+                    sender.sendMessage(CU.t(msgStart + "&a已将验证码提交到服务器"));
                     MapbotLoginSolver.solve(args[1]);
-                } else sender.sendMessage("&c无效的参数！用法：/mapbot captcha <ticket>");
+                } else sender.sendMessage(CU.t(msgStart + "&c无效的参数！用法：/mapbot captcha <ticket>"));
             }
+
             case "deviceverify" -> {
                 if (args.length == 1) {
                     MapbotLoginSolver.solve();
-                    sender.sendMessage("&a已将验证请求提交到服务器");
+                    sender.sendMessage(CU.t(msgStart + "&a已将验证请求提交到服务器"));
                 } else if (args.length == 2) {
                     MapbotLoginSolver.solve(args[1]);
-                    sender.sendMessage("&a已将验证码提交到服务器");
+                    sender.sendMessage(CU.t(msgStart + "&a已将验证码提交到服务器"));
                 }
             }
+
             default -> sender.sendMessage(CU.t(msgStart + "未知的指令"));
         }
 
@@ -177,7 +199,7 @@ public class Mapbot implements CommandExecutor, TabExecutor {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if(args.length == 1){
-            String[] allCommands = {"help", "hitokoto", "receive", "stopserver", "cancelstopserver", "login", "reload"};
+            String[] allCommands = {"help", "hitokoto", "receive", "stopserver", "cancelstopserver", "login", "logout", "reload"};
 
             List<String> commandList = new ArrayList<>();
             for(String commandName : allCommands)
